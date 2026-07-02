@@ -1,16 +1,26 @@
 /*
-  reddit-grid-extension — grid.css v5.0
-  Dense masonry grid. Zero wasted gaps. Natural card heights.
-  Aggressive margin/padding removal from Reddit's internal elements.
+  Reddit Pro — grid.css v3.0
+  ══════════════════════════════════════════════════════════════════════════════
+  BATCH-ISOLATED MASONRY ARCHITECTURE
+  ──────────────────────────────────────────────────────────────────────────────
+  BEFORE (v2): shreddit-feed → masonry grid, batches = sub-grids inside it
+    Problem: Inserting a new batch into the parent grid caused the parent to
+    reflow, which cascaded span recalculations to all existing cards.
+
+  AFTER  (v3): shreddit-feed → flex column, each batch = independent masonry grid
+    Guarantee: New faceplate-batch elements are appended at the BOTTOM of the
+    flex column. They have zero influence on the layout of existing batches.
+    Each batch is its own self-contained CSS grid formatting context.
+  ══════════════════════════════════════════════════════════════════════════════
 */
 
 /* =============================================
-   1. GLOBAL PAGE SETUP
+   1. GLOBAL CSS VARIABLES
    ============================================= */
-
-/* Base variables */
 :root {
-  --reddit-cols: 3;
+  --reddit-cols:      3;
+  --reddit-col-gap:   8px;
+  --reddit-batch-gap: 16px;
 }
 
 body[data-reddit-grid-cols="1"] { --reddit-cols: 1; }
@@ -20,7 +30,7 @@ body[data-reddit-grid-cols="4"] { --reddit-cols: 4; }
 body[data-reddit-grid-cols="5"] { --reddit-cols: 5; }
 body[data-reddit-grid-cols="6"] { --reddit-cols: 6; }
 
-/* Auto-Fit: only overrides when toggle is ON */
+/* Auto-Fit: responsive column scaling for ultrawide monitors */
 @media (min-width: 1400px) {
   body[data-reddit-grid-autofit="true"] { --reddit-cols: 4; }
 }
@@ -31,20 +41,16 @@ body[data-reddit-grid-cols="6"] { --reddit-cols: 6; }
   body[data-reddit-grid-autofit="true"] { --reddit-cols: 6; }
 }
 
-/* =============================================
-   1.5 RESPONSIVE SAFETY DOWNGRADES
-   Prevents manual overrides from squashing cards
-   on small screens by enforcing maximums.
-   ============================================= */
+/* Responsive safety: never crush cards on small screens */
 @media (max-width: 1100px) {
-  body[data-reddit-grid-cols="4"] { --reddit-cols: 3; }
-  body[data-reddit-grid-cols="5"] { --reddit-cols: 3; }
+  body[data-reddit-grid-cols="4"],
+  body[data-reddit-grid-cols="5"],
   body[data-reddit-grid-cols="6"] { --reddit-cols: 3; }
 }
 @media (max-width: 850px) {
-  body[data-reddit-grid-cols="3"] { --reddit-cols: 2; }
-  body[data-reddit-grid-cols="4"] { --reddit-cols: 2; }
-  body[data-reddit-grid-cols="5"] { --reddit-cols: 2; }
+  body[data-reddit-grid-cols="3"],
+  body[data-reddit-grid-cols="4"],
+  body[data-reddit-grid-cols="5"],
   body[data-reddit-grid-cols="6"] { --reddit-cols: 2; }
 }
 @media (max-width: 600px) {
@@ -53,6 +59,7 @@ body[data-reddit-grid-cols="6"] { --reddit-cols: 6; }
 
 /* =============================================
    2. HIDE RIGHT SIDEBAR & FOOTER
+   Always hidden in grid mode (>1 col)
    ============================================= */
 body:not([data-reddit-grid-cols="1"]) #right-sidebar-container,
 body:not([data-reddit-grid-cols="1"]) shreddit-layout-sidebar,
@@ -67,7 +74,7 @@ body:not([data-reddit-grid-cols="1"]) grid-layout > :nth-child(3) {
   min-width: 0 !important;
 }
 
-/* Hide Sidebar Toggle now kills the LEFT navigation drawer too for true full-bleed */
+/* Left sidebar hide toggle */
 body[data-reddit-grid-hide-sidebar="true"] grid-layout > :nth-child(1),
 body[data-reddit-grid-hide-sidebar="true"] grid-layout > :nth-child(2),
 body[data-reddit-grid-hide-sidebar="true"] #left-sidebar-container,
@@ -77,7 +84,7 @@ body[data-reddit-grid-hide-sidebar="true"] left-nav {
 }
 
 /* =============================================
-   3. FULL-WIDTH LAYOUT UNLOCK
+   3. FULL-WIDTH PAGE LAYOUT
    ============================================= */
 body:not([data-reddit-grid-cols="1"]) shreddit-app {
   max-width: 100vw !important;
@@ -124,11 +131,24 @@ body:not([data-reddit-grid-cols="1"]) main {
   margin: 0 !important;
 }
 
-/* ── THE DENSE GRID CORE ──
-   Covers: Home feed, subreddit feeds, profile pages (Posts/Saved/History/Upvoted etc.)
-   gap: 4px = tight but still visually separated
-   grid-auto-flow: row dense = fills holes automatically
-   align-items: start = natural card heights, no stretching */
+/* =============================================
+   4. FEED CONTAINERS — Flex Column
+   ──────────────────────────────────────────────
+   This is the v3.0 architectural change.
+
+   All feed containers are now display:flex with
+   flex-direction:column. Each faceplate-batch is
+   a flex item that stacks SEQUENTIALLY from top
+   to bottom.
+
+   WHY THIS SOLVES THE SHIFT BUG:
+   • Flex items are placed in document order
+   • Adding a new item at the END never moves
+     existing items (no reordering, no reflow
+     cascades to existing flex children)
+   • Each batch is a completely independent layout
+     context — it knows nothing about other batches
+   ============================================= */
 body:not([data-reddit-grid-cols="1"]) shreddit-feed,
 body:not([data-reddit-grid-cols="1"]) .feed-container,
 body:not([data-reddit-grid-cols="1"]) profile-feed,
@@ -138,12 +158,10 @@ body:not([data-reddit-grid-cols="1"]) [data-feed-type],
 body:not([data-reddit-grid-cols="1"]) main > div:has(> article),
 body:not([data-reddit-grid-cols="1"]) main > div:has(> shreddit-post),
 body:not([data-reddit-grid-cols="1"]) main > div:has(> faceplate-batch) {
-  display: grid !important;
-  grid-template-columns: repeat(var(--reddit-cols), minmax(0, 1fr)) !important;
-  grid-auto-flow: row dense !important;
-  grid-auto-rows: auto !important;
-  align-items: start !important;
-  gap: 4px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--reddit-batch-gap, 16px) !important;
+  align-items: stretch !important;
   width: 100% !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
@@ -151,141 +169,137 @@ body:not([data-reddit-grid-cols="1"]) main > div:has(> faceplate-batch) {
   margin: 0 !important;
 }
 
-/* ── NESTED GRIDS (BATCH ISOLATION & SCROLL FIX) ──
-   Converting batch wrappers to sub-grids solves two critical problems:
-   1. Teleport Bug: Wrappers keep their physical DOM boxes, allowing Reddit's IntersectionObserver to track scroll position.
-   2. Batch Isolation: Posts can only masonry shuffle within their own batch, preserving chronological order.
-*/
+/* =============================================
+   5. FACEPLATE-BATCH — Independent Masonry Grid
+   ──────────────────────────────────────────────
+   Each batch is its own CSS grid formatting context.
+   Cards inside use JS-computed grid-row-end: span N
+   for true masonry height matching.
+
+   grid-auto-rows: 5px  → micro-rows for precise spans
+   grid-auto-flow: row dense → fills gaps within batch
+   column-gap only → row gap is baked into JS span calc
+   ============================================= */
 body:not([data-reddit-grid-cols="1"]) shreddit-feed > faceplate-batch,
 body:not([data-reddit-grid-cols="1"]) .feed-container > faceplate-batch,
 body:not([data-reddit-grid-cols="1"]) profile-feed > faceplate-batch,
 body:not([data-reddit-grid-cols="1"]) shreddit-profile-feed > faceplate-batch,
 body:not([data-reddit-grid-cols="1"]) shreddit-user-feed > faceplate-batch,
-body:not([data-reddit-grid-cols="1"]) [data-feed-type] > faceplate-batch,
-/* Also target parent div wrappers that hold multiple posts (virtual batches) */
-body:not([data-reddit-grid-cols="1"]) shreddit-feed > div:has(shreddit-post ~ shreddit-post),
-body:not([data-reddit-grid-cols="1"]) shreddit-feed > div:has(article ~ article),
-body:not([data-reddit-grid-cols="1"]) .feed-container > div:has(shreddit-post ~ shreddit-post),
-body:not([data-reddit-grid-cols="1"]) .feed-container > div:has(article ~ article),
-body:not([data-reddit-grid-cols="1"]) profile-feed > div:has(shreddit-post ~ shreddit-post),
-body:not([data-reddit-grid-cols="1"]) profile-feed > div:has(article ~ article),
-body:not([data-reddit-grid-cols="1"]) shreddit-profile-feed > div:has(shreddit-post ~ shreddit-post),
-body:not([data-reddit-grid-cols="1"]) shreddit-profile-feed > div:has(article ~ article),
-body:not([data-reddit-grid-cols="1"]) shreddit-user-feed > div:has(shreddit-post ~ shreddit-post),
-body:not([data-reddit-grid-cols="1"]) shreddit-user-feed > div:has(article ~ article),
-body:not([data-reddit-grid-cols="1"]) [data-feed-type] > div:has(shreddit-post ~ shreddit-post),
-body:not([data-reddit-grid-cols="1"]) [data-feed-type] > div:has(article ~ article) {
+body:not([data-reddit-grid-cols="1"]) [data-feed-type] > faceplate-batch {
   display: grid !important;
-  grid-template-columns: repeat(var(--reddit-cols), minmax(0, 1fr)) !important;
+  grid-template-columns: repeat(var(--reddit-cols, 3), minmax(0, 1fr)) !important;
   grid-auto-rows: 5px !important;
   grid-auto-flow: row dense !important;
-  grid-column: 1 / -1 !important;
-  gap: 16px !important;
+  /* Row gap = 0: gap is baked into JS span calculation (ROW_GAP = 8px)
+     Column gap = visual separation between card columns */
+  column-gap: var(--reddit-col-gap, 8px) !important;
+  row-gap: 0 !important;
   align-items: start !important;
-  margin: 0 0 16px 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
   padding: 0 !important;
-}
-
-/* ── FLATTEN INNER WRAPPERS ──
-   Flatten inner divs and single-post wrappers so individual posts hit the nested grid containers. */
-/* Flatten inner divs that are wrappers WITHIN a batch (not the batch itself) */
-body:not([data-reddit-grid-cols="1"]) shreddit-feed > div:not(:has(shreddit-post ~ shreddit-post)):not(:has(article ~ article)):not(:empty),
-body:not([data-reddit-grid-cols="1"]) shreddit-feed > faceplate-batch > div,
-body:not([data-reddit-grid-cols="1"]) .feed-container > div:not(:has(shreddit-post ~ shreddit-post)):not(:has(article ~ article)):not(:empty),
-body:not([data-reddit-grid-cols="1"]) profile-feed > div:not(:has(shreddit-post ~ shreddit-post)):not(:has(article ~ article)):not(:empty),
-body:not([data-reddit-grid-cols="1"]) profile-feed > faceplate-batch > div,
-body:not([data-reddit-grid-cols="1"]) shreddit-profile-feed > div:not(:has(shreddit-post ~ shreddit-post)):not(:has(article ~ article)):not(:empty),
-body:not([data-reddit-grid-cols="1"]) shreddit-profile-feed > faceplate-batch > div,
-body:not([data-reddit-grid-cols="1"]) shreddit-user-feed > div:not(:has(shreddit-post ~ shreddit-post)):not(:has(article ~ article)):not(:empty),
-body:not([data-reddit-grid-cols="1"]) shreddit-user-feed > faceplate-batch > div,
-body:not([data-reddit-grid-cols="1"]) [data-feed-type] > div:not(:has(shreddit-post ~ shreddit-post)):not(:has(article ~ article)):not(:empty),
-body:not([data-reddit-grid-cols="1"]) [data-feed-type] > faceplate-batch > div,
-body:not([data-reddit-grid-cols="1"]) shreddit-feed > faceplate-batch > div > div {
-  display: contents !important;
-}
-
-/* ── VIRTUAL SCROLLER PROTECTION ──
-   Exempt completely empty wrappers so they maintain Reddit's injected placeholder height. */
-body:not([data-reddit-grid-cols="1"]) faceplate-batch:not(:has(shreddit-post, article, .Post)),
-body:not([data-reddit-grid-cols="1"]) shreddit-feed > div:not(:has(shreddit-post, article, .Post)),
-body:not([data-reddit-grid-cols="1"]) profile-feed > div:not(:has(shreddit-post, article, .Post)),
-body:not([data-reddit-grid-cols="1"]) .feed-container > div:not(:has(shreddit-post, article, .Post)),
-body:not([data-reddit-grid-cols="1"]) shreddit-profile-feed > div:not(:has(shreddit-post, article, .Post)),
-body:not([data-reddit-grid-cols="1"]) shreddit-user-feed > div:not(:has(shreddit-post, article, .Post)),
-body:not([data-reddit-grid-cols="1"]) [data-feed-type] > div:not(:has(shreddit-post, article, .Post)) {
-  display: block !important;
-  grid-column: 1 / -1 !important;
   margin: 0 !important;
-  padding: 0 !important;
+}
+
+/* Non-masonry mode: auto row heights (uniform grid within each batch) */
+body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] shreddit-feed > faceplate-batch,
+body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] .feed-container > faceplate-batch,
+body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] profile-feed > faceplate-batch,
+body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] shreddit-profile-feed > faceplate-batch,
+body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] shreddit-user-feed > faceplate-batch,
+body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] [data-feed-type] > faceplate-batch {
+  grid-auto-rows: auto !important;
+  column-gap: 4px !important;
+  row-gap: 4px !important;
+}
+
+/* Empty placeholder batches — keep as block for scroll position tracking */
+body:not([data-reddit-grid-cols="1"]) faceplate-batch:empty {
+  display: block !important;
+  min-height: 1px !important;
+  width: 100% !important;
 }
 
 /* =============================================
-   6. POST CARDS — Glassmorphic Design
-   Soft semi-transparent background, frosted
-   glass border, premium shadow & hover lift.
+   6. INNER BATCH WRAPPERS — Flatten
+   Some batches wrap posts in a redundant div.
+   Make it transparent to the batch grid.
+   ============================================= */
+body:not([data-reddit-grid-cols="1"]) shreddit-feed > faceplate-batch > div,
+body:not([data-reddit-grid-cols="1"]) .feed-container > faceplate-batch > div,
+body:not([data-reddit-grid-cols="1"]) profile-feed > faceplate-batch > div,
+body:not([data-reddit-grid-cols="1"]) shreddit-profile-feed > faceplate-batch > div,
+body:not([data-reddit-grid-cols="1"]) shreddit-user-feed > faceplate-batch > div,
+body:not([data-reddit-grid-cols="1"]) [data-feed-type] > faceplate-batch > div {
+  display: contents !important;
+}
+
+/* Kill Reddit's HR dividers inside grids */
+body:not([data-reddit-grid-cols="1"]) shreddit-feed hr,
+body:not([data-reddit-grid-cols="1"]) faceplate-batch hr,
+body:not([data-reddit-grid-cols="1"]) shreddit-post hr {
+  display: none !important;
+}
+
+/* Kill gap/padding Reddit adds inline */
+body:not([data-reddit-grid-cols="1"]) shreddit-feed[style],
+body:not([data-reddit-grid-cols="1"]) faceplate-batch[style] {
+  gap: inherit !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* =============================================
+   7. POST CARDS — Sizing & Glassmorphic Design
    ============================================= */
 body:not([data-reddit-grid-cols="1"]) shreddit-post,
 body:not([data-reddit-grid-cols="1"]) shreddit-feed article,
 body:not([data-reddit-grid-cols="1"]) shreddit-feed shreddit-post-placeholder,
 body:not([data-reddit-grid-cols="1"]) .Post {
-  /* Grid sizing */
   width: 100% !important;
   min-width: 0 !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
-
-  /* Natural height */
   height: auto !important;
   align-self: start !important;
-
-  /* Zero external spacing */
   margin: 0 !important;
   padding: 0 !important;
 }
 
-/* ── Glassmorphic Card Visuals ── 
-   Applied strictly to the inner card to prevent "double borders"
-   caused by styling both the wrapper and the card. */
+/* Glassmorphic card visuals */
 @keyframes rg-fade-in {
-  from { opacity: 0; transform: translateY(15px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 body:not([data-reddit-grid-cols="1"]) shreddit-post,
 body:not([data-reddit-grid-cols="1"]) .Post {
   border-radius: 12px !important;
   overflow: hidden !important;
-  animation: rg-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  animation: rg-fade-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
 
-  /* ── Liquid Glass Aesthetic ── 
-     High-blur, translucent panels with dynamic light reflections */
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%) !important;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.01) 100%) !important;
   backdrop-filter: blur(24px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
 
-  /* Liquid light reflection (brighter top-left edge) */
-  border: 1px solid rgba(255, 255, 255, 0.05) !important;
-  border-top-color: rgba(255, 255, 255, 0.15) !important;
-  border-left-color: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255,255,255,0.05) !important;
+  border-top-color: rgba(255,255,255,0.15) !important;
+  border-left-color: rgba(255,255,255,0.12) !important;
 
-  /* Deep ambient shadow and inner top glint */
   box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.10) !important;
+    0 8px 32px rgba(0,0,0,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.10) !important;
 
-  /* Smooth transitions */
   transition:
     border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    transform 0.2s ease,
-    background 0.2s ease !important;
+    box-shadow   0.2s ease,
+    transform    0.2s ease,
+    background   0.2s ease !important;
   will-change: transform !important;
-  
-  /* CRITICAL: Confine Reddit's absolute-positioned click overlay to this card */
   position: relative !important;
 }
 
-/* Kill Reddit's native hover borders drawn with pseudo elements */
+/* Suppress Reddit's native hover pseudo-elements */
 body:not([data-reddit-grid-cols="1"]) shreddit-post::before,
 body:not([data-reddit-grid-cols="1"]) shreddit-post::after,
 body:not([data-reddit-grid-cols="1"]) .Post::before,
@@ -293,11 +307,7 @@ body:not([data-reddit-grid-cols="1"]) .Post::after {
   display: none !important;
 }
 
-/* ── Prevent GPU Smearing Bug ──
-   Reddit uses position: sticky on post headers so they follow you as you scroll.
-   When combined with our frosted glass backdrop-filter, this triggers a known 
-   Chromium graphics bug that smears the header infinitely down the screen.
-   Fix: Force all headers to be position: relative instead. */
+/* Fix sticky-header + backdrop-filter GPU smear bug */
 body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="post-header"],
 body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="credit-bar"],
 body:not([data-reddit-grid-cols="1"]) shreddit-post::part(post-header),
@@ -307,9 +317,7 @@ body:not([data-reddit-grid-cols="1"]) shreddit-post-header {
   top: auto !important;
 }
 
-/* ── Force Internal Elements to be Transparent ──
-   Prevents Reddit's internal action bars/footers from having solid 
-   black backgrounds that block our glassmorphism and create a "double layer" look. */
+/* Internal elements transparent (no double-layer solid backgrounds) */
 body:not([data-reddit-grid-cols="1"]) shreddit-post::part(action-bar),
 body:not([data-reddit-grid-cols="1"]) shreddit-post::part(credit-bar),
 body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="credit-bar"],
@@ -320,63 +328,38 @@ body:not([data-reddit-grid-cols="1"]) shreddit-post > div {
   box-shadow: none !important;
 }
 
-/* Completely kill Reddit's HR dividers inside the grid feed */
-body:not([data-reddit-grid-cols="1"]) shreddit-feed hr,
-body:not([data-reddit-grid-cols="1"]) faceplate-batch hr,
-body:not([data-reddit-grid-cols="1"]) shreddit-post hr {
-  display: none !important;
-}
-
 /* Hover: lift + brighter glass + accent glow */
 body:not([data-reddit-grid-cols="1"]) shreddit-post:hover,
 body:not([data-reddit-grid-cols="1"]) .Post:hover {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.03) 100%) !important;
-  border-top-color: rgba(255, 255, 255, 0.25) !important;
-  border-left-color: rgba(255, 255, 255, 0.20) !important;
+  background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.03) 100%) !important;
+  border-top-color: rgba(255,255,255,0.25) !important;
+  border-left-color: rgba(255,255,255,0.20) !important;
   box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.40),
-    0 0 15px rgba(255, 69, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
+    0 12px 40px rgba(0,0,0,0.40),
+    0 0 15px rgba(255,69,0,0.15),
+    inset 0 1px 0 rgba(255,255,255,0.15) !important;
   transform: translateY(-3px) scale(1.005) !important;
-  /* Keep z-index contained so lifted card never sits ON TOP of
-     a neighbour and intercepts that neighbour's click area */
   z-index: 1 !important;
   position: relative !important;
-  /* Ensure the card itself receives all click events */
   pointer-events: auto !important;
 }
 
 /* =============================================
-   7. KILL REDDIT'S OWN INTERNAL SPACING
-   Reddit adds margin-bottom to posts and
-   padding inside feed wrappers. Nuke it all.
+   8. KILL REDDIT'S INTERNAL SPACING
    ============================================= */
-
-/* Remove any spacing Reddit puts between posts */
 body:not([data-reddit-grid-cols="1"]) shreddit-post + shreddit-post,
 body:not([data-reddit-grid-cols="1"]) article + article {
   margin-top: 0 !important;
 }
 
-/* Reddit sometimes adds row-gap or padding to the feed via inline style.
-   This selector hits the element directly regardless of inline style. */
-body:not([data-reddit-grid-cols="1"]) shreddit-feed[style],
-body:not([data-reddit-grid-cols="1"]) faceplate-batch[style] {
-  gap: 4px !important;
-  padding: 0 !important;
-  margin: 0 !important;
-}
-
-/* Kill any wrapper padding/margin in Reddit's layout system */
 body:not([data-reddit-grid-cols="1"]) faceplate-batch {
   margin: 0 !important;
   padding: 0 !important;
 }
 
-/* ── CONTAIN MEDIA ─ prevent image/video blowout ──
-   IMPORTANT: Wildcard * rule is limited to media elements only.
-   Action bar buttons, vote counts, etc. are EXCLUDED so they don't get squished. */
-
+/* =============================================
+   9. MEDIA CONTAINMENT
+   ============================================= */
 body:not([data-reddit-grid-cols="1"]) shreddit-post img,
 body:not([data-reddit-grid-cols="1"]) shreddit-post video,
 body:not([data-reddit-grid-cols="1"]) shreddit-post iframe,
@@ -391,7 +374,6 @@ body:not([data-reddit-grid-cols="1"]) gallery-carousel {
   display: block !important;
 }
 
-/* Constrain post content wrappers (not action bars) */
 body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="text-body"],
 body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="title"],
 body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="post-media-container"],
@@ -402,12 +384,9 @@ body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="post-body"] {
   word-break: break-word !important;
 }
 
-/* ── PROTECT THE ACTION BAR ──
-   The action bar contains upvote/downvote/share buttons arranged in a flex row.
-   Without protection, our aggressive width rules cause them to stack vertically
-   or get crushed to zero width. We explicitly restore their flex layout here. */
-
-/* The action bar row itself: horizontal flex, never wraps */
+/* =============================================
+   10. ACTION BAR PROTECTION
+   ============================================= */
 body:not([data-reddit-grid-cols="1"]) shreddit-post::part(action-bar),
 body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="action-bar"],
 body:not([data-reddit-grid-cols="1"]) shreddit-post-action-bar,
@@ -425,7 +404,6 @@ body:not([data-reddit-grid-cols="1"]) [data-post-click-location="action-bar"] {
   gap: 4px !important;
 }
 
-/* Individual action buttons: let them be their natural size, never shrink to 0 */
 body:not([data-reddit-grid-cols="1"]) shreddit-post::part(action-bar) > *,
 body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="action-bar"] > *,
 body:not([data-reddit-grid-cols="1"]) shreddit-post-action-bar > *,
@@ -436,7 +414,6 @@ body:not([data-reddit-grid-cols="1"]) [data-post-click-location="action-bar"] > 
   width: auto !important;
 }
 
-/* Vote pill: upvote count + arrows — never collapse */
 body:not([data-reddit-grid-cols="1"]) shreddit-post shreddit-vote-buttons,
 body:not([data-reddit-grid-cols="1"]) shreddit-post vote-buttons,
 body:not([data-reddit-grid-cols="1"]) shreddit-post [data-post-click-location="vote"],
@@ -449,7 +426,6 @@ body:not([data-reddit-grid-cols="1"]) shreddit-post faceplate-number {
   align-items: center !important;
 }
 
-/* Share / award / other action buttons */
 body:not([data-reddit-grid-cols="1"]) shreddit-post shreddit-share-button,
 body:not([data-reddit-grid-cols="1"]) shreddit-post shreddit-overflow-menu,
 body:not([data-reddit-grid-cols="1"]) shreddit-post [data-post-click-location="share"],
@@ -459,6 +435,10 @@ body:not([data-reddit-grid-cols="1"]) shreddit-post [data-post-click-location="c
   max-width: none !important;
   width: auto !important;
 }
+
+/* =============================================
+   11. PROMOTED POST HIDE
+   ============================================= */
 body[data-reddit-grid-hide-promoted="true"] [data-reddit-grid-is-ad="true"],
 body[data-reddit-grid-hide-promoted="true"] .promotedlink,
 body[data-reddit-grid-hide-promoted="true"] shreddit-post[ad-id],
@@ -468,47 +448,12 @@ body[data-reddit-grid-hide-promoted="true"] shreddit-ad-post {
 }
 
 /* =============================================
-   10. MASONRY (JS Grid-Span) LAYOUT OVERRIDE
-   Enabled via toggle in popup.
-   Uses a micro-grid (5px rows) and JS calculates row spans.
+   12. COMPACT MODE
    ============================================= */
-body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="true"] shreddit-feed,
-body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="true"] .feed-container,
-body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="true"] main > div:has(> shreddit-post),
-body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="true"] main > div:has(> faceplate-batch) {
-  display: grid !important;
-  grid-template-columns: repeat(var(--reddit-cols), minmax(0, 1fr)) !important;
-  /* Micro-rows for precise JS height spanning */
-  grid-auto-rows: 5px !important;
-  /* Dense so new items automatically fill the next available column hole */
-  grid-auto-flow: row dense !important;
-  /* 0px row gap because JS adds the 8px visual gap into the span calculation */
-  gap: 0px 8px !important;
-  align-items: start !important;
+body[data-reddit-grid-compact="true"] shreddit-post [slot="text-body"] {
+  display: none !important;
 }
 
-/* FIX: DO NOT flatten faceplate-batch with display:contents in masonry mode.
-   Doing so destroys the element's bounding box, which breaks Reddit's
-   IntersectionObserver and causes the page to jump to the top on every
-   new batch load. Instead, batches remain as sub-grids (handled by the
-   nested grid rules above) and cards get their row spans from JS. */
-
-/* Each card in masonry is managed by JS ResizeObserver */
-body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="true"] shreddit-post,
-body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="true"] faceplate-batch > shreddit-post,
-body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="true"] faceplate-batch > article,
-body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="true"] .Post {
-  break-inside: avoid !important;
-  display: block !important;
-  height: auto !important;
-  width: 100% !important;
-  /* Margins are stripped; vertical gap is baked into the JS row span */
-  margin: 0 !important;
-}
-
-/* =============================================
-   11. COMPACT MODE
-   ============================================= */
 body[data-reddit-grid-compact="true"] shreddit-post,
 body[data-reddit-grid-compact="true"] .Post {
   padding: 4px !important;
