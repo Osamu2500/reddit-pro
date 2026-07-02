@@ -132,32 +132,19 @@ body:not([data-reddit-grid-cols="1"]) main {
 }
 
 /* =============================================
-   4. FEED CONTAINERS — Flex Column
+   4. FEED CONTAINERS
    ──────────────────────────────────────────────
-   This is the v3.0 architectural change.
-
-   All feed containers are now display:flex with
-   flex-direction:column. Each faceplate-batch is
-   a flex item that stacks SEQUENTIALLY from top
-   to bottom.
-
-   WHY THIS SOLVES THE SHIFT BUG:
-   • Flex items are placed in document order
-   • Adding a new item at the END never moves
-     existing items (no reordering, no reflow
-     cascades to existing flex children)
-   • Each batch is a completely independent layout
-     context — it knows nothing about other batches
+   If the feed uses faceplate-batch (infinite scroll), the feed is a flex column.
+   If the feed does NOT use faceplate-batch, the feed ITSELF is the grid.
    ============================================= */
-body:not([data-reddit-grid-cols="1"]) shreddit-feed,
-body:not([data-reddit-grid-cols="1"]) .feed-container,
-body:not([data-reddit-grid-cols="1"]) profile-feed,
-body:not([data-reddit-grid-cols="1"]) shreddit-profile-feed,
-body:not([data-reddit-grid-cols="1"]) shreddit-user-feed,
-body:not([data-reddit-grid-cols="1"]) [data-feed-type],
-body:not([data-reddit-grid-cols="1"]) main > div:has(> article),
-body:not([data-reddit-grid-cols="1"]) main > div:has(> shreddit-post),
-body:not([data-reddit-grid-cols="1"]) main > div:has(> faceplate-batch) {
+/* Flex column for batch-based feeds */
+body:not([data-reddit-grid-cols="1"]) shreddit-feed:has(faceplate-batch),
+body:not([data-reddit-grid-cols="1"]) .feed-container:has(faceplate-batch),
+body:not([data-reddit-grid-cols="1"]) profile-feed:has(faceplate-batch),
+body:not([data-reddit-grid-cols="1"]) shreddit-profile-feed:has(faceplate-batch),
+body:not([data-reddit-grid-cols="1"]) shreddit-user-feed:has(faceplate-batch),
+body:not([data-reddit-grid-cols="1"]) [data-feed-type]:has(faceplate-batch),
+body:not([data-reddit-grid-cols="1"]) main > div:has(faceplate-batch) {
   display: flex !important;
   flex-direction: column !important;
   gap: var(--reddit-batch-gap, 16px) !important;
@@ -170,28 +157,31 @@ body:not([data-reddit-grid-cols="1"]) main > div:has(> faceplate-batch) {
 }
 
 /* =============================================
-   5. FACEPLATE-BATCH — Independent Masonry Grid
+   5. THE MASONRY GRID
    ──────────────────────────────────────────────
-   Each batch is its own CSS grid formatting context.
-   Cards inside use JS-computed grid-row-end: span N
-   for true masonry height matching.
-
-   grid-auto-rows: 5px  → micro-rows for precise spans
-   grid-auto-flow: row dense → fills gaps within batch
-   column-gap only → row gap is baked into JS span calc
+   Applied to either the faceplate-batch (if present) OR the feed container itself.
    ============================================= */
+/* 1. The batches inside a flex feed */
 body:not([data-reddit-grid-cols="1"]) shreddit-feed > faceplate-batch,
 body:not([data-reddit-grid-cols="1"]) .feed-container > faceplate-batch,
 body:not([data-reddit-grid-cols="1"]) profile-feed > faceplate-batch,
 body:not([data-reddit-grid-cols="1"]) shreddit-profile-feed > faceplate-batch,
 body:not([data-reddit-grid-cols="1"]) shreddit-user-feed > faceplate-batch,
-body:not([data-reddit-grid-cols="1"]) [data-feed-type] > faceplate-batch {
+body:not([data-reddit-grid-cols="1"]) [data-feed-type] > faceplate-batch,
+
+/* 2. Feeds without batches */
+body:not([data-reddit-grid-cols="1"]) shreddit-feed:not(:has(faceplate-batch)),
+body:not([data-reddit-grid-cols="1"]) .feed-container:not(:has(faceplate-batch)),
+body:not([data-reddit-grid-cols="1"]) profile-feed:not(:has(faceplate-batch)),
+body:not([data-reddit-grid-cols="1"]) shreddit-profile-feed:not(:has(faceplate-batch)),
+body:not([data-reddit-grid-cols="1"]) shreddit-user-feed:not(:has(faceplate-batch)),
+body:not([data-reddit-grid-cols="1"]) [data-feed-type]:not(:has(faceplate-batch)),
+body:not([data-reddit-grid-cols="1"]) main > div:not(:has(faceplate-batch)):has(> article),
+body:not([data-reddit-grid-cols="1"]) main > div:not(:has(faceplate-batch)):has(> shreddit-post) {
   display: grid !important;
   grid-template-columns: repeat(var(--reddit-cols, 3), minmax(0, 1fr)) !important;
   grid-auto-rows: 5px !important;
   grid-auto-flow: row dense !important;
-  /* Row gap = 0: gap is baked into JS span calculation (ROW_GAP = 8px)
-     Column gap = visual separation between card columns */
   column-gap: var(--reddit-col-gap, 8px) !important;
   row-gap: 0 !important;
   align-items: start !important;
@@ -201,13 +191,19 @@ body:not([data-reddit-grid-cols="1"]) [data-feed-type] > faceplate-batch {
   margin: 0 !important;
 }
 
-/* Non-masonry mode: auto row heights (uniform grid within each batch) */
+/* Non-masonry mode: auto row heights */
 body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] shreddit-feed > faceplate-batch,
 body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] .feed-container > faceplate-batch,
 body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] profile-feed > faceplate-batch,
 body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] shreddit-profile-feed > faceplate-batch,
 body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] shreddit-user-feed > faceplate-batch,
-body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] [data-feed-type] > faceplate-batch {
+body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] [data-feed-type] > faceplate-batch,
+body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] shreddit-feed:not(:has(faceplate-batch)),
+body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] .feed-container:not(:has(faceplate-batch)),
+body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] profile-feed:not(:has(faceplate-batch)),
+body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] shreddit-profile-feed:not(:has(faceplate-batch)),
+body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] shreddit-user-feed:not(:has(faceplate-batch)),
+body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] [data-feed-type]:not(:has(faceplate-batch)) {
   grid-auto-rows: auto !important;
   column-gap: 4px !important;
   row-gap: 4px !important;

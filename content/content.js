@@ -54,18 +54,16 @@ let storageLoaded  = false;
 const STATIC_FORCE_CSS = `
   /* ── Reddit Pro Extension Styles v3.0 ── */
 
-  /* ── FEED CONTAINERS: Flex column ──
-     Each faceplate-batch stacks vertically as an independent flex item.
-     New batches appended at the bottom NEVER cause existing items to reflow. */
-  body:not([data-reddit-grid-cols="1"]) shreddit-feed,
-  body:not([data-reddit-grid-cols="1"]) .feed-container,
-  body:not([data-reddit-grid-cols="1"]) profile-feed,
-  body:not([data-reddit-grid-cols="1"]) shreddit-profile-feed,
-  body:not([data-reddit-grid-cols="1"]) shreddit-user-feed,
-  body:not([data-reddit-grid-cols="1"]) [data-feed-type],
-  body:not([data-reddit-grid-cols="1"]) main > div:has(> faceplate-batch),
-  body:not([data-reddit-grid-cols="1"]) main > div:has(> article),
-  body:not([data-reddit-grid-cols="1"]) main > div:has(> shreddit-post) {
+  /* ── FEED CONTAINERS ──
+     If the feed uses faceplate-batch (infinite scroll), the feed is a flex column.
+     If the feed does NOT use faceplate-batch, the feed ITSELF is the grid. */
+  body:not([data-reddit-grid-cols="1"]) shreddit-feed:has(faceplate-batch),
+  body:not([data-reddit-grid-cols="1"]) .feed-container:has(faceplate-batch),
+  body:not([data-reddit-grid-cols="1"]) profile-feed:has(faceplate-batch),
+  body:not([data-reddit-grid-cols="1"]) shreddit-profile-feed:has(faceplate-batch),
+  body:not([data-reddit-grid-cols="1"]) shreddit-user-feed:has(faceplate-batch),
+  body:not([data-reddit-grid-cols="1"]) [data-feed-type]:has(faceplate-batch),
+  body:not([data-reddit-grid-cols="1"]) main > div:has(faceplate-batch) {
     display: flex !important;
     flex-direction: column !important;
     gap: var(--reddit-batch-gap, 16px) !important;
@@ -77,23 +75,26 @@ const STATIC_FORCE_CSS = `
     margin: 0 !important;
   }
 
-  /* ── EACH BATCH: Independent masonry grid ──
-     CRITICAL: Each faceplate-batch is its own grid context.
-     Cards inside can freely rearrange within their batch via dense flow.
-     Nothing inside one batch can affect card positions in another batch.
-     grid-auto-rows: 5px — micro-row grid for JS height spanning (masonry)
-     gap: 0 col-gap    — row gap is baked into JS span calculation */
+  /* ── THE MASONRY GRID ──
+     Applied to either the faceplate-batch (if present) OR the feed container itself. */
   body:not([data-reddit-grid-cols="1"]) shreddit-feed > faceplate-batch,
   body:not([data-reddit-grid-cols="1"]) .feed-container > faceplate-batch,
   body:not([data-reddit-grid-cols="1"]) profile-feed > faceplate-batch,
   body:not([data-reddit-grid-cols="1"]) shreddit-profile-feed > faceplate-batch,
   body:not([data-reddit-grid-cols="1"]) shreddit-user-feed > faceplate-batch,
-  body:not([data-reddit-grid-cols="1"]) [data-feed-type] > faceplate-batch {
+  body:not([data-reddit-grid-cols="1"]) [data-feed-type] > faceplate-batch,
+  body:not([data-reddit-grid-cols="1"]) shreddit-feed:not(:has(faceplate-batch)),
+  body:not([data-reddit-grid-cols="1"]) .feed-container:not(:has(faceplate-batch)),
+  body:not([data-reddit-grid-cols="1"]) profile-feed:not(:has(faceplate-batch)),
+  body:not([data-reddit-grid-cols="1"]) shreddit-profile-feed:not(:has(faceplate-batch)),
+  body:not([data-reddit-grid-cols="1"]) shreddit-user-feed:not(:has(faceplate-batch)),
+  body:not([data-reddit-grid-cols="1"]) [data-feed-type]:not(:has(faceplate-batch)),
+  body:not([data-reddit-grid-cols="1"]) main > div:not(:has(faceplate-batch)):has(> article),
+  body:not([data-reddit-grid-cols="1"]) main > div:not(:has(faceplate-batch)):has(> shreddit-post) {
     display: grid !important;
     grid-template-columns: repeat(var(--reddit-cols, 3), minmax(0, 1fr)) !important;
     grid-auto-rows: 5px !important;
     grid-auto-flow: row dense !important;
-    /* Column gap only — row gap is absorbed into JS span calculation */
     column-gap: var(--reddit-col-gap, 8px) !important;
     row-gap: 0 !important;
     align-items: start !important;
@@ -103,14 +104,19 @@ const STATIC_FORCE_CSS = `
     margin: 0 !important;
   }
 
-  /* ── NON-MASONRY MODE: Uniform row heights per-batch ──
-     When masonry is off, use auto rows so all cards are equal height */
+  /* ── NON-MASONRY MODE ── */
   body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] shreddit-feed > faceplate-batch,
   body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] .feed-container > faceplate-batch,
   body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] profile-feed > faceplate-batch,
   body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] shreddit-profile-feed > faceplate-batch,
   body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] shreddit-user-feed > faceplate-batch,
-  body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] [data-feed-type] > faceplate-batch {
+  body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] [data-feed-type] > faceplate-batch,
+  body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] shreddit-feed:not(:has(faceplate-batch)),
+  body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] .feed-container:not(:has(faceplate-batch)),
+  body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] profile-feed:not(:has(faceplate-batch)),
+  body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] shreddit-profile-feed:not(:has(faceplate-batch)),
+  body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] shreddit-user-feed:not(:has(faceplate-batch)),
+  body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] [data-feed-type]:not(:has(faceplate-batch)) {
     grid-auto-rows: auto !important;
     column-gap: 4px !important;
     row-gap: 4px !important;
