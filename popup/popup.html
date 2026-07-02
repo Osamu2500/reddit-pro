@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Reddit Pro</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="header">
+    <h1>Reddit Pro</h1>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Layout</div>
+    <div class="layout-options">
+      <label class="layout-option">
+        <input type="radio" name="columns" value="1">
+        <div class="layout-card">
+          <div class="layout-icon linear">
+            <div></div><div></div>
+          </div>
+          <span>Linear</span>
+        </div>
+      </label>
+      <label class="layout-option">
+        <input type="radio" name="columns" value="2">
+        <div class="layout-card">
+          <div class="layout-icon columns-2">
+            <div></div><div></div><div></div><div></div>
+          </div>
+          <span>2 Cols</span>
+        </div>
+      </label>
+      <label class="layout-option">
+        <input type="radio" name="columns" value="3" checked>
+        <div class="layout-card">
+          <div class="layout-icon columns-3">
+            <div></div><div></div><div></div><div></div><div></div><div></div>
+          </div>
+          <span>3 Cols</span>
+        </div>
+      </label>
+      <label class="layout-option">
+        <input type="radio" name="columns" value="4">
+        <div class="layout-card">
+          <div class="layout-icon columns-4">
+            <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+          </div>
+          <span>4 Cols</span>
+        </div>
+      </label>
+      <label class="layout-option">
+        <input type="radio" name="columns" value="5">
+        <div class="layout-card">
+          <div class="layout-icon columns-5">
+            <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+          </div>
+          <span>5 Cols</span>
+        </div>
+      </label>
+      <label class="layout-option">
+        <input type="radio" name="columns" value="6">
+        <div class="layout-card">
+          <div class="layout-icon columns-6">
+            <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
+          </div>
+          <span>6 Cols</span>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="section">
+    <div class="section-title">Options</div>
+    <div class="toggle-row">
+      <span>Auto Fit (Ultrawide)</span>
+      <label class="switch">
+        <input type="checkbox" id="autoFit">
+        <span class="slider round"></span>
+      </label>
+    </div>
+    <div class="toggle-row">
+      <span>Smart Auto-Play Audio</span>
+      <label class="switch">
+        <input type="checkbox" id="autoPlayAudio">
+        <span class="slider round"></span>
+      </label>
+    </div>
+    <div class="toggle-row">
+      <span>Compact Cards</span>
+      <label class="switch">
+        <input type="checkbox" id="compactCards">
+        <span class="slider round"></span>
+      </label>
+    </div>
+  </div>
+
+  <hr>
+
+  <div class="section">
+    <div class="section-title">Filters &amp; Hide</div>
+    <div class="toggle-row">
+      <span>Promoted / Ads</span>
+      <label class="switch">
+        <input type="checkbox" id="hidePromoted" checked>
+        <span class="slider round"></span>
+      </label>
+    </div>
+    <div class="toggle-row">
+      <span>Left Sidebar</span>
+      <label class="switch">
+        <input type="checkbox" id="hideSidebar">
+        <span class="slider round"></span>
+      </label>
+    </div>
+    <div class="toggle-row">
+      <span>Scrollbar</span>
+      <label class="switch">
+        <input type="checkbox" id="hideScrollbar" checked>
+        <span class="slider round"></span>
+      </label>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
