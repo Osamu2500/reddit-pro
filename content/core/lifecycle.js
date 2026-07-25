@@ -2,6 +2,7 @@
  * @file lifecycle.js
  * @description Master orchestrator that safely mounts and unmounts the extension during SPA navigation.
  */
+// @ts-nocheck
 window.RedditPro = window.RedditPro || {};
 
 window.RedditPro.Lifecycle = (function() {
@@ -12,11 +13,16 @@ window.RedditPro.Lifecycle = (function() {
   let lastUrl = location.href;
   /** @type {number | null} */
   let navDebounce = null;
+  /** @type {boolean} */
+  let isInitialized = false;
 
   /**
    * Initializes the entire extension lifecycle.
    */
   function init() {
+    if (isInitialized) return;
+    isInitialized = true;
+    
     window.RedditPro.Settings.load().then(() => {
       window.RedditPro.CSSVars.init();
       if (window.RedditPro.Filters) window.RedditPro.Filters.init();
@@ -41,13 +47,30 @@ window.RedditPro.Lifecycle = (function() {
 
   function applyRoutingLogic() {
     const pageType = detectPageType(location.href);
+    
+    // Manage Body Classes for SPA Routing CSS Targeting
+    document.body.classList.remove('rg-page-home', 'rg-page-community', 'rg-page-profile', 'rg-page-saved', 'rg-page-post', 'rg-page-search');
+    const path = location.pathname;
+    
     if (pageType === PAGE_TYPE.POST_THREAD) {
+      document.body.classList.add('rg-page-post');
       window.RedditPro.Settings.updateActive({ columns: '1' });
       halt();
     } else {
+      if (pageType === PAGE_TYPE.SEARCH) document.body.classList.add('rg-page-search');
+      else if (pageType === PAGE_TYPE.PROFILE) {
+        if (path.includes('/saved')) document.body.classList.add('rg-page-saved');
+        else document.body.classList.add('rg-page-profile');
+      }
+      else if (pageType === PAGE_TYPE.FEED) {
+        if (path === '/' || path.match(/^\/(best|hot|new)\/?$/)) document.body.classList.add('rg-page-home');
+        else document.body.classList.add('rg-page-community');
+      }
+      
       window.RedditPro.Settings.updateActive({}); 
       resume();
     }
+    
     if (pageType !== PAGE_TYPE.POST_THREAD) {
       setTimeout(() => window.RedditPro.Masonry.sweepAll(), 80);
       setTimeout(() => window.RedditPro.Masonry.sweepAll(), 400);

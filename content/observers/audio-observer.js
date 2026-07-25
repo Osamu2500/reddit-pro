@@ -42,6 +42,12 @@ window.RedditPro.AudioObserver = (function() {
 
   function updateFocus() {
     const settings = window.RedditPro.Settings.get();
+    
+    // Purge disconnected nodes to prevent memory leaks in the SPA
+    for (const player of visible) {
+      if (!player.isConnected) visible.delete(player);
+    }
+
     if (visible.size === 0 || !settings.autoPlayAudio) return;
     if (/\/comments\/[a-z0-9]+\//.test(location.href)) return;
 

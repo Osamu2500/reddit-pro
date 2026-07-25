@@ -51,14 +51,22 @@ window.RedditPro.Settings = (function() {
    */
   function load() {
     return new Promise((resolve) => {
-      chrome.storage.sync.get(DEFAULT_SETTINGS, (result) => {
-        // @ts-ignore - Chrome storage return type allows this merging
-        userSettings = { ...DEFAULT_SETTINGS, ...result };
-        activeSettings = { ...userSettings };
-        isLoaded = true;
-        notifyListeners();
+      try {
+        chrome.storage.sync.get(DEFAULT_SETTINGS, (result) => {
+          if (chrome.runtime.lastError) {
+             console.warn("Storage warning:", chrome.runtime.lastError);
+          }
+          // @ts-ignore - Chrome storage return type allows this merging
+          userSettings = { ...DEFAULT_SETTINGS, ...result };
+          activeSettings = { ...userSettings };
+          isLoaded = true;
+          notifyListeners();
+          resolve(userSettings);
+        });
+      } catch (err) {
+        console.warn("Storage API unavailable", err);
         resolve(userSettings);
-      });
+      }
     });
   }
 
@@ -69,9 +77,17 @@ window.RedditPro.Settings = (function() {
   function save(newSettings) {
     userSettings = { ...userSettings, ...newSettings };
     activeSettings = { ...userSettings };
-    chrome.storage.sync.set(userSettings, () => {
+    try {
+      chrome.storage.sync.set(userSettings, () => {
+        if (chrome.runtime.lastError) {
+          console.warn("Storage warning:", chrome.runtime.lastError);
+        }
+        notifyListeners();
+      });
+    } catch (err) {
+      console.warn("Storage API unavailable", err);
       notifyListeners();
-    });
+    }
   }
 
   /**

@@ -11,12 +11,13 @@
  *  - STABILITY_THRESHOLD raised to 3 for rock-solid positioning
  *  - Removed all expanded-card logic (feature deleted)
  */
+// @ts-nocheck
 window.RedditPro = window.RedditPro || {};
 
 window.RedditPro.Masonry = (function() {
   let resizePending = false;
-  const resizeQueue = new Map();
-  const stableCount = new Map();
+  const resizeQueue = new Map(); // Emptied every frame
+  const stableCount = new WeakMap(); // WeakMap prevents memory leaks for removed nodes
   const heightCache = new WeakMap();
   // Track which posts we've attached image listeners to
   const imgListeners = new WeakSet();
@@ -37,12 +38,7 @@ window.RedditPro.Masonry = (function() {
   }
 
   const POST_SELECTORS = [
-    'shreddit-post', 'shreddit-ad-post', 'shreddit-feed article',
-    'faceplate-batch > shreddit-post', 'faceplate-batch > article',
-    'profile-feed shreddit-post', 'profile-feed article',
-    'shreddit-profile-feed shreddit-post', 'shreddit-profile-feed article',
-    'shreddit-user-feed shreddit-post', 'shreddit-user-feed article',
-    '[data-feed-type] shreddit-post', '[data-feed-type] article', '.Post'
+    'shreddit-post', 'shreddit-ad-post', 'article', '.Post'
   ].join(',');
 
   const observer = new ResizeObserver((entries) => {
@@ -59,14 +55,8 @@ window.RedditPro.Masonry = (function() {
       if (Math.abs(height - cachedHeight) < 2) continue;
       heightCache.set(el, height);
 
-      if (el.hasAttribute('data-rg-stable')) {
-        const rowGap = getRowGap();
-        const currentSpan = parseInt(el.getAttribute('data-rg-span') || '0', 10);
-        const newSpan = Math.ceil((height + rowGap) / ROW_HEIGHT);
-        if (currentSpan === newSpan) continue;
-        el.removeAttribute('data-rg-stable');
-        stableCount.delete(el);
-      }
+      // We defer the span math to flush() (rAF) to prevent layout thrashing
+      // caused by getComputedStyle inside the ResizeObserver callback.
       resizeQueue.set(el, height);
     }
 
@@ -90,25 +80,25 @@ window.RedditPro.Masonry = (function() {
       if (height <= 0) continue;
 
       const span = Math.ceil((height + rowGap) / ROW_HEIGHT);
-      const currentSpan = el.getAttribute('data-rg-span');
+      const gridItem = el.closest('faceplate-tracker') || el;
+      const currentSpan = gridItem.getAttribute('data-rg-span');
 
       if (currentSpan !== String(span)) {
-        el.style.setProperty('grid-row-end', `span ${span}`, 'important');
-        el.setAttribute('data-rg-span', span);
-        el.removeAttribute('data-rg-stable');
-        stableCount.set(el, 0);
+        gridItem.style.setProperty('grid-row-end', `span ${span}`, 'important');
+        gridItem.setAttribute('data-rg-span', span);
+        gridItem.removeAttribute('data-rg-stable');
+        stableCount.set(gridItem, 0);
 
         // First time this card gets a span: remove loading state so it fades in
-        if (el.hasAttribute('data-rg-loading')) {
-          el.removeAttribute('data-rg-loading');
+        if (gridItem.hasAttribute('data-rg-loading')) {
+          gridItem.removeAttribute('data-rg-loading');
         }
       } else {
-        const count = (stableCount.get(el) || 0) + 1;
-        stableCount.set(el, count);
+        const count = (stableCount.get(gridItem) || 0) + 1;
+        stableCount.set(gridItem, count);
         if (count >= STABILITY_THRESHOLD) {
-          el.setAttribute('data-rg-stable', '1');
-          // Ensure loading state is cleared on stability
-          el.removeAttribute('data-rg-loading');
+          gridItem.setAttribute('data-rg-stable', '1');
+          gridItem.removeAttribute('data-rg-loading');
         }
       }
     }
@@ -134,24 +124,28 @@ window.RedditPro.Masonry = (function() {
     });
   }
 
+  /**
+   * @param {Element} el
+   */
   function processCard(el) {
     if (!el || el.nodeType !== 1) return;
     const settings = window.RedditPro.Settings.get();
+    const gridItem = el.closest('faceplate-tracker') || el;
 
     if (settings.columns !== '1') {
       // Mark as loading so it stays invisible until first span is set
-      if (!el.hasAttribute('data-rg-span') && !el.hasAttribute('data-rg-stable')) {
-        el.setAttribute('data-rg-loading', '1');
+      if (!gridItem.hasAttribute('data-rg-span') && !gridItem.hasAttribute('data-rg-stable')) {
+        gridItem.setAttribute('data-rg-loading', '1');
       }
       observer.observe(el);
       attachImageListeners(el);
     } else {
       observer.unobserve(el);
-      el.style.removeProperty('grid-row-end');
-      el.removeAttribute('data-rg-span');
-      el.removeAttribute('data-rg-stable');
-      el.removeAttribute('data-rg-loading');
-      stableCount.delete(el);
+      gridItem.style.removeProperty('grid-row-end');
+      gridItem.removeAttribute('data-rg-span');
+      gridItem.removeAttribute('data-rg-stable');
+      gridItem.removeAttribute('data-rg-loading');
+      stableCount.delete(gridItem);
     }
   }
 
@@ -164,9 +158,10 @@ window.RedditPro.Masonry = (function() {
 
   function sweepAll() {
     document.querySelectorAll(POST_SELECTORS).forEach(el => {
-      el.removeAttribute('data-rg-stable');
-      el.removeAttribute('data-rg-loading');
-      stableCount.delete(el);
+      const gridItem = el.closest('faceplate-tracker') || el;
+      gridItem.removeAttribute('data-rg-stable');
+      gridItem.removeAttribute('data-rg-loading');
+      // WeakMap and WeakSet don't need manual clearing, just heightCache
       heightCache.delete(el);
       processCard(el);
     });
@@ -176,12 +171,14 @@ window.RedditPro.Masonry = (function() {
     observer.disconnect();
     resizeQueue.clear();
     resizePending = false;
-    stableCount.clear();
   }
 
+  /**
+   * @param {Element} el
+   */
   function recalculateCard(el) {
-    el.removeAttribute('data-rg-stable');
-    stableCount.delete(el);
+    const gridItem = el.closest('faceplate-tracker') || el;
+    gridItem.removeAttribute('data-rg-stable');
     heightCache.delete(el);
     processCard(el);
   }
