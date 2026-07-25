@@ -119,14 +119,23 @@ body:not([data-reddit-grid-cols="1"]) main {
    ===================================================================== */
 
 /* 1. HOME & COMMUNITY PAGES (/) & (/r/subreddit) */
-body:not([data-reddit-grid-cols="1"]):is(.rg-page-home, .rg-page-community) shreddit-feed:has(> faceplate-batch) {
+/* Flex containers (batches wrappers) */
+body:not([data-reddit-grid-cols="1"]):is(.rg-page-home, .rg-page-community) :is(shreddit-feed, main > div, shreddit-async-loader):has(> faceplate-batch) {
   display: flex !important;
   flex-direction: column !important;
   gap: var(--reddit-batch-gap, 16px) !important;
   align-items: stretch !important;
   width: 100% !important;
 }
-body:not([data-reddit-grid-cols="1"]):is(.rg-page-home, .rg-page-community) shreddit-feed > faceplate-batch {
+/* The Grid Containers */
+body:not([data-reddit-grid-cols="1"]):is(.rg-page-home, .rg-page-community) :is(
+  shreddit-feed > faceplate-batch,
+  main > div > faceplate-batch,
+  shreddit-async-loader > faceplate-batch,
+  shreddit-feed:not(:has(> faceplate-batch)),
+  main > div:not(:has(> faceplate-batch)),
+  shreddit-async-loader:not(:has(> faceplate-batch))
+) {
   display: grid !important;
   grid-template-columns: repeat(var(--reddit-cols, 3), minmax(0, 1fr)) !important;
   grid-auto-rows: 5px !important;
@@ -137,13 +146,33 @@ body:not([data-reddit-grid-cols="1"]):is(.rg-page-home, .rg-page-community) shre
   width: 100% !important;
   contain: layout style !important;
 }
-/* Default all unknown elements in batch to full width */
-body:not([data-reddit-grid-cols="1"]):is(.rg-page-home, .rg-page-community) shreddit-feed > faceplate-batch > * {
+/* Default all unknown elements to full width */
+body:not([data-reddit-grid-cols="1"]):is(.rg-page-home, .rg-page-community) :is(
+  shreddit-feed > faceplate-batch,
+  main > div > faceplate-batch,
+  shreddit-async-loader > faceplate-batch,
+  shreddit-feed > faceplate-batch > div,
+  main > div > faceplate-batch > div,
+  shreddit-async-loader > faceplate-batch > div,
+  shreddit-feed:not(:has(> faceplate-batch)),
+  main > div:not(:has(> faceplate-batch)),
+  shreddit-async-loader:not(:has(> faceplate-batch))
+) > * {
   grid-column: 1 / -1 !important;
   width: 100% !important;
 }
 /* Extract trackers/posts into the column flow */
-body:not([data-reddit-grid-cols="1"]):is(.rg-page-home, .rg-page-community) shreddit-feed > faceplate-batch > :is(
+body:not([data-reddit-grid-cols="1"]):is(.rg-page-home, .rg-page-community) :is(
+  shreddit-feed > faceplate-batch,
+  main > div > faceplate-batch,
+  shreddit-async-loader > faceplate-batch,
+  shreddit-feed > faceplate-batch > div,
+  main > div > faceplate-batch > div,
+  shreddit-async-loader > faceplate-batch > div,
+  shreddit-feed:not(:has(> faceplate-batch)),
+  main > div:not(:has(> faceplate-batch)),
+  shreddit-async-loader:not(:has(> faceplate-batch))
+) > :is(
   shreddit-post, article, faceplate-tracker:has(shreddit-post), faceplate-tracker:has(article)
 ) {
   grid-column: span 1 !important;
@@ -151,39 +180,23 @@ body:not([data-reddit-grid-cols="1"]):is(.rg-page-home, .rg-page-community) shre
 }
 
 
-/* 2. PROFILE PAGES (/user/name/) - Overview, Posts, Comments */
-body:not([data-reddit-grid-cols="1"]).rg-page-profile main > div {
-  display: grid !important;
-  grid-template-columns: repeat(var(--reddit-cols, 3), minmax(0, 1fr)) !important;
-  grid-auto-rows: 5px !important;
-  grid-auto-flow: row dense !important;
-  column-gap: var(--reddit-col-gap, 8px) !important;
-  row-gap: 0 !important;
-  align-items: start !important;
-  width: 100% !important;
-  contain: layout style !important;
-}
-body:not([data-reddit-grid-cols="1"]).rg-page-profile main > div > * {
-  grid-column: 1 / -1 !important;
-  width: 100% !important;
-}
-body:not([data-reddit-grid-cols="1"]).rg-page-profile main > div > :is(
-  shreddit-post, article, faceplate-tracker:has(shreddit-post), faceplate-tracker:has(article)
-) {
-  grid-column: span 1 !important;
-  width: auto !important;
-}
-
-
-/* 3. SAVED PAGE (/user/name/saved) */
-body:not([data-reddit-grid-cols="1"]).rg-page-saved shreddit-profile-feed faceplate-batch {
+/* 2. PROFILE & SAVED PAGES (/user/name/*) */
+/* Flex containers (batches wrappers) */
+body:not([data-reddit-grid-cols="1"]):is(.rg-page-profile, .rg-page-saved) :is(shreddit-profile-feed, profile-feed, main > div, shreddit-async-loader):has(> faceplate-batch) {
   display: flex !important;
   flex-direction: column !important;
   gap: var(--reddit-batch-gap, 16px) !important;
   width: 100% !important;
 }
-/* The div inside the batch is our actual grid container */
-body:not([data-reddit-grid-cols="1"]).rg-page-saved shreddit-profile-feed faceplate-batch > div {
+/* The Grid Containers */
+body:not([data-reddit-grid-cols="1"]):is(.rg-page-profile, .rg-page-saved) :is(
+  shreddit-profile-feed faceplate-batch > div,
+  profile-feed faceplate-batch > div,
+  main > div > faceplate-batch > div,
+  shreddit-async-loader faceplate-batch > div,
+  main > div:not(:has(> faceplate-batch)),
+  shreddit-async-loader:not(:has(> faceplate-batch))
+) {
   display: grid !important;
   grid-template-columns: repeat(var(--reddit-cols, 3), minmax(0, 1fr)) !important;
   grid-auto-rows: 5px !important;
@@ -194,11 +207,27 @@ body:not([data-reddit-grid-cols="1"]).rg-page-saved shreddit-profile-feed facepl
   width: 100% !important;
   contain: layout style !important;
 }
-body:not([data-reddit-grid-cols="1"]).rg-page-saved shreddit-profile-feed faceplate-batch > div > * {
+/* Default all unknown elements to full width */
+body:not([data-reddit-grid-cols="1"]):is(.rg-page-profile, .rg-page-saved) :is(
+  shreddit-profile-feed faceplate-batch > div,
+  profile-feed faceplate-batch > div,
+  main > div > faceplate-batch > div,
+  shreddit-async-loader faceplate-batch > div,
+  main > div:not(:has(> faceplate-batch)),
+  shreddit-async-loader:not(:has(> faceplate-batch))
+) > * {
   grid-column: 1 / -1 !important;
   width: 100% !important;
 }
-body:not([data-reddit-grid-cols="1"]).rg-page-saved shreddit-profile-feed faceplate-batch > div > :is(
+/* Extract trackers/posts into the column flow */
+body:not([data-reddit-grid-cols="1"]):is(.rg-page-profile, .rg-page-saved) :is(
+  shreddit-profile-feed faceplate-batch > div,
+  profile-feed faceplate-batch > div,
+  main > div > faceplate-batch > div,
+  shreddit-async-loader faceplate-batch > div,
+  main > div:not(:has(> faceplate-batch)),
+  shreddit-async-loader:not(:has(> faceplate-batch))
+) > :is(
   shreddit-post, article, faceplate-tracker:has(shreddit-post), faceplate-tracker:has(article)
 ) {
   grid-column: span 1 !important;
@@ -206,7 +235,7 @@ body:not([data-reddit-grid-cols="1"]).rg-page-saved shreddit-profile-feed facepl
 }
 
 
-/* 4. SEARCH PAGES (/search) */
+/* 3. SEARCH PAGES (/search) */
 body:not([data-reddit-grid-cols="1"]).rg-page-search [data-testid="post-list"] {
   display: grid !important;
   grid-template-columns: repeat(var(--reddit-cols, 3), minmax(0, 1fr)) !important;
