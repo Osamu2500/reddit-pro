@@ -1,0 +1,214 @@
+/*
+  Reddit Pro — animations.css  v4
+  ═══════════════════════════════════════════════════════════════════════════
+  ALL KEYFRAMES, TRANSITIONS, AND MICRO-ANIMATIONS
+
+  v4 changes:
+  ─ rg-reveal: card entrance (fires after masonry sets first span)
+  ─ rg-btn-pop: three-dots button entrance bounce
+  ─ rg-pill-pop: action bar pill buttons entrance (staggered via nth-child)
+  ─ Hover uses full --rg-shadow-hover token (matches theme.css clay system)
+  ─ Stable cards: no re-animation guard
+  ─ Reduced motion: all animations disabled via prefers-reduced-motion
+*/
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   KEYFRAMES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Card reveal — fired when [data-rg-loading] is removed by masonry.js */
+@keyframes rg-reveal {
+  0% {
+    opacity:   0;
+    transform: translateY(10px) scale(0.985);
+    filter:    blur(2px);
+  }
+  60% {
+    filter:    blur(0);
+  }
+  100% {
+    opacity:   1;
+    transform: translateY(0) scale(1);
+    filter:    blur(0);
+  }
+}
+
+/* Three-dots button pop-in — fires 0.15s after card reveal */
+@keyframes rg-btn-pop {
+  0%   { opacity: 0;    transform: scale(0.55) translateY(5px); }
+  55%  { opacity: 1;    transform: scale(1.12) translateY(-2px); }
+  75%  { transform: scale(0.95) translateY(0); }
+  100% { opacity: 0.78; transform: scale(1)   translateY(0); }
+}
+
+/* Action bar pill pop-in — sequential with tiny delays */
+@keyframes rg-pill-pop {
+  0%   { opacity: 0;  transform: translateY(6px) scale(0.88); }
+  65%  { opacity: 1;  transform: translateY(-1px) scale(1.04); }
+  85%  { transform: translateY(0) scale(0.98); }
+  100% { opacity: 1;  transform: translateY(0) scale(1); }
+}
+
+/* Hover shimmer sweep across the card */
+@keyframes rg-shimmer-sweep {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE CARD TRANSITION SET
+   Only animatable properties that change on user interaction.
+   grid-row-end is intentionally excluded — animating it causes layout
+   thrashing during masonry recalculation.
+   ═══════════════════════════════════════════════════════════════════════════ */
+body:not([data-reddit-grid-cols="1"]) shreddit-post,
+body:not([data-reddit-grid-cols="1"]) .Post {
+  transition:
+    border-color     0.20s ease,
+    border-top-color 0.20s ease,
+    box-shadow       0.22s ease,
+    transform        0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    background       0.20s ease,
+    opacity          0.24s ease,
+    filter           0.24s ease !important;
+  will-change: transform, opacity !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CARD ENTRANCE — post masonry reveal
+   Card starts at opacity:0 via layout.css [data-rg-loading].
+   JS removes that attribute once masonry sets the first grid-row-end span.
+   Then this animation fires — card appears in its correct grid position.
+   ═══════════════════════════════════════════════════════════════════════════ */
+body:not([data-reddit-grid-cols="1"]) shreddit-post:not([data-rg-loading]),
+body:not([data-reddit-grid-cols="1"]) .Post:not([data-rg-loading]) {
+  animation: rg-reveal 0.32s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+}
+
+/* Stable cards: no re-animation on masonry recalculation */
+body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable],
+body:not([data-reddit-grid-cols="1"]) .Post[data-rg-stable] {
+  animation: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CARD HOVER — full clay shadow lift + border brightening
+   ═══════════════════════════════════════════════════════════════════════════ */
+body:not([data-reddit-grid-cols="1"]) shreddit-post:hover,
+body:not([data-reddit-grid-cols="1"]) .Post:hover {
+  background: linear-gradient(
+    158deg,
+    var(--rg-glass-top)  0%,
+    var(--rg-glass-mid) 45%,
+    var(--rg-glass-bot) 100%
+  ) !important;
+  border-top-color:    var(--rg-b-top)   !important;
+  border-left-color:   var(--rg-b-left)  !important;
+  box-shadow:          var(--rg-shadow-hover) !important;
+  transform:           translateY(-3px) scale(1.005) !important;
+  z-index:             4 !important;
+  pointer-events:      auto !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   THREE-DOTS BUTTON ENTRANCE
+   Pops in with overshoot bounce, 150ms after the card reveal animation.
+   Stops animating once the card is [data-rg-stable].
+   ═══════════════════════════════════════════════════════════════════════════ */
+body:not([data-reddit-grid-cols="1"]) shreddit-post:not([data-rg-loading]) shreddit-overflow-menu button,
+body:not([data-reddit-grid-cols="1"]) shreddit-post:not([data-rg-loading]) button[aria-label*="more" i],
+body:not([data-reddit-grid-cols="1"]) shreddit-post:not([data-rg-loading]) button[aria-haspopup="menu"] {
+  animation: rg-btn-pop 0.44s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both !important;
+}
+
+body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable] shreddit-overflow-menu button,
+body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable] button[aria-label*="more" i],
+body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable] button[aria-haspopup="menu"] {
+  animation: none    !important;
+  opacity:   0.78    !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACTION BAR PILL ENTRANCES — staggered by position
+   ═══════════════════════════════════════════════════════════════════════════ */
+body:not([data-reddit-grid-cols="1"]) shreddit-post:not([data-rg-loading]) shreddit-vote-buttons,
+body:not([data-reddit-grid-cols="1"]) shreddit-post:not([data-rg-loading]) vote-buttons,
+body:not([data-reddit-grid-cols="1"]) shreddit-post:not([data-rg-loading]) [data-post-click-location="vote"] {
+  animation: rg-pill-pop 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.18s both !important;
+}
+
+body:not([data-reddit-grid-cols="1"]) shreddit-post:not([data-rg-loading]) [data-post-click-location="comments"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post:not([data-rg-loading]) shreddit-comment-button {
+  animation: rg-pill-pop 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.24s both !important;
+}
+
+body:not([data-reddit-grid-cols="1"]) shreddit-post:not([data-rg-loading]) [data-post-click-location="share"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post:not([data-rg-loading]) shreddit-share-button {
+  animation: rg-pill-pop 0.35s cubic-bezier(0.16, 1, 0.3, 1) 0.30s both !important;
+}
+
+/* Stop pill animations on stable cards */
+body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable] shreddit-vote-buttons,
+body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable] [data-post-click-location="vote"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable] [data-post-click-location="comments"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable] [data-post-click-location="share"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable] shreddit-comment-button,
+body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable] shreddit-share-button {
+  animation: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PILL BUTTON TRANSITIONS
+   Shared transition for vote, comment, share buttons.
+   ═══════════════════════════════════════════════════════════════════════════ */
+body:not([data-reddit-grid-cols="1"]) shreddit-post shreddit-vote-buttons,
+body:not([data-reddit-grid-cols="1"]) shreddit-post vote-buttons,
+body:not([data-reddit-grid-cols="1"]) shreddit-post [data-post-click-location="vote"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post [data-post-click-location="comments"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post [data-post-click-location="share"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post shreddit-comment-button,
+body:not([data-reddit-grid-cols="1"]) shreddit-post shreddit-share-button {
+  transition:
+    transform  0.16s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.16s ease,
+    background 0.16s ease,
+    color      0.14s ease !important;
+  will-change: transform !important;
+}
+
+/* Three-dots button transition */
+body:not([data-reddit-grid-cols="1"]) shreddit-post shreddit-overflow-menu button,
+body:not([data-reddit-grid-cols="1"]) shreddit-post button[aria-label*="more" i],
+body:not([data-reddit-grid-cols="1"]) shreddit-post button[aria-haspopup="menu"] {
+  transition:
+    transform    0.16s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow   0.16s ease,
+    background   0.16s ease,
+    border-color 0.16s ease,
+    opacity      0.16s ease !important;
+  will-change: transform, opacity !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   REDUCED MOTION — respect the user's OS preference
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  body:not([data-reddit-grid-cols="1"]) shreddit-post,
+  body:not([data-reddit-grid-cols="1"]) .Post,
+  body:not([data-reddit-grid-cols="1"]) shreddit-post:not([data-rg-loading]),
+  body:not([data-reddit-grid-cols="1"]) .Post:not([data-rg-loading]) {
+    animation:  none !important;
+    transition: opacity 0.12s ease !important;
+  }
+
+  body:not([data-reddit-grid-cols="1"]) shreddit-post shreddit-overflow-menu button,
+  body:not([data-reddit-grid-cols="1"]) shreddit-post button[aria-label*="more" i],
+  body:not([data-reddit-grid-cols="1"]) shreddit-post button[aria-haspopup="menu"],
+  body:not([data-reddit-grid-cols="1"]) shreddit-post shreddit-vote-buttons,
+  body:not([data-reddit-grid-cols="1"]) shreddit-post [data-post-click-location="vote"],
+  body:not([data-reddit-grid-cols="1"]) shreddit-post [data-post-click-location="comments"],
+  body:not([data-reddit-grid-cols="1"]) shreddit-post [data-post-click-location="share"] {
+    animation:  none !important;
+    transition: none !important;
+  }
+}

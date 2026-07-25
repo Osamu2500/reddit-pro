@@ -24,8 +24,21 @@
   "content_scripts": [
     {
       "matches": ["*://*.reddit.com/*"],
-      "css": ["content/grid.css"],
-      "js": ["content/content.js"],
+      "css": [
+        "content/styles/layout.css",
+        "content/styles/cards.css",
+        "content/styles/theme.css",
+        "content/styles/animations.css"
+      ],
+      "js": [
+        "content/core/settings.js",
+        "content/layout/css-vars.js",
+        "content/layout/masonry.js",
+        "content/features/filters.js",
+        "content/observers/dom-observer.js",
+        "content/observers/audio-observer.js",
+        "content/core/lifecycle.js"
+      ],
       "run_at": "document_start"
     }
   ]

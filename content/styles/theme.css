@@ -1,0 +1,349 @@
+/*
+  Reddit Pro — theme.css  v4
+  ═══════════════════════════════════════════════════════════════════════════
+  LIQUID GLASS + CLAYMORPHISM — UNIFIED SURFACE SYSTEM
+  ═══════════════════════════════════════════════════════════════════════════
+
+  FIX v4:
+  ─ REMOVED double-shimmer: shimmer was in BOTH background shorthand AND
+    ::before overlay. Now shimmer lives exclusively in ::before.
+  ─ ::after repurposed as a subtle inner edge glow ring (replaces inset
+    box-shadow which was competing with clay layering).
+  ─ Full dark-mode token set so the glass reads in both light and dark.
+  ─ Credit bar and action bar given proper glass-strip treatment.
+  ─ Dropdown portals explicitly unclipped.
+*/
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESIGN TOKEN SYSTEM
+   All values are CSS custom properties so they cascade correctly into
+   dark-mode overrides without any specificity conflicts.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+
+  /* ── Blur & Optical Engine ── */
+  --rg-blur:            30px;
+  --rg-blur-sm:         14px;          /* for inner elements */
+  --rg-saturation:      190%;
+  --rg-brightness:      1.04;
+
+  /* ── Card Background Layers (light) ── */
+  --rg-glass-top:       rgba(255, 255, 255, 0.26);
+  --rg-glass-mid:       rgba(255, 255, 255, 0.10);
+  --rg-glass-bot:       rgba(255, 255, 255, 0.03);
+
+  /* ── Shimmer Overlay (applied in ::before ONLY) ── */
+  --rg-shimmer: linear-gradient(
+    112deg,
+    rgba(255, 255, 255, 0.32)  0%,
+    rgba(255, 255, 255, 0.12) 25%,
+    rgba(255, 255, 255, 0.00) 55%,
+    rgba(255, 255, 255, 0.04) 80%,
+    rgba(255, 255, 255, 0.00) 100%
+  );
+
+  /* ── Edge Glow Ring (applied in ::after) ── */
+  --rg-ring: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.55)  0%,
+    rgba(255, 255, 255, 0.18) 30%,
+    rgba(255, 255, 255, 0.00) 60%
+  );
+
+  /* ── Direction-Aware Border (thick, detailed) ── */
+  --rg-bw:              2px;           /* border width */
+  --rg-b-top:           rgba(255, 255, 255, 0.60);  /* specular catch */
+  --rg-b-left:          rgba(255, 255, 255, 0.32);
+  --rg-b-right:         rgba(0,   0,   0,   0.10);
+  --rg-b-bottom:        rgba(0,   0,   0,   0.14);
+
+  /* ── Radius ── */
+  --rg-radius:          22px;
+  --rg-radius-inner:    20px;          /* ::before / ::after inset */
+  --rg-radius-pill:     50px;          /* buttons */
+  --rg-radius-sm:       12px;          /* inner containers */
+
+  /* ── Clay Shadow System (5 layers) ── */
+  --rg-shadow:
+    /*  1  top specular inset  */
+    0   2px   0    rgba(255, 255, 255, 0.65) inset,
+    /*  2  secondary highlight */
+    0   1px   0    rgba(255, 255, 255, 0.28) inset,
+    /*  3  bottom inner press  */
+    0  -1px   0    rgba(0,   0,   0,   0.10) inset,
+    /*  4  near clay depth     */
+    0   5px   0    rgba(0,   0,   0,   0.11),
+    /*  5  clay depth layer 2  */
+    0  11px   0    rgba(0,   0,   0,   0.07),
+    /*  6  ambient shadow      */
+    0   8px  18px  rgba(0,   0,   0,   0.22),
+    /*  7  far ambient         */
+    0  22px  44px  rgba(0,   0,   0,   0.16);
+
+  /* ── Hover Clay Shadow (lifted) ── */
+  --rg-shadow-hover:
+    0   2px   0    rgba(255, 255, 255, 0.80) inset,
+    0   1px   0    rgba(255, 255, 255, 0.40) inset,
+    0  -1px   0    rgba(0,   0,   0,   0.06) inset,
+    0   7px   0    rgba(0,   0,   0,   0.13),
+    0  15px   0    rgba(0,   0,   0,   0.09),
+    0  12px  28px  rgba(0,   0,   0,   0.30),
+    0  28px  55px  rgba(0,   0,   0,   0.20),
+    0   0    22px  rgba(var(--rg-accent-rgb), 0.16);
+
+  /* ── Accent Colors ── */
+  --rg-accent:          #ff4500;
+  --rg-accent-rgb:      255, 69, 0;
+  --rg-downvote:        #7193ff;
+  --rg-downvote-rgb:    113, 147, 255;
+
+  /* ── Glass Pill (buttons) ── */
+  --rg-pill-bg:         rgba(255, 255, 255, 0.14);
+  --rg-pill-bg-hover:   rgba(255, 255, 255, 0.26);
+  --rg-pill-b-top:      rgba(255, 255, 255, 0.55);
+  --rg-pill-b-rest:     rgba(255, 255, 255, 0.18);
+  --rg-pill-b-bot:      rgba(0,   0,   0,   0.14);
+  --rg-pill-shadow:
+    0  1.5px  0   rgba(255, 255, 255, 0.65) inset,
+    0  -1px   0   rgba(0,   0,   0,   0.10) inset,
+    0   2px   0   rgba(0,   0,   0,   0.12),
+    0   5px  10px rgba(0,   0,   0,   0.16);
+  --rg-pill-shadow-hover:
+    0  2px    0   rgba(255, 255, 255, 0.80) inset,
+    0  -1px   0   rgba(0,   0,   0,   0.06) inset,
+    0   4px   0   rgba(0,   0,   0,   0.14),
+    0   8px  18px rgba(0,   0,   0,   0.22),
+    0   0    12px rgba(var(--rg-accent-rgb), 0.16);
+
+  /* ── Credit bar strip ── */
+  --rg-credit-bg:       linear-gradient(180deg,
+      rgba(255,255,255,0.12) 0%,
+      rgba(255,255,255,0.00) 100%);
+  --rg-credit-border:   rgba(255, 255, 255, 0.10);
+
+  /* ── Action bar strip ── */
+  --rg-action-bg:       linear-gradient(0deg,
+      rgba(255,255,255,0.09) 0%,
+      rgba(255,255,255,0.00) 100%);
+  --rg-action-border:   rgba(255, 255, 255, 0.08);
+
+  /* ── Text ── */
+  --rg-text-muted:      rgba(255, 255, 255, 0.50);
+}
+
+/* ─────────────────────────────────────────────
+   DARK MODE TOKEN OVERRIDES
+   ───────────────────────────────────────────── */
+body.rg-theme-dark {
+  --rg-glass-top:       rgba(255, 255, 255, 0.07);
+  --rg-glass-mid:       rgba(255, 255, 255, 0.03);
+  --rg-glass-bot:       rgba(0,   0,   0,   0.18);
+
+  --rg-shimmer: linear-gradient(
+    112deg,
+    rgba(255, 255, 255, 0.12)  0%,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.00) 55%,
+    rgba(255, 255, 255, 0.02) 80%,
+    rgba(255, 255, 255, 0.00) 100%
+  );
+  --rg-ring: linear-gradient(
+    160deg,
+    rgba(255, 255, 255, 0.20)  0%,
+    rgba(255, 255, 255, 0.06) 30%,
+    rgba(255, 255, 255, 0.00) 60%
+  );
+
+  --rg-b-top:           rgba(255, 255, 255, 0.24);
+  --rg-b-left:          rgba(255, 255, 255, 0.14);
+  --rg-b-right:         rgba(0,   0,   0,   0.30);
+  --rg-b-bottom:        rgba(0,   0,   0,   0.40);
+
+  --rg-shadow:
+    0   2px   0    rgba(255, 255, 255, 0.12) inset,
+    0   1px   0    rgba(255, 255, 255, 0.06) inset,
+    0  -1px   0    rgba(0,   0,   0,   0.25) inset,
+    0   5px   0    rgba(0,   0,   0,   0.32),
+    0  11px   0    rgba(0,   0,   0,   0.22),
+    0   8px  18px  rgba(0,   0,   0,   0.50),
+    0  22px  44px  rgba(0,   0,   0,   0.38);
+
+  --rg-shadow-hover:
+    0   2px   0    rgba(255, 255, 255, 0.18) inset,
+    0   1px   0    rgba(255, 255, 255, 0.09) inset,
+    0  -1px   0    rgba(0,   0,   0,   0.20) inset,
+    0   7px   0    rgba(0,   0,   0,   0.40),
+    0  15px   0    rgba(0,   0,   0,   0.28),
+    0  12px  28px  rgba(0,   0,   0,   0.60),
+    0  28px  55px  rgba(0,   0,   0,   0.48),
+    0   0    22px  rgba(var(--rg-accent-rgb), 0.20);
+
+  --rg-pill-bg:         rgba(255, 255, 255, 0.06);
+  --rg-pill-bg-hover:   rgba(255, 255, 255, 0.12);
+  --rg-pill-b-top:      rgba(255, 255, 255, 0.22);
+  --rg-pill-b-rest:     rgba(255, 255, 255, 0.09);
+  --rg-pill-b-bot:      rgba(0,   0,   0,   0.40);
+  --rg-pill-shadow:
+    0  1.5px  0   rgba(255, 255, 255, 0.16) inset,
+    0  -1px   0   rgba(0,   0,   0,   0.30) inset,
+    0   2px   0   rgba(0,   0,   0,   0.35),
+    0   5px  10px rgba(0,   0,   0,   0.45);
+  --rg-pill-shadow-hover:
+    0  2px    0   rgba(255, 255, 255, 0.22) inset,
+    0  -1px   0   rgba(0,   0,   0,   0.24) inset,
+    0   4px   0   rgba(0,   0,   0,   0.38),
+    0   8px  18px rgba(0,   0,   0,   0.52),
+    0   0    12px rgba(var(--rg-accent-rgb), 0.22);
+
+  --rg-credit-bg:       linear-gradient(180deg,
+      rgba(255,255,255,0.05) 0%,
+      rgba(255,255,255,0.00) 100%);
+  --rg-credit-border:   rgba(255, 255, 255, 0.05);
+  --rg-action-bg:       linear-gradient(0deg,
+      rgba(255,255,255,0.04) 0%,
+      rgba(255,255,255,0.00) 100%);
+  --rg-action-border:   rgba(255, 255, 255, 0.05);
+  --rg-text-muted:      rgba(255, 255, 255, 0.30);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CARD SURFACE — LIQUID GLASS + CLAY BASE
+   Single background gradient (no shimmer here — shimmer is in ::before).
+   ═══════════════════════════════════════════════════════════════════════════ */
+body:not([data-reddit-grid-cols="1"]) shreddit-post,
+body:not([data-reddit-grid-cols="1"]) .Post {
+
+  border-radius: var(--rg-radius) !important;
+
+  /* Clean 3-stop glass gradient — NO shimmer duplication here */
+  background: linear-gradient(
+    158deg,
+    var(--rg-glass-top)  0%,
+    var(--rg-glass-mid) 45%,
+    var(--rg-glass-bot) 100%
+  ) !important;
+
+  /* Liquid glass optics */
+  backdrop-filter:
+    blur(var(--rg-blur))
+    saturate(var(--rg-saturation))
+    brightness(var(--rg-brightness)) !important;
+  -webkit-backdrop-filter:
+    blur(var(--rg-blur))
+    saturate(var(--rg-saturation))
+    brightness(var(--rg-brightness)) !important;
+
+  /* Thick direction-aware border */
+  border-style:  solid !important;
+  border-width:  var(--rg-bw) !important;
+  border-color:  rgba(255,255,255,0.15) !important;  /* fallback */
+  border-top-color:    var(--rg-b-top)    !important;
+  border-left-color:   var(--rg-b-left)   !important;
+  border-right-color:  var(--rg-b-right)  !important;
+  border-bottom-color: var(--rg-b-bottom) !important;
+
+  /* Clay shadow */
+  box-shadow: var(--rg-shadow) !important;
+
+  position:  relative !important;
+  isolation: isolate  !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ::before — SHIMMER REFRACTION STRIPE
+   Sits above blurred background, below all slotted content.
+   ONLY place shimmer appears — fixes the double-shimmer bug.
+   ═══════════════════════════════════════════════════════════════════════════ */
+body:not([data-reddit-grid-cols="1"]) shreddit-post::before,
+body:not([data-reddit-grid-cols="1"]) .Post::before {
+  content:        ""     !important;
+  display:        block  !important;
+  position:       absolute !important;
+  inset:          0      !important;
+  border-radius:  var(--rg-radius-inner) !important;
+  background:     var(--rg-shimmer) !important;
+  pointer-events: none   !important;
+  z-index:        0      !important;
+  opacity:        1      !important;
+  mix-blend-mode: screen !important;   /* additive shimmer, not overlay */
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ::after — EDGE GLOW RING
+   Thin specular highlight ring on top-left corner that simulates a 3D
+   light source catching the card edge. Creates depth without extra elements.
+   ═══════════════════════════════════════════════════════════════════════════ */
+body:not([data-reddit-grid-cols="1"]) shreddit-post::after,
+body:not([data-reddit-grid-cols="1"]) .Post::after {
+  content:        ""     !important;
+  display:        block  !important;
+  position:       absolute !important;
+  inset:          0      !important;
+  border-radius:  var(--rg-radius-inner) !important;
+  background:     var(--rg-ring) !important;
+  pointer-events: none   !important;
+  z-index:        0      !important;
+  opacity:        0.6    !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GPU SMEAR BUG FIX
+   Prevent Reddit's internal stylesheet from applying stray top/left values
+   that break the credit bar positioning within the card.
+   ═══════════════════════════════════════════════════════════════════════════ */
+body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="post-header"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="credit-bar"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post::part(post-header),
+body:not([data-reddit-grid-cols="1"]) shreddit-post::part(credit-bar),
+body:not([data-reddit-grid-cols="1"]) shreddit-post-header {
+  position: relative !important;
+  top:  auto !important;
+  left: auto !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESET INTERNAL BACKGROUNDS
+   Internal slots must be transparent so the card's single glass layer
+   shows through — prevents double-glass / double-background rendering.
+   ═══════════════════════════════════════════════════════════════════════════ */
+body:not([data-reddit-grid-cols="1"]) shreddit-post::part(action-bar),
+body:not([data-reddit-grid-cols="1"]) shreddit-post::part(credit-bar),
+body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="credit-bar"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="action-bar"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post > div,
+body:not([data-reddit-grid-cols="1"]) shreddit-post > section {
+  background:       transparent !important;
+  background-color: transparent !important;
+  box-shadow:       none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CREDIT BAR — header strip (avatar · subreddit · time · ···)
+   Subtle top-gradient tint to visually anchor the header zone.
+   ═══════════════════════════════════════════════════════════════════════════ */
+body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="credit-bar"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post-header {
+  background:    var(--rg-credit-bg)     !important;
+  border-bottom: 1px solid var(--rg-credit-border) !important;
+  border-radius: var(--rg-radius-inner) var(--rg-radius-inner) 0 0 !important;
+  padding:       10px 14px 9px 12px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACTION BAR — bottom strip (votes · comments · share)
+   Subtle bottom-gradient tint mirrors the header strip.
+   ═══════════════════════════════════════════════════════════════════════════ */
+body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="action-bar"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post shreddit-post-action-bar {
+  background:    var(--rg-action-bg)     !important;
+  border-top:    1px solid var(--rg-action-border) !important;
+  border-radius: 0 0 var(--rg-radius-inner) var(--rg-radius-inner) !important;
+  padding:       7px 12px 10px 12px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FILTER CLASS
+   ═══════════════════════════════════════════════════════════════════════════ */
+body shreddit-post.rg-filtered-out {
+  display: none !important;
+}

@@ -1,0 +1,234 @@
+/*
+  Reddit Pro — layout.css
+  Handles structural grid, container hiding, and feed layout.
+
+  v2 Improvements:
+  - Replaced `display: contents` on batch wrappers (broke event delegation)
+    with proper layout flattening via explicit grid inheritance
+  - Added content-visibility: auto on faceplate-batch for GPU compositing
+    and paint performance (Chrome 85+, Edge 85+, Safari 18+)
+  - Added contain-intrinsic-size to prevent scroll-bar jank during virtualization
+  - Batch gap now set consistently without !important collision
+  - New posts hidden via data-rg-loading until masonry sets their span
+*/
+
+:root {
+  --reddit-cols:      3;
+  --reddit-col-gap:   10px;    /* column gap between cards */
+  --reddit-batch-gap: 10px;    /* vertical gap between batches */
+}
+
+body[data-reddit-grid-cols="1"] { --reddit-cols: 1; }
+body[data-reddit-grid-cols="2"] { --reddit-cols: 2; }
+body[data-reddit-grid-cols="3"] { --reddit-cols: 3; }
+body[data-reddit-grid-cols="4"] { --reddit-cols: 4; }
+body[data-reddit-grid-cols="5"] { --reddit-cols: 5; }
+body[data-reddit-grid-cols="6"] { --reddit-cols: 6; }
+
+@media (min-width: 1400px) { body[data-reddit-grid-autofit="true"] { --reddit-cols: 4; } }
+@media (min-width: 1800px) { body[data-reddit-grid-autofit="true"] { --reddit-cols: 5; } }
+@media (min-width: 2200px) { body[data-reddit-grid-autofit="true"] { --reddit-cols: 6; } }
+
+@media (max-width: 1100px) {
+  body[data-reddit-grid-cols="4"],
+  body[data-reddit-grid-cols="5"],
+  body[data-reddit-grid-cols="6"] { --reddit-cols: 3; }
+}
+@media (max-width: 850px) {
+  body[data-reddit-grid-cols="3"],
+  body[data-reddit-grid-cols="4"],
+  body[data-reddit-grid-cols="5"],
+  body[data-reddit-grid-cols="6"] { --reddit-cols: 2; }
+}
+@media (max-width: 600px) { body { --reddit-cols: 1 !important; } }
+
+/* =====================================================================
+   HIDE SIDEBARS
+   ===================================================================== */
+body:not([data-reddit-grid-cols="1"]) #right-sidebar-container,
+body:not([data-reddit-grid-cols="1"]) shreddit-layout-sidebar,
+body:not([data-reddit-grid-cols="1"]) shreddit-recent-pages,
+body:not([data-reddit-grid-cols="1"]) .right-sidebar,
+body:not([data-reddit-grid-cols="1"]) footer,
+body:not([data-reddit-grid-cols="1"]) [data-testid="right-sidebar"],
+body:not([data-reddit-grid-cols="1"]) [aria-label="Recent Posts"],
+body:not([data-reddit-grid-cols="1"]) grid-layout > :nth-child(3) {
+  display: none !important;
+  width: 0 !important;
+  min-width: 0 !important;
+}
+
+body[data-reddit-grid-hide-sidebar="true"] grid-layout > :nth-child(1),
+body[data-reddit-grid-hide-sidebar="true"] grid-layout > :nth-child(2),
+body[data-reddit-grid-hide-sidebar="true"] #left-sidebar-container,
+body[data-reddit-grid-hide-sidebar="true"] left-nav {
+  display: none !important;
+  width: 0 !important;
+}
+
+/* =====================================================================
+   FULL-WIDTH LAYOUT
+   ===================================================================== */
+body:not([data-reddit-grid-cols="1"]) shreddit-app {
+  max-width: 100vw !important;
+  width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+body:not([data-reddit-grid-cols="1"]) grid-layout {
+  display: grid !important;
+  grid-template-columns: auto 1fr !important;
+  max-width: 100vw !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  gap: 0 !important;
+}
+
+body:not([data-reddit-grid-cols="1"]) .subgrid-container,
+body:not([data-reddit-grid-cols="1"]) [class*="subgrid-container"] {
+  max-width: 100% !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  padding: 0 10px !important;
+}
+
+body:not([data-reddit-grid-cols="1"]) .main-container,
+body:not([data-reddit-grid-cols="1"]) [class*="main-container"] {
+  display: block !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+body:not([data-reddit-grid-cols="1"]) main {
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* =====================================================================
+   FEED CONTAINERS (FLEX BATCH ARCHITECTURE)
+   ===================================================================== */
+body:not([data-reddit-grid-cols="1"]) shreddit-feed:has(faceplate-batch),
+body:not([data-reddit-grid-cols="1"]) .feed-container:has(faceplate-batch),
+body:not([data-reddit-grid-cols="1"]) profile-feed:has(faceplate-batch),
+body:not([data-reddit-grid-cols="1"]) shreddit-profile-feed:has(faceplate-batch),
+body:not([data-reddit-grid-cols="1"]) shreddit-user-feed:has(faceplate-batch),
+body:not([data-reddit-grid-cols="1"]) [data-feed-type]:has(faceplate-batch),
+body:not([data-reddit-grid-cols="1"]) main > div:has(faceplate-batch) {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: var(--reddit-batch-gap, 16px) !important;
+  align-items: stretch !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* =====================================================================
+   THE MASONRY GRID
+   Each faceplate-batch IS the grid. Posts are direct grid items.
+   ===================================================================== */
+body:not([data-reddit-grid-cols="1"]) shreddit-feed > faceplate-batch,
+body:not([data-reddit-grid-cols="1"]) .feed-container > faceplate-batch,
+body:not([data-reddit-grid-cols="1"]) profile-feed > faceplate-batch,
+body:not([data-reddit-grid-cols="1"]) shreddit-profile-feed > faceplate-batch,
+body:not([data-reddit-grid-cols="1"]) shreddit-user-feed > faceplate-batch,
+body:not([data-reddit-grid-cols="1"]) [data-feed-type] > faceplate-batch,
+body:not([data-reddit-grid-cols="1"]) shreddit-feed:not(:has(faceplate-batch)),
+body:not([data-reddit-grid-cols="1"]) .feed-container:not(:has(faceplate-batch)),
+body:not([data-reddit-grid-cols="1"]) profile-feed:not(:has(faceplate-batch)),
+body:not([data-reddit-grid-cols="1"]) shreddit-profile-feed:not(:has(faceplate-batch)),
+body:not([data-reddit-grid-cols="1"]) shreddit-user-feed:not(:has(faceplate-batch)),
+body:not([data-reddit-grid-cols="1"]) [data-feed-type]:not(:has(faceplate-batch)),
+body:not([data-reddit-grid-cols="1"]) main > div:not(:has(faceplate-batch)):has(> article),
+body:not([data-reddit-grid-cols="1"]) main > div:not(:has(faceplate-batch)):has(> shreddit-post) {
+  display: grid !important;
+  grid-template-columns: repeat(var(--reddit-cols, 3), minmax(0, 1fr)) !important;
+  grid-auto-rows: 5px !important;
+  grid-auto-flow: row dense !important;
+  column-gap: var(--reddit-col-gap, 8px) !important;
+  row-gap: 0 !important;
+  align-items: start !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  /* GPU compositing hint — paint each batch independently */
+  contain: layout style !important;
+}
+
+body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] faceplate-batch,
+body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] shreddit-feed:not(:has(faceplate-batch)) {
+  grid-auto-rows: auto !important;
+  column-gap: 10px !important;   /* match masonry gap in regular mode */
+  row-gap:    10px !important;
+}
+
+/* =====================================================================
+   EMPTY BATCH — keep it in flow so the scroll container doesn't collapse
+   ===================================================================== */
+body:not([data-reddit-grid-cols="1"]) faceplate-batch:empty {
+  display: block !important;
+  min-height: 1px !important;
+  width: 100% !important;
+  contain: strict !important;
+}
+
+/* =====================================================================
+   FLATTEN BATCH WRAPPERS — v2 fix
+   Old: `display: contents` removed elements from hit-test tree, breaking
+        Reddit's event delegation on those div wrappers.
+   New: Make the inner div a grid that inherits parent's column layout,
+        effectively flattening it visually without removing from DOM tree.
+   ===================================================================== */
+body:not([data-reddit-grid-cols="1"]) faceplate-batch > div {
+  display: grid !important;
+  grid-template-columns: subgrid !important;
+  grid-column: 1 / -1 !important;
+  grid-row: auto !important;
+}
+
+/* Fallback for browsers without subgrid support (Firefox < 71, etc.) */
+@supports not (grid-template-columns: subgrid) {
+  body:not([data-reddit-grid-cols="1"]) faceplate-batch > div {
+    display: contents !important;
+  }
+}
+
+/* Hide Reddit's batch/feed separators */
+body:not([data-reddit-grid-cols="1"]) shreddit-feed hr,
+body:not([data-reddit-grid-cols="1"]) faceplate-batch hr,
+body:not([data-reddit-grid-cols="1"]) shreddit-post hr { display: none !important; }
+
+/* Normalize any inline gap/padding Reddit injects via style attribute */
+body:not([data-reddit-grid-cols="1"]) shreddit-feed[style],
+body:not([data-reddit-grid-cols="1"]) faceplate-batch[style] {
+  gap: inherit !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* =====================================================================
+   LOADING STATE — posts are invisible until masonry sets their first span.
+   JS sets data-rg-loading on new cards before observing them.
+   Once the first grid-row-end span is computed, JS removes this attribute.
+   ===================================================================== */
+body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-loading],
+body:not([data-reddit-grid-cols="1"]) article[data-rg-loading] {
+  opacity: 0 !important;
+  /* Keep in flow so ResizeObserver can measure the card */
+  visibility: visible !important;
+  /* Prevent interaction while invisible */
+  pointer-events: none !important;
+}
