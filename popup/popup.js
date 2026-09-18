@@ -7,8 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     compactCards: document.getElementById('compactCards'),
     hidePromoted: document.getElementById('hidePromoted'),
     hideSidebar: document.getElementById('hideSidebar'),
-    hideScrollbar: document.getElementById('hideScrollbar'),
-    themeSelect: document.getElementById('themeSelect')
+    hideScrollbar: document.getElementById('hideScrollbar')
   };
 
   // Default settings — autoFit MUST be false so manual column picks are respected
@@ -20,8 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     compactCards: false,
     hidePromoted: true,
     hideSidebar: false,
-    hideScrollbar: true,
-    theme: 'default'
+    hideScrollbar: true
   };
 
   // Load saved settings and populate UI
@@ -41,11 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.hidePromoted.checked  = settings.hidePromoted;
     elements.hideSidebar.checked   = settings.hideSidebar;
     elements.hideScrollbar.checked = settings.hideScrollbar;
-
-    // Set theme select
-    if (elements.themeSelect && settings.theme) {
-      elements.themeSelect.value = settings.theme;
-    }
   });
 
   // Build current settings from UI state
@@ -58,8 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
       compactCards:  elements.compactCards.checked,
       hidePromoted:  elements.hidePromoted.checked,
       hideSidebar:   elements.hideSidebar.checked,
-      hideScrollbar: elements.hideScrollbar.checked,
-      theme:         elements.themeSelect ? elements.themeSelect.value : 'default'
+      hideScrollbar: elements.hideScrollbar.checked
     };
   };
 
@@ -89,7 +81,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 b.setAttribute('data-reddit-grid-compact',       s.compactCards);
                 b.setAttribute('data-reddit-grid-hide-promoted', s.hidePromoted);
                 b.setAttribute('data-reddit-grid-hide-sidebar',  s.hideSidebar);
-                b.setAttribute('data-reddit-pro-theme',          s.theme);
+
+                // 2. Inject forced CSS
+                let tag = document.getElementById('rg-force-styles');
+                if (!tag) {
+                  tag = document.createElement('style');
+                  tag.id = 'rg-force-styles';
+                  (document.head || document.documentElement).appendChild(tag);
+                }
+                if (s.columns !== '1') {
+                  tag.textContent = `
+                    shreddit-post, shreddit-feed article, shreddit-feed shreddit-post-placeholder, faceplate-batch > shreddit-post, faceplate-batch > article, .Post {
+                      margin: 0 !important; padding: 0 !important; flex-shrink: 0 !important; width: 100% !important; min-width: 0 !important; max-width: 100% !important; box-sizing: border-box !important;
+                    }
+                    shreddit-post, .Post {
+                      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%) !important; backdrop-filter: blur(24px) saturate(180%) !important; -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+                    }
+                    shreddit-feed, .feed-container { gap: 4px !important; padding: 0 !important; margin: 0 !important; }
+                    shreddit-feed > faceplate-batch, shreddit-feed > div, .feed-container > faceplate-batch, .feed-container > div { display: contents !important; margin: 0 !important; padding: 0 !important; }
+                    faceplate-batch { margin: 0 !important; padding: 0 !important; }
+                    .subgrid-container, [class*="subgrid-container"] { max-width: 100% !important; width: 100% !important; padding: 0 10px !important; margin: 0 !important; box-sizing: border-box !important; }
+                    .main-container, [class*="main-container"] { display: block !important; max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; box-sizing: border-box !important; }
+                  `;
+                } else {
+                  tag.textContent = '';
+                }
 
                 // 3. Strip margins immediately
                 if (s.columns !== '1') {
@@ -124,5 +140,4 @@ document.addEventListener('DOMContentLoaded', () => {
   elements.hidePromoted.addEventListener('change',  saveAndNotify);
   elements.hideSidebar.addEventListener('change',   saveAndNotify);
   elements.hideScrollbar.addEventListener('change', saveAndNotify);
-  if (elements.themeSelect) elements.themeSelect.addEventListener('change', saveAndNotify);
 });

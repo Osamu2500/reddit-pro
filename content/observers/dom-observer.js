@@ -65,11 +65,6 @@ window.RedditPro.DOMObserver = (function() {
         window.RedditPro.StatsInjector.queuePost(node);
       }
 
-      // Theater Mode
-      if (window.RedditPro.TheaterMode) {
-        window.RedditPro.TheaterMode.injectExpandButtons(node);
-      }
-
     } else if (BATCH_TAGS.has(tag)) {
       // New batch container added — schedule a sweep after a short settle time
       scheduleNewSweep();
@@ -105,14 +100,11 @@ window.RedditPro.DOMObserver = (function() {
 
   function scheduleNewSweep() {
     clearTimeout(sweepTimer);
-    // V7 Performance Tuning: Use requestIdleCallback for masonry sweeps
-    // so that heavy grid recalculations never block scrolling (micro-stutters)
+    // Tight debounce: 80ms to quickly detect batch end, then one rAF for paint sync
     sweepTimer = setTimeout(() => {
-      if ('requestIdleCallback' in window) {
-        requestIdleCallback(() => window.RedditPro.Masonry.sweepNew(), { timeout: 100 });
-      } else {
-        requestAnimationFrame(() => window.RedditPro.Masonry.sweepNew());
-      }
+      requestAnimationFrame(() => {
+        window.RedditPro.Masonry.sweepNew();
+      });
     }, 80);
   }
 

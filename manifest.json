@@ -30,8 +30,7 @@
         "content/styles/cards.css",
         "content/styles/animations.css",
         "content/styles/modal.css",
-        "content/styles/comments.css",
-        "content/styles/theater.css"
+        "content/styles/comments.css"
       ],
       "js": [
         "content/core/error-boundary.js",
@@ -42,8 +41,6 @@
         "content/features/filters.js",
         "content/features/stats-injector.js",
         "content/features/post-modal.js",
-        "content/features/smart-header.js",
-        "content/features/theater-mode.js",
         "content/observers/dom-observer.js",
         "content/observers/audio-observer.js",
         "content/core/lifecycle.js"

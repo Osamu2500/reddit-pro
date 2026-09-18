@@ -62,46 +62,12 @@ body:not([data-reddit-grid-cols="1"]) grid-layout > :nth-child(3) {
   min-width: 0 !important;
 }
 
-body[data-reddit-grid-hide-sidebar="true"] #left-sidebar-container {
-  position: fixed !important;
-  top: 56px !important; /* Below header */
-  left: 0 !important;
-  height: calc(100vh - 56px) !important;
-  z-index: 100 !important;
-  transform: translateX(-100%) !important;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  background: rgba(11, 20, 22, 0.8) !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 10px 0 30px rgba(0,0,0,0.5) !important;
-  width: 280px !important;
-}
-
-/* Invisible hover trigger zone */
-body[data-reddit-grid-hide-sidebar="true"]::before {
-  content: '';
-  position: fixed;
-  top: 56px;
-  left: 0;
-  width: 20px;
-  height: calc(100vh - 56px);
-  z-index: 99;
-}
-
-/* Slide in when hovering the trigger zone OR the sidebar itself */
-body[data-reddit-grid-hide-sidebar="true"]::before:hover + #left-sidebar-container,
-body[data-reddit-grid-hide-sidebar="true"] #left-sidebar-container:hover,
-body[data-reddit-grid-hide-sidebar="true"]:has(> #left-sidebar-container:hover) #left-sidebar-container,
-body[data-reddit-grid-hide-sidebar="true"] #left-sidebar-container:focus-within {
-  transform: translateX(0) !important;
-}
-
-/* Shift the main content container to take full width */
-body[data-reddit-grid-hide-sidebar="true"] .grid-container,
-body[data-reddit-grid-hide-sidebar="true"] main {
-  grid-column: 1 / -1 !important;
-  padding-left: 20px !important;
+body[data-reddit-grid-hide-sidebar="true"] grid-layout > :nth-child(1),
+body[data-reddit-grid-hide-sidebar="true"] grid-layout > :nth-child(2),
+body[data-reddit-grid-hide-sidebar="true"] #left-sidebar-container,
+body[data-reddit-grid-hide-sidebar="true"] left-nav {
+  display: none !important;
+  width: 0 !important;
 }
 
 /* =====================================================================
@@ -150,20 +116,6 @@ body:not([data-reddit-grid-cols="1"]) main {
   box-sizing: border-box !important;
   padding: 0 !important;
   margin: 0 !important;
-}
-
-body:not([data-reddit-grid-cols="1"]) shreddit-feed,
-body:not([data-reddit-grid-cols="1"]) .feed-container { 
-  gap: 4px !important; padding: 0 !important; margin: 0 !important; 
-}
-body:not([data-reddit-grid-cols="1"]) shreddit-feed > faceplate-batch,
-body:not([data-reddit-grid-cols="1"]) shreddit-feed > div,
-body:not([data-reddit-grid-cols="1"]) .feed-container > faceplate-batch,
-body:not([data-reddit-grid-cols="1"]) .feed-container > div { 
-  display: contents !important; margin: 0 !important; padding: 0 !important; 
-}
-body:not([data-reddit-grid-cols="1"]) faceplate-batch { 
-  margin: 0 !important; padding: 0 !important; 
 }
 
 /* =====================================================================

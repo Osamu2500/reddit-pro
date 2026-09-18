@@ -24,7 +24,7 @@
   --rg-brightness:      1.02;
 
   /* ── Card Background Layers (light) ── */
-  --rg-glass-base:      rgba(255, 255, 255, 0.40);
+  --rg-glass-base:      transparent;
   
   /* ── Flat Border ── */
   --rg-bw:              1px;           /* Crisp 1px line */
@@ -68,7 +68,7 @@
    DARK MODE TOKEN OVERRIDES
    ───────────────────────────────────────────── */
 body.rg-theme-dark {
-  --rg-glass-base:      rgba(30, 30, 30, 0.60);
+  --rg-glass-base:      transparent;
   
   --rg-border:          rgba(255, 255, 255, 0.08);
   --rg-border-inner:    rgba(255, 255, 255, 0.03);
@@ -85,12 +85,23 @@ body.rg-theme-dark {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   CARD SURFACE — NATIVE CLEAN
+   CARD SURFACE — NOTION MINIMAL GLASS
    ═══════════════════════════════════════════════════════════════════════════ */
 body:not([data-reddit-grid-cols="1"]) shreddit-post,
 body:not([data-reddit-grid-cols="1"]) .Post {
 
   border-radius: var(--rg-radius) !important;
+  background: var(--rg-glass-base) !important;
+
+  /* Glass optics */
+  -webkit-backdrop-filter:
+    blur(var(--rg-blur))
+    saturate(var(--rg-saturation))
+    brightness(var(--rg-brightness)) !important;
+  backdrop-filter:
+    blur(var(--rg-blur))
+    saturate(var(--rg-saturation))
+    brightness(var(--rg-brightness)) !important;
 
   /* Flat minimal border */
   border: var(--rg-bw) solid var(--rg-border) !important;
@@ -176,64 +187,8 @@ body:not([data-reddit-grid-cols="1"]) shreddit-post shreddit-post-action-bar {
   padding:       8px 14px 10px 14px !important;
 }
 
-/* Default Glassmorphic theme */
-body[data-reddit-pro-theme="default"] {
-  /* Inherit existing styles */
-}
-
-/* OLED Midnight Theme */
-body[data-reddit-pro-theme="oled"] {
-  --color-neutral-background: #000000 !important;
-  --color-neutral-background-hover: #080808 !important;
-  --color-neutral-border-weak: #111111 !important;
-  --color-neutral-background-strong: #0a0a0a !important;
-}
-
-body[data-reddit-pro-theme="oled"] shreddit-post,
-body[data-reddit-pro-theme="oled"] .rg-modal-content {
-  background: #000000 !important;
-  border: 1px solid #111111 !important;
-}
-
-/* Cyberpunk Neon Theme */
-body[data-reddit-pro-theme="cyberpunk"] {
-  --color-neutral-background: #09090b !important;
-  --color-neutral-background-hover: #121217 !important;
-  --color-neutral-border-weak: #ff0055 !important;
-  --color-action-upvote: #00ffff !important;
-  --color-action-downvote: #ff0055 !important;
-  --rg-font-heading: 'Space Mono', monospace !important;
-}
-
-body[data-reddit-pro-theme="cyberpunk"] shreddit-post {
-  background: rgba(9, 9, 11, 0.9) !important;
-  border: 1px solid rgba(255, 0, 85, 0.4) !important;
-  box-shadow: 0 0 15px rgba(0, 255, 255, 0.1) !important;
-}
-
-body[data-reddit-pro-theme="cyberpunk"] shreddit-post:hover {
-  border-color: #00ffff !important;
-  box-shadow: 0 0 20px rgba(0, 255, 255, 0.3) !important;
-}
-
-/* Nord Pastel Theme */
-body[data-reddit-pro-theme="nord"] {
-  --color-neutral-background: #2e3440 !important;
-  --color-neutral-background-hover: #3b4252 !important;
-  --color-neutral-border-weak: #4c566a !important;
-  --color-neutral-content: #eceff4 !important;
-  --color-neutral-content-weak: #d8dee9 !important;
-  --color-action-upvote: #88c0d0 !important;
-  --color-action-downvote: #bf616a !important;
-}
-
-body[data-reddit-pro-theme="nord"] shreddit-post {
-  background: #2e3440 !important;
-  border: 1px solid #3b4252 !important;
-}
-
 /* ═══════════════════════════════════════════════════════════════════════════
-   2. TYPOGRAPHY & INHERITANCE
+   FILTER CLASS
    ═══════════════════════════════════════════════════════════════════════════ */
 body shreddit-post.rg-filtered-out {
   display: none !important;
