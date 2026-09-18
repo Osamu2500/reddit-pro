@@ -32,7 +32,7 @@ window.RedditPro.Settings = (function() {
     autoPlayAudio: true,
     hideScrollbar: true,
     enableFilters: true,
-    theme: 'system'
+    theme: 'default'
   };
 
   /** @type {RedditProSettings} */

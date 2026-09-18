@@ -33,6 +33,7 @@ window.RedditPro.CSSVars = (function() {
     body.setAttribute('data-reddit-grid-compact', String(settings.compactCards));
     body.setAttribute('data-reddit-grid-hide-promoted', String(settings.hidePromoted));
     body.setAttribute('data-reddit-grid-hide-sidebar', String(settings.hideSidebar));
+    body.setAttribute('data-reddit-pro-theme', settings.theme);
     
     if (settings.theme === 'dark' || (settings.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       body.classList.add('rg-theme-dark');

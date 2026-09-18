@@ -1,0 +1,98 @@
+/* 
+  Reddit Pro - Comment Tree Focus Mode
+  Denser comments, color-coded indentation lines, and distraction-free reading.
+*/
+
+/* 1. Denser Comment Trees */
+shreddit-comment-tree, 
+comment-tree,
+shreddit-comment {
+  --comment-padding-y: 8px !important; /* Reddit default is huge */
+}
+
+shreddit-comment::part(comment-body) {
+  margin-top: 4px !important;
+  margin-bottom: 4px !important;
+}
+
+/* 2. Color-coded Indentation Lines */
+/* Level 1 */
+shreddit-comment[depth="1"]::part(thread-line) {
+  border-left-color: #ff4500 !important; /* Reddit Orange */
+  opacity: 0.5;
+}
+shreddit-comment[depth="1"]:hover::part(thread-line) {
+  opacity: 1;
+  border-left-width: 2px !important;
+}
+
+/* Level 2 */
+shreddit-comment[depth="2"]::part(thread-line) {
+  border-left-color: #ffb000 !important; /* Gold */
+  opacity: 0.4;
+}
+shreddit-comment[depth="2"]:hover::part(thread-line) {
+  opacity: 1;
+  border-left-width: 2px !important;
+}
+
+/* Level 3 */
+shreddit-comment[depth="3"]::part(thread-line) {
+  border-left-color: #00d26a !important; /* Green */
+  opacity: 0.3;
+}
+shreddit-comment[depth="3"]:hover::part(thread-line) {
+  opacity: 1;
+  border-left-width: 2px !important;
+}
+
+/* Level 4 */
+shreddit-comment[depth="4"]::part(thread-line) {
+  border-left-color: #00a8ff !important; /* Blue */
+  opacity: 0.2;
+}
+shreddit-comment[depth="4"]:hover::part(thread-line) {
+  opacity: 1;
+  border-left-width: 2px !important;
+}
+
+/* Level 5+ */
+shreddit-comment[depth="5"]::part(thread-line),
+shreddit-comment[depth="6"]::part(thread-line),
+shreddit-comment[depth="7"]::part(thread-line) {
+  border-left-color: #9d00ff !important; /* Purple */
+  opacity: 0.2;
+}
+shreddit-comment[depth="5"]:hover::part(thread-line),
+shreddit-comment[depth="6"]:hover::part(thread-line),
+shreddit-comment[depth="7"]:hover::part(thread-line) {
+  opacity: 1;
+  border-left-width: 2px !important;
+}
+
+/* 3. Hide annoying avatars in deep threads to save horizontal space */
+shreddit-comment[depth="3"] faceplate-img,
+shreddit-comment[depth="4"] faceplate-img,
+shreddit-comment[depth="5"] faceplate-img,
+shreddit-comment[depth="6"] faceplate-img,
+shreddit-comment[depth="7"] faceplate-img {
+  width: 16px !important;
+  height: 16px !important;
+}
+
+/* Auto-collapse Automoderator / Stickied comments */
+shreddit-comment[author="AutoModerator"]::part(comment-body),
+shreddit-comment[author="AutoModerator"]::part(action-bar),
+shreddit-comment[stickied="true"]::part(comment-body),
+shreddit-comment[stickied="true"]::part(action-bar) {
+  display: none !important;
+}
+shreddit-comment[author="AutoModerator"]::before,
+shreddit-comment[stickied="true"]::before {
+  content: "Pinned comment collapsed by Reddit Pro";
+  display: block;
+  font-size: 11px;
+  color: var(--color-neutral-content-weak, #888);
+  font-style: italic;
+  padding: 4px 0;
+}

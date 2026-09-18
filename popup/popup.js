@@ -7,7 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
     compactCards: document.getElementById('compactCards'),
     hidePromoted: document.getElementById('hidePromoted'),
     hideSidebar: document.getElementById('hideSidebar'),
-    hideScrollbar: document.getElementById('hideScrollbar')
+    hideScrollbar: document.getElementById('hideScrollbar'),
+    themeSelect: document.getElementById('themeSelect')
   };
 
   // Default settings — autoFit MUST be false so manual column picks are respected
@@ -19,7 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
     compactCards: false,
     hidePromoted: true,
     hideSidebar: false,
-    hideScrollbar: true
+    hideScrollbar: true,
+    theme: 'default'
   };
 
   // Load saved settings and populate UI
@@ -39,6 +41,11 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.hidePromoted.checked  = settings.hidePromoted;
     elements.hideSidebar.checked   = settings.hideSidebar;
     elements.hideScrollbar.checked = settings.hideScrollbar;
+
+    // Set theme select
+    if (elements.themeSelect && settings.theme) {
+      elements.themeSelect.value = settings.theme;
+    }
   });
 
   // Build current settings from UI state
@@ -51,7 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
       compactCards:  elements.compactCards.checked,
       hidePromoted:  elements.hidePromoted.checked,
       hideSidebar:   elements.hideSidebar.checked,
-      hideScrollbar: elements.hideScrollbar.checked
+      hideScrollbar: elements.hideScrollbar.checked,
+      theme:         elements.themeSelect ? elements.themeSelect.value : 'default'
     };
   };
 
@@ -81,6 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 b.setAttribute('data-reddit-grid-compact',       s.compactCards);
                 b.setAttribute('data-reddit-grid-hide-promoted', s.hidePromoted);
                 b.setAttribute('data-reddit-grid-hide-sidebar',  s.hideSidebar);
+                b.setAttribute('data-reddit-pro-theme',          s.theme);
 
                 // 2. Inject forced CSS
                 let tag = document.getElementById('rg-force-styles');
@@ -140,4 +149,5 @@ document.addEventListener('DOMContentLoaded', () => {
   elements.hidePromoted.addEventListener('change',  saveAndNotify);
   elements.hideSidebar.addEventListener('change',   saveAndNotify);
   elements.hideScrollbar.addEventListener('change', saveAndNotify);
+  if (elements.themeSelect) elements.themeSelect.addEventListener('change', saveAndNotify);
 });
