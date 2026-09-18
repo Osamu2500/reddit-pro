@@ -29,8 +29,8 @@ window.RedditPro.Lifecycle = (function() {
       if (window.RedditPro.Virtualizer) window.RedditPro.Virtualizer.init();
       if (window.RedditPro.SmartHeader) window.RedditPro.SmartHeader.init();
       if (window.RedditPro.TheaterMode) window.RedditPro.TheaterMode.init();
-      if (window.RedditPro.DOMObserver) window.RedditPro.DOMObserver.init();
-      if (window.RedditPro.AudioObserver) window.RedditPro.AudioObserver.init();
+      if (window.RedditPro.DOMObserver) window.RedditPro.DOMObserver.start();
+      if (window.RedditPro.AudioObserver) window.RedditPro.AudioObserver.start();
       if (window.RedditPro.PostModal) window.RedditPro.PostModal.init();
       setupNavigationWatchers();
       applyRoutingLogic();
