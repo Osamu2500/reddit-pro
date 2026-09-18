@@ -85,23 +85,12 @@ body.rg-theme-dark {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   CARD SURFACE — NOTION MINIMAL GLASS
+   CARD SURFACE — NATIVE CLEAN
    ═══════════════════════════════════════════════════════════════════════════ */
 body:not([data-reddit-grid-cols="1"]) shreddit-post,
 body:not([data-reddit-grid-cols="1"]) .Post {
 
   border-radius: var(--rg-radius) !important;
-  background: var(--rg-glass-base) !important;
-
-  /* Glass optics */
-  -webkit-backdrop-filter:
-    blur(var(--rg-blur))
-    saturate(var(--rg-saturation))
-    brightness(var(--rg-brightness)) !important;
-  backdrop-filter:
-    blur(var(--rg-blur))
-    saturate(var(--rg-saturation))
-    brightness(var(--rg-brightness)) !important;
 
   /* Flat minimal border */
   border: var(--rg-bw) solid var(--rg-border) !important;

@@ -91,28 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 b.setAttribute('data-reddit-grid-hide-sidebar',  s.hideSidebar);
                 b.setAttribute('data-reddit-pro-theme',          s.theme);
 
-                // 2. Inject forced CSS
-                let tag = document.getElementById('rg-force-styles');
-                if (!tag) {
-                  tag = document.createElement('style');
-                  tag.id = 'rg-force-styles';
-                  (document.head || document.documentElement).appendChild(tag);
-                }
-                if (s.columns !== '1') {
-                  tag.textContent = `
-                    shreddit-post, shreddit-feed article, shreddit-feed shreddit-post-placeholder, faceplate-batch > shreddit-post, faceplate-batch > article, .Post {
-                      margin: 0 !important; padding: 0 !important; flex-shrink: 0 !important; width: 100% !important; min-width: 0 !important; max-width: 100% !important; box-sizing: border-box !important;
-                    }
-                    shreddit-feed, .feed-container { gap: 4px !important; padding: 0 !important; margin: 0 !important; }
-                    shreddit-feed > faceplate-batch, shreddit-feed > div, .feed-container > faceplate-batch, .feed-container > div { display: contents !important; margin: 0 !important; padding: 0 !important; }
-                    faceplate-batch { margin: 0 !important; padding: 0 !important; }
-                    .subgrid-container, [class*="subgrid-container"] { max-width: 100% !important; width: 100% !important; padding: 0 10px !important; margin: 0 !important; box-sizing: border-box !important; }
-                    .main-container, [class*="main-container"] { display: block !important; max-width: 100% !important; width: 100% !important; padding: 0 !important; margin: 0 !important; box-sizing: border-box !important; }
-                  `;
-                } else {
-                  tag.textContent = '';
-                }
-
                 // 3. Strip margins immediately
                 if (s.columns !== '1') {
                   document.querySelectorAll('shreddit-post, shreddit-ad-post, shreddit-feed article, faceplate-batch > shreddit-post, .Post').forEach(el => {

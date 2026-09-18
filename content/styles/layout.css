@@ -152,6 +152,20 @@ body:not([data-reddit-grid-cols="1"]) main {
   margin: 0 !important;
 }
 
+body:not([data-reddit-grid-cols="1"]) shreddit-feed,
+body:not([data-reddit-grid-cols="1"]) .feed-container { 
+  gap: 4px !important; padding: 0 !important; margin: 0 !important; 
+}
+body:not([data-reddit-grid-cols="1"]) shreddit-feed > faceplate-batch,
+body:not([data-reddit-grid-cols="1"]) shreddit-feed > div,
+body:not([data-reddit-grid-cols="1"]) .feed-container > faceplate-batch,
+body:not([data-reddit-grid-cols="1"]) .feed-container > div { 
+  display: contents !important; margin: 0 !important; padding: 0 !important; 
+}
+body:not([data-reddit-grid-cols="1"]) faceplate-batch { 
+  margin: 0 !important; padding: 0 !important; 
+}
+
 /* =====================================================================
    SPA ROUTING: PAGE-SPECIFIC GRID LAYOUTS
    ===================================================================== */
