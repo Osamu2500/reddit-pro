@@ -1,0 +1,127 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   THEATER MODE OVERLAY & BUTTONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Freeze body scrolling when active */
+body.rg-theater-active {
+  overflow: hidden !important;
+}
+
+/* The Expand Button on Media Containers */
+.rg-theater-expand-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 10;
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 0.2s, transform 0.2s, background 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.rg-theater-expand-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Show button on hover */
+[slot="post-media-container"]:hover .rg-theater-expand-btn {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.rg-theater-expand-btn:hover {
+  background: rgba(255, 69, 0, 0.8); /* Reddit Orange */
+  transform: scale(1.1) !important;
+}
+
+/* The Full Screen Overlay */
+.rg-theater-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 999999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: rg-theater-fade-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes rg-theater-fade-in {
+  from { opacity: 0; backdrop-filter: blur(0px); }
+  to { opacity: 1; backdrop-filter: blur(20px); }
+}
+
+/* Close Button */
+.rg-theater-close-btn {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 1000000;
+  color: #ffffff;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.rg-theater-close-btn svg {
+  width: 24px;
+  height: 24px;
+}
+
+.rg-theater-close-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+/* The Active Element in Theater Mode */
+.rg-in-theater {
+  width: auto !important;
+  height: auto !important;
+  max-width: 95vw !important;
+  max-height: 95vh !important;
+  object-fit: contain !important;
+  border-radius: 8px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8) !important;
+  z-index: 999999 !important;
+}
+
+.rg-in-theater img,
+.rg-in-theater video,
+.rg-in-theater shreddit-gallery,
+.rg-in-theater gallery-carousel {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 95vw !important;
+  max-height: 95vh !important;
+  object-fit: contain !important;
+  border-radius: inherit !important;
+}
+
+/* Hide the expand button while inside theater mode */
+.rg-in-theater .rg-theater-expand-btn {
+  display: none !important;
+}

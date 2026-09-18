@@ -62,7 +62,12 @@ window.RedditPro.Masonry = (function() {
 
     if (resizeQueue.size > 0 && !resizePending) {
       resizePending = true;
-      requestAnimationFrame(flush);
+      // V7 Performance Tuning: Use requestIdleCallback so the browser prioritizes scrolling
+      if ('requestIdleCallback' in window) {
+        requestIdleCallback(flush, { timeout: 100 });
+      } else {
+        requestAnimationFrame(flush);
+      }
     }
   });
 

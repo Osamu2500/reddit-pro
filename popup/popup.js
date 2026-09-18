@@ -103,9 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     shreddit-post, shreddit-feed article, shreddit-feed shreddit-post-placeholder, faceplate-batch > shreddit-post, faceplate-batch > article, .Post {
                       margin: 0 !important; padding: 0 !important; flex-shrink: 0 !important; width: 100% !important; min-width: 0 !important; max-width: 100% !important; box-sizing: border-box !important;
                     }
-                    shreddit-post, .Post {
-                      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%) !important; backdrop-filter: blur(24px) saturate(180%) !important; -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-                    }
                     shreddit-feed, .feed-container { gap: 4px !important; padding: 0 !important; margin: 0 !important; }
                     shreddit-feed > faceplate-batch, shreddit-feed > div, .feed-container > faceplate-batch, .feed-container > div { display: contents !important; margin: 0 !important; padding: 0 !important; }
                     faceplate-batch { margin: 0 !important; padding: 0 !important; }
