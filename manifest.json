@@ -31,10 +31,13 @@
         "content/styles/animations.css"
       ],
       "js": [
+        "content/core/error-boundary.js",
         "content/core/settings.js",
         "content/layout/css-vars.js",
         "content/layout/masonry.js",
+        "content/layout/virtualizer.js",
         "content/features/filters.js",
+        "content/features/stats-injector.js",
         "content/observers/dom-observer.js",
         "content/observers/audio-observer.js",
         "content/core/lifecycle.js"

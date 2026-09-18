@@ -29,7 +29,17 @@ window.RedditPro.DOMObserver = (function() {
     const tag = node.tagName.toLowerCase();
     const settings = window.RedditPro.Settings.get();
 
+    if (node.hasAttribute('data-rg-processed')) return;
+    node.setAttribute('data-rg-processed', 'true');
+
     if (POST_TAGS.has(tag) || (node.classList && node.classList.contains('Post'))) {
+      // Proactively extract aspect ratio from Reddit's DOM before images load
+      // We will use this to pre-allocate space while the card is loading to prevent massive layout jumps!
+      const arNode = node.querySelector('[id$="-aspect-ratio"]');
+      if (arNode && arNode.style.aspectRatio) {
+        node.style.setProperty('--card-aspect-ratio', arNode.style.aspectRatio);
+      }
+
       // Only process unstable cards
       if (!node.hasAttribute('data-rg-stable')) {
         window.RedditPro.Masonry.processCard(node);
@@ -50,6 +60,11 @@ window.RedditPro.DOMObserver = (function() {
         window.RedditPro.Filters.applyToCard(node);
       }
 
+      // Pro Stats Injector
+      if (window.RedditPro.StatsInjector) {
+        window.RedditPro.StatsInjector.queuePost(node);
+      }
+
     } else if (BATCH_TAGS.has(tag)) {
       // New batch container added — schedule a sweep after a short settle time
       scheduleNewSweep();
@@ -57,6 +72,11 @@ window.RedditPro.DOMObserver = (function() {
       // Let audio observer scan for any players inside the new batch
       if (window.RedditPro.AudioObserver) {
         window.RedditPro.AudioObserver.observeIn(node);
+      }
+      
+      // Wire up virtualization for infinite scroll memory management
+      if (window.RedditPro.Virtualizer) {
+        window.RedditPro.Virtualizer.observeBatch(node);
       }
 
     } else if (tag === 'shreddit-player') {

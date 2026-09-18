@@ -20,7 +20,15 @@ body:not([data-reddit-grid-cols="1"]) .Post {
   align-self:    start  !important;
   margin:        0      !important;
   padding:       0      !important;
-  overflow:      visible !important;
+  overflow:      hidden !important;
+}
+
+/* Hardware Acceleration & Layout Containment for stable cards */
+body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable="1"],
+body:not([data-reddit-grid-cols="1"]) faceplate-tracker[data-rg-stable="1"] {
+  will-change: transform !important;
+  contain: layout style !important;
+  content-visibility: auto !important;
 }
 
 /* Elevate card z-index when a dropdown menu inside it is open */
@@ -58,7 +66,7 @@ body:not([data-reddit-grid-cols="1"]) shreddit-post::part(action-bar) {
 /* ═══════════════════════════════════════════════════════════════════════════
    CREDIT BAR LAYOUT (Header)
    ═══════════════════════════════════════════════════════════════════════════ */
-body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="credit-bar"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post::part(credit-bar),
 body:not([data-reddit-grid-cols="1"]) shreddit-post-header {
   display:        flex          !important;
   flex-direction: row           !important;
@@ -68,6 +76,12 @@ body:not([data-reddit-grid-cols="1"]) shreddit-post-header {
   width:          100%          !important;
   min-width:      0             !important;
   box-sizing:     border-box    !important;
+  padding:        14px 48px 4px 14px !important;
+}
+
+body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="credit-bar"] {
+  min-width: 0 !important;
+  flex-shrink: 1 !important;
 }
 
 /* Avatar */
@@ -83,11 +97,12 @@ body:not([data-reddit-grid-cols="1"]) shreddit-post-header img {
   flex-shrink:   0      !important;
 }
 
-/* Subreddit / Meta */
-body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="credit-bar"] > *:not(shreddit-overflow-menu):not([data-post-click-location="overflow-menu"]),
-body:not([data-reddit-grid-cols="1"]) shreddit-post-header > *:not(shreddit-overflow-menu):not([data-post-click-location="overflow-menu"]) {
+/* Subreddit / Meta - Truncate text but leave room for absolute button */
+body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="credit-bar"] > *:not(:has(button)),
+body:not([data-reddit-grid-cols="1"]) shreddit-post-header > *:not(:has(button)) {
   flex-shrink:  1      !important;
   min-width:    0      !important;
+  margin-right: 36px   !important; /* Keep text away from the absolute three dots */
   overflow:     hidden !important;
   white-space:  nowrap !important;
   text-overflow: ellipsis !important;
@@ -101,19 +116,19 @@ body:not([data-reddit-grid-cols="1"]) shreddit-post-header button:not([aria-hasp
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   THREE-DOTS OVERFLOW BUTTON — Absolute Positioning & Flat Design
+   THREE-DOTS OVERFLOW BUTTON — Absolute Positioning
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* Wrapper in the flex row */
 body:not([data-reddit-grid-cols="1"]) shreddit-post shreddit-overflow-menu,
 body:not([data-reddit-grid-cols="1"]) shreddit-post [data-post-click-location="overflow-menu"],
-body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="overflow"] {
-  position: relative !important;
-  top: auto !important;
-  right: auto !important;
-  margin-left: auto !important; /* Push to far right of header flex row */
-  flex-shrink: 0 !important;
-  z-index: 20 !important;
+body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="overflow"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="credit-bar"] button[aria-haspopup="menu"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post-header button[aria-haspopup="menu"] {
+  position: absolute !important;
+  top: 10px !important;
+  right: 12px !important;
+  margin: 0 !important;
+  z-index: 100 !important;
 }
 
 body:not([data-reddit-grid-cols="1"]) shreddit-post shreddit-overflow-menu button,
@@ -188,36 +203,103 @@ body > shreddit-overflow-menu {
   position: fixed   !important;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   MEDIA CONTAINMENT
-   ═══════════════════════════════════════════════════════════════════════════ */
-body:not([data-reddit-grid-cols="1"]) shreddit-post img,
-body:not([data-reddit-grid-cols="1"]) shreddit-post video,
-body:not([data-reddit-grid-cols="1"]) shreddit-post iframe,
-body:not([data-reddit-grid-cols="1"]) shreddit-player,
-body:not([data-reddit-grid-cols="1"]) .shreddit-player-wrapper {
+/* Bypass Reddit's artificial aspect ratio caps for standard feed media (Single Images/Video) */
+body:not([data-reddit-grid-cols="1"]) shreddit-aspect-ratio:not(:has(gallery-carousel)),
+body:not([data-reddit-grid-cols="1"]) div[id$="-aspect-ratio"]:not(:has(gallery-carousel)),
+body:not([data-reddit-grid-cols="1"]) shreddit-post:not(:has(gallery-carousel)) [slot="post-media-container"] {
+  padding-bottom: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+}
+
+/* PRE-ALLOCATE SPACE: While a card is downloading, enforce Reddit's aspect ratio to prevent grid jumping.
+   Once loaded, this lock is released and the container shrink-wraps to the true image height! */
+body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-loading] shreddit-aspect-ratio:not(:has(gallery-carousel)),
+body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-loading] div[id$="-aspect-ratio"]:not(:has(gallery-carousel)),
+body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-loading] [slot="post-media-container"]:not(:has(gallery-carousel)) {
+  aspect-ratio: var(--card-aspect-ratio, auto) !important;
+  min-height: 220px !important;
+}
+
+body:not([data-reddit-grid-cols="1"]) div[id$="-aspect-ratio"]:not(:has(gallery-carousel)) > div {
+  position: relative !important;
+  height: auto !important;
+}
+
+body:not([data-reddit-grid-cols="1"]) faceplate-img:not(:has(gallery-carousel)) {
+  height: auto !important;
+  aspect-ratio: auto !important;
+  display: block !important;
+}
+
+/* Force standard media to dictate its own height naturally */
+body:not([data-reddit-grid-cols="1"]) shreddit-post:not(:has(gallery-carousel)) img:not(.post-background-image-filter),
+body:not([data-reddit-grid-cols="1"]) shreddit-post:not(:has(gallery-carousel)) video,
+body:not([data-reddit-grid-cols="1"]) shreddit-post:not(:has(gallery-carousel)) iframe,
+body:not([data-reddit-grid-cols="1"]) shreddit-post:not(:has(gallery-carousel)) shreddit-player,
+body:not([data-reddit-grid-cols="1"]) shreddit-post:not(:has(gallery-carousel)) .shreddit-player-wrapper {
   max-width:   100%          !important;
   width:       100%          !important;
   height:      auto          !important;
-  max-height:  70vh          !important;
-  object-fit:  cover         !important; /* Makes images fill cleanly */
+  max-height:  none          !important; 
   display:     block         !important;
+  position:    relative      !important;
+  object-fit:  contain       !important;
+  background:  transparent   !important; 
 }
 
-body:not([data-reddit-grid-cols="1"]) gallery-carousel {
-  max-width:  100%   !important;
-  width:      100%   !important;
+/* Ensure blurred background images stay absolutely positioned behind the main image */
+body:not([data-reddit-grid-cols="1"]) shreddit-post img.post-background-image-filter {
+  position: absolute !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+/* Let inner video elements scale naturally to their original ratio */
+body:not([data-reddit-grid-cols="1"]) shreddit-player::part(video),
+body:not([data-reddit-grid-cols="1"]) shreddit-player video {
+  width: 100% !important;
+  height: auto !important;
+}
+
+/* Let gallery carousels shrink-wrap their natural image heights instead of using Reddit's fixed height variables */
+body:not([data-reddit-grid-cols="1"]) gallery-carousel,
+body:not([data-reddit-grid-cols="1"]) gallery-carousel ul,
+body:not([data-reddit-grid-cols="1"]) gallery-carousel li {
   height:     auto   !important;
-  max-height: 70vh   !important;
-  display:    block  !important;
-  overflow:   hidden !important;
+  max-height: none   !important;
+}
+
+/* Ensure the main image in the gallery behaves like a standard relative image */
+body:not([data-reddit-grid-cols="1"]) gallery-carousel img:not(.post-background-image-filter) {
+  position: relative !important;
+  height: auto !important;
+  object-fit: contain !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONTEXT SLOT (Recommendations, e.g. "Because you visited...")
+   ═══════════════════════════════════════════════════════════════════════════ */
+body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="context"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post shreddit-post-context {
+  display:     block !important;
+  position:    relative !important;
+  z-index:     10 !important;
+  padding:     10px 14px 0 14px !important;
+  margin-bottom: 4px !important; /* Positive margin to prevent overlap */
+  font-size:   11px !important;
+  color:       var(--rg-text-muted) !important;
+  white-space: normal !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    TITLE SLOT
    ═══════════════════════════════════════════════════════════════════════════ */
 body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="title"],
-body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="post-title"] {
+body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="post-title"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post-title {
   display:     block      !important;
   max-width:   100%       !important;
   box-sizing:  border-box !important;
@@ -229,14 +311,25 @@ body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="post-title"] {
   font-weight: 600 !important; /* Bold, minimal typography */
 }
 
+
+
+/* Flairs inside title can cause weird text wrapping gaps if forced inline */
+body:not([data-reddit-grid-cols="1"]) shreddit-post shreddit-post-flair {
+  display: inline-flex !important;
+  margin-top: 6px !important;
+  margin-left: 0 !important;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    TEXT BODY SLOT
    ═══════════════════════════════════════════════════════════════════════════ */
 body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="text-body"],
-body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="post-body"] {
+body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="post-body"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post-body {
   max-width:    100%       !important;
   box-sizing:   border-box !important;
   padding:      4px 14px 10px 14px !important;
+  margin:       0          !important;
   overflow:     hidden     !important;
   word-break:   break-word !important;
   display:            -webkit-box !important;
@@ -263,13 +356,15 @@ body:not([data-reddit-grid-cols="1"]) [data-post-click-location="action-bar"] {
   min-width:      0       !important;
   box-sizing:     border-box !important;
   overflow:       visible !important;
+  padding:        4px 14px 14px 14px !important;
 }
 
 body:not([data-reddit-grid-cols="1"]) shreddit-post::part(action-bar) > *,
 body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="action-bar"] > *,
 body:not([data-reddit-grid-cols="1"]) shreddit-post-action-bar > * {
-  flex-shrink: 1  !important;
+  flex-shrink: 0  !important;
   min-width:   0  !important;
+  max-width:   100% !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -289,10 +384,11 @@ body:not([data-reddit-grid-cols="1"]) shreddit-post [data-post-click-location="v
   overflow:       visible !important;
 
   background: var(--rg-btn-bg) !important;
+  background-image: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 100%) !important;
   border: 1px solid var(--rg-btn-border) !important;
-  box-shadow: none !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.05) !important;
 
-  transition: background 0.15s ease, border-color 0.15s ease !important;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease !important;
 }
 
 body:not([data-reddit-grid-cols="1"]) shreddit-post shreddit-vote-buttons:hover,
@@ -322,10 +418,11 @@ body:not([data-reddit-grid-cols="1"]) shreddit-post button[aria-label*="save" i]
   padding:         6px 12px    !important;
   
   background:      var(--rg-btn-bg) !important;
+  background-image: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 100%) !important;
   border:          1px solid var(--rg-btn-border) !important;
-  box-shadow:      none !important;
+  box-shadow:      0 1px 2px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.05) !important;
 
-  transition:      background 0.15s ease, border-color 0.15s ease !important;
+  transition:      background 0.15s ease, border-color 0.15s ease, transform 0.15s ease !important;
   cursor:          pointer  !important;
   white-space:     nowrap   !important;
   flex-shrink:     1        !important;
@@ -388,11 +485,11 @@ body:not([data-reddit-grid-cols="1"]) shreddit-post button[aria-label*="join" i]
   padding:      4px 12px  !important;
   font-size:    0.75rem   !important;
   font-weight:  600       !important;
-  background:   transparent !important;
+  background:   rgba(var(--rg-accent-rgb), 0.1) !important;
   color:        var(--rg-accent) !important;
-  border:       1px solid rgba(var(--rg-accent-rgb), 0.3) !important;
-  box-shadow:   none !important;
-  transition:   background 0.15s ease !important;
+  border:       1px solid rgba(var(--rg-accent-rgb), 0.4) !important;
+  box-shadow:   0 1px 3px rgba(0,0,0,0.1) !important;
+  transition:   background 0.15s ease, transform 0.1s ease !important;
   cursor: pointer !important;
 }
 
@@ -464,4 +561,84 @@ body:not([data-reddit-grid-cols="1"]) faceplate-batch[style] {
   gap:     inherit !important;
   padding: 0       !important;
   margin:  0       !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CROSSPOSTS, EMBEDS, AND NSFW BLURS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Nested Crossposts */
+body:not([data-reddit-grid-cols="1"]) shreddit-crosspost {
+  display: block !important;
+  margin: 10px 14px !important;
+  padding: 12px !important;
+  border-radius: var(--rg-radius-inner) !important;
+  border: 1px solid var(--rg-border) !important;
+  background: rgba(128, 128, 128, 0.04) !important;
+}
+
+body:not([data-reddit-grid-cols="1"]) shreddit-crosspost shreddit-post-title {
+  padding: 0 0 8px 0 !important; /* Reset padding for inner nested title */
+  font-size: 0.95rem !important; /* Slightly smaller */
+}
+
+/* Link Embeds (External Articles, etc.) */
+body:not([data-reddit-grid-cols="1"]) shreddit-async-loader shreddit-embed {
+  margin: 10px 14px !important;
+  border-radius: var(--rg-radius-inner) !important;
+  border: 1px solid var(--rg-border) !important;
+  overflow: hidden !important;
+}
+
+/* Ensure NSFW / Spoiler overlays don't bleed out of card corners */
+body:not([data-reddit-grid-cols="1"]) shreddit-blurred-container,
+body:not([data-reddit-grid-cols="1"]) shreddit-blurred-container::part(blur-container) {
+  border-radius: 0 !important; /* the parent post media container should handle corners */
+  max-width: 100% !important;
+  height: 100% !important;
+  position: absolute !important;
+  inset: 0 !important;
+}
+
+/* Add smooth optical fade to truncated text bodies */
+body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="text-body"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="post-body"] {
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%) !important;
+  mask-image:         linear-gradient(to bottom, black 60%, transparent 100%) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PRO STATS INJECTOR (UPVOTE RATIO)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.rg-pro-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-neutral-content-weak);
+  margin-left: 6px;
+  padding-left: 6px;
+  border-left: 1px solid var(--color-neutral-border-weak);
+  white-space: nowrap;
+}
+
+.rg-stat-ratio {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: var(--color-secondary-background);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.rg-stat-oc {
+  display: inline-flex;
+  align-items: center;
+  background: var(--color-primary-background);
+  color: var(--color-primary-content);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
 }

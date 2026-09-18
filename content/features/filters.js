@@ -1,3 +1,8 @@
+/**
+ * @file filters.js
+ * @description Applies user-defined filtering (keywords, flairs, media types) to Reddit posts,
+ * hiding cards that match the active filters before masonry layout calculates them.
+ */
 window.RedditPro = window.RedditPro || {};
 
 window.RedditPro.Filters = (function() {
@@ -57,10 +62,16 @@ window.RedditPro.Filters = (function() {
       if (activeFilters.mediaType === 'text' && (isVideo || isImage)) shouldHide = true;
     }
 
+    const gridItem = card.closest('faceplate-tracker') || card;
+
     if (shouldHide) {
-      card.classList.add('rg-filtered-out');
+      gridItem.classList.add('rg-filtered-out');
+      gridItem.style.setProperty('display', 'none', 'important');
     } else {
-      card.classList.remove('rg-filtered-out');
+      gridItem.classList.remove('rg-filtered-out');
+      if (gridItem.style.display === 'none') {
+        gridItem.style.removeProperty('display');
+      }
     }
   }
 

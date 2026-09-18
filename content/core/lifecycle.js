@@ -26,6 +26,7 @@ window.RedditPro.Lifecycle = (function() {
     window.RedditPro.Settings.load().then(() => {
       window.RedditPro.CSSVars.init();
       if (window.RedditPro.Filters) window.RedditPro.Filters.init();
+      if (window.RedditPro.Virtualizer) window.RedditPro.Virtualizer.init();
       setupNavigationWatchers();
       applyRoutingLogic();
     });

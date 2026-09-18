@@ -41,8 +41,8 @@ window.RedditPro.CSSVars = (function() {
     }
 
     body.style.setProperty('--reddit-cols', settings.columns);
-    body.style.setProperty('--reddit-col-gap', settings.masonry ? '8px' : '4px');
-    body.style.setProperty('--reddit-batch-gap', settings.masonry ? '16px' : '8px');
+    body.style.setProperty('--reddit-col-gap', settings.masonry ? 'clamp(8px, 1vw, 16px)' : '4px');
+    body.style.setProperty('--reddit-batch-gap', settings.masonry ? 'clamp(16px, 2vw, 24px)' : '8px');
 
     manageScrollbar(settings.hideScrollbar);
   }

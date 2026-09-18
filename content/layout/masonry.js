@@ -22,7 +22,7 @@ window.RedditPro.Masonry = (function() {
   // Track which posts we've attached image listeners to
   const imgListeners = new WeakSet();
 
-  const ROW_HEIGHT = 5;
+  const ROW_HEIGHT = 1;
   const STABILITY_THRESHOLD = 3;
 
   /**
@@ -105,9 +105,22 @@ window.RedditPro.Masonry = (function() {
     resizeQueue.clear();
   }
 
+  function getMediaElementsDeep(root, acc = []) {
+    if (!root) return acc;
+    if (root.nodeType === 1) {
+      const tag = root.tagName.toLowerCase();
+      if (tag === 'img' || tag === 'video') acc.push(root);
+      if (root.shadowRoot) getMediaElementsDeep(root.shadowRoot, acc);
+    }
+    for (const child of root.childNodes) {
+      getMediaElementsDeep(child, acc);
+    }
+    return acc;
+  }
+
   /**
-   * Attach load listeners to all images inside a card so masonry
-   * recalculates the moment each image finishes loading.
+   * Attach load listeners to all images/videos inside a card (including Shadow DOM)
+   * so masonry recalculates the moment each media finishes loading.
    * This is the #1 cause of mid-scroll card reflow.
    * @param {Element} el
    */
@@ -115,11 +128,14 @@ window.RedditPro.Masonry = (function() {
     if (imgListeners.has(el)) return;
     imgListeners.add(el);
 
-    const imgs = el.querySelectorAll('img');
-    imgs.forEach(img => {
-      if (!img.complete) {
-        img.addEventListener('load', () => recalculateCard(el), { once: true, passive: true });
-        img.addEventListener('error', () => recalculateCard(el), { once: true, passive: true });
+    const media = getMediaElementsDeep(el);
+    media.forEach(node => {
+      const tag = node.tagName.toLowerCase();
+      if (tag === 'img' && !node.complete) {
+        node.addEventListener('load', () => recalculateCard(el), { once: true, passive: true });
+        node.addEventListener('error', () => recalculateCard(el), { once: true, passive: true });
+      } else if (tag === 'video' && node.readyState < 3) {
+        node.addEventListener('loadeddata', () => recalculateCard(el), { once: true, passive: true });
       }
     });
   }
@@ -149,11 +165,46 @@ window.RedditPro.Masonry = (function() {
     }
   }
 
+  const GRID_CONTAINERS = [
+    'shreddit-feed > faceplate-batch',
+    'main > div > faceplate-batch',
+    'shreddit-async-loader > faceplate-batch',
+    'shreddit-feed > faceplate-batch > div',
+    'main > div > faceplate-batch > div',
+    'shreddit-async-loader > faceplate-batch > div',
+    'shreddit-feed:not(:has(> faceplate-batch))',
+    'main > div:not(:has(> faceplate-batch))',
+    'shreddit-async-loader:not(:has(> faceplate-batch))',
+    'shreddit-profile-feed faceplate-batch > div',
+    'profile-feed faceplate-batch > div',
+    '[data-testid="post-list"]'
+  ].join(',');
+
+  function processGridHeaders(force = false) {
+    if (window.RedditPro.Settings.get().columns === '1') return;
+    document.querySelectorAll(GRID_CONTAINERS).forEach(container => {
+      Array.from(container.children).forEach(child => {
+        // Skip cards (they are handled by POST_SELECTORS)
+        if (child.matches(POST_SELECTORS) || child.matches('faceplate-tracker')) return;
+        
+        if (force || !child.hasAttribute('data-rg-stable')) {
+           if (force) {
+             child.removeAttribute('data-rg-stable');
+             child.removeAttribute('data-rg-loading');
+             heightCache.delete(child);
+           }
+           processCard(child);
+        }
+      });
+    });
+  }
+
   function sweepNew() {
     if (window.RedditPro.Settings.get().columns === '1') return;
     document.querySelectorAll(POST_SELECTORS).forEach(el => {
       if (!el.hasAttribute('data-rg-stable')) processCard(el);
     });
+    processGridHeaders(false);
   }
 
   function sweepAll() {
@@ -161,10 +212,10 @@ window.RedditPro.Masonry = (function() {
       const gridItem = el.closest('faceplate-tracker') || el;
       gridItem.removeAttribute('data-rg-stable');
       gridItem.removeAttribute('data-rg-loading');
-      // WeakMap and WeakSet don't need manual clearing, just heightCache
       heightCache.delete(el);
       processCard(el);
     });
+    processGridHeaders(true);
   }
 
   function disconnectAll() {

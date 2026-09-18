@@ -172,6 +172,8 @@ body:not([data-reddit-grid-cols="1"]) shreddit-post-header {
   border-bottom: 1px solid var(--rg-credit-border) !important;
   border-radius: var(--rg-radius-inner) var(--rg-radius-inner) 0 0 !important;
   padding:       12px 14px 10px 14px !important;
+  position:      relative !important;
+  z-index:       1 !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

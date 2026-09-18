@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const elements = {
-    columns: document.querySelectorAll('input[name="columns"]'),
+    columns: document.getElementById('columnsSlider'),
+    columnsDisplay: document.getElementById('columnsValueDisplay'),
     autoFit: document.getElementById('autoFit'),
     autoPlayAudio: document.getElementById('autoPlayAudio'),
     compactCards: document.getElementById('compactCards'),
@@ -23,10 +24,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Load saved settings and populate UI
   chrome.storage.sync.get(defaultSettings, (settings) => {
-    // Set radio buttons
-    elements.columns.forEach(radio => {
-      radio.checked = (radio.value === settings.columns);
-    });
+    // Set slider
+    if (elements.columns && settings.columns) {
+      elements.columns.value = settings.columns;
+      if (elements.columnsDisplay) {
+        elements.columnsDisplay.textContent = settings.columns === '1' ? '1 Column' : `${settings.columns} Columns`;
+      }
+    }
 
     // Set checkboxes
     elements.autoFit.checked       = settings.autoFit;
@@ -39,13 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Build current settings from UI state
   const getSettings = () => {
-    let selectedColumns = '3';
-    elements.columns.forEach(radio => {
-      if (radio.checked) selectedColumns = radio.value;
-    });
-
     return {
-      columns:       selectedColumns,
+      columns:       elements.columns ? elements.columns.value : '3',
       autoFit:       elements.autoFit.checked,
       autoPlayAudio: elements.autoPlayAudio.checked,
       masonry:       true,
@@ -127,7 +126,14 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // Wire up all controls
-  elements.columns.forEach(radio => radio.addEventListener('change', saveAndNotify));
+  if (elements.columns) {
+    elements.columns.addEventListener('input', (e) => {
+      if (elements.columnsDisplay) {
+        elements.columnsDisplay.textContent = e.target.value === '1' ? '1 Column' : `${e.target.value} Columns`;
+      }
+      saveAndNotify();
+    });
+  }
   elements.autoFit.addEventListener('change',       saveAndNotify);
   elements.autoPlayAudio.addEventListener('change', saveAndNotify);
   elements.compactCards.addEventListener('change',  saveAndNotify);

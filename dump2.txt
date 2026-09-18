@@ -1,0 +1,126 @@
+<USER_REQUEST>
+=== REDDIT MEDIA SHADOW DOM DUMP ===
+
+--- ONE IMAGE POST ---
+<div class="relative overflow-hidden pointer-cursor   isolate bg-neutral-background rounded-4" slot="post-media-container">
+  <div class="pointer-events-none absolute inset-0 z-[3] border-sm border-solid border-neutral-border-weak rounded-4">
+  </div>
+  <div id="t3_1welzth-aspect-ratio" class="relative block w-full overflow-hidden " style="
+    aspect-ratio: 1;
+    min-height: 220px;
+    max-height: 540px;
+  ">
+    <div class="absolute inset-0 h-full w-full">
+      <shreddit-media-lightbox-listener class="nd:visible contents">
+        #shadow-root
+          <slot>
+          </slot>
+        <div class="media-lightbox-img max-h-[100vw] h-full w-full object-contain overflow-hidden relative bg-black">
+          <img class="absolute top-1/2 -translate-y-1/2 start-0 w-full h-full opacity-30 object-cover scale-[1.2] post-background-image-filter">
+          </img>
+          <img id="post-image" class="i18n-post-media-img preview-img non-lightboxed-content media-lightbox-img max-h-[100vw] h-full w-full
+      object-contain relative">
+          </img>
+          <image-observer>
+          </image-observer>
+          <div class="lightboxed-content hidden">
+            <zoomable-img class="flex w-full h-full justify-center items-center overflow-hidden">
+              <img class="z-1 max-h-full max-w-full object-contain cursor-zoom-in">
+              </img>
+            </zoomable-img>
+          </div>
+        </div>
+        <script>
+          "function recordImagePerformanc..."
+        </script>
+      </shreddit-media-lightbox-listener>
+    </div>
+  </div>
+  <div>
+  </div>
+</div>
+
+
+--- ONE VIDEO POST ---
+<div class="relative overflow-hidden pointer-cursor   isolate bg-black rounded-4" slot="post-media-container">
+  <div class="pointer-events-none absolute inset-0 z-[3] border-sm border-solid border-neutral-border-weak rounded-4">
+  </div>
+  <div id="t3_1wf45fh-aspect-ratio" class="relative block w-full overflow-hidden " style="
+    aspect-ratio: 1.7777
+<truncated 9115 bytes>
+
+display: grid;
+position: relative;
+width: 158.987px;
+height: 158.987px;
+max-height: none;
+aspect-ratio: auto;
+object-fit: fill;
+[INLINE STYLE ATTRIBUTE]: transition-duration: 0ms; transform: translateX(0px);
+
+--- <gallery-carousel.nd:block.nd:overflow-hidden.nd:h-[var(--gallery-initial-height)]> ---
+display: block;
+width: 158.987px;
+height: 158.987px;
+max-height: none;
+max-width: 100%;
+aspect-ratio: auto;
+object-fit: fill;
+[INLINE STYLE ATTRIBUTE]: --gallery-initial-height: 540px
+
+--- <shreddit-async-loader> ---
+display: grid;
+width: 158.987px;
+height: 0.991071px;
+max-height: none;
+aspect-ratio: auto;
+object-fit: fill;
+contain: layout style;
+
+--- <div.mb-md.> ---
+display: block;
+width: 158.987px;
+height: 0.991071px;
+max-height: none;
+aspect-ratio: auto;
+margin: 0px 0px 16px;
+object-fit: fill;
+
+--- <div.relative.overflow-hidden.pointer-cursor...isolate.bg-neutral-background.rounded-4 slot="post-media-container"> ---
+display: block;
+position: relative;
+width: 158.987px;
+height: 281.879px;
+max-height: none;
+aspect-ratio: auto;
+overflow: hidden;
+overflow-y: hidden;
+overflow-x: hidden;
+object-fit: fill;
+
+--- <shreddit-post#t3_1wgbzpv.block.relative.cursor-pointer.group.bg-neutral-background.focus-within:bg-neutral-background-hover.hover:bg-neutral-background-hover.xs:rounded-4.px-md.py-2xs.my-2xs.nd:visible.rgb-action-bar-placeholder.[&:not(:defined):not(:has(rpl-action-bar))]:pb-2xl> ---
+display: block;
+position: relative;
+width: 160.701px;
+height: 537.12px;
+max-height: none;
+max-width: 100%;
+aspect-ratio: auto;
+overflow: hidden;
+overflow-y: hidden;
+overflow-x: hidden;
+box-sizing: border-box;
+object-fit: fill;
+
+
+VM967:104 👆 Copy everything from '=== COMPUTED STYLES DEEP DIVE ===' down to here!
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-09-18T05:34:08+05:30.
+
+The user's current state is as follows:
+Active Document: f:\Reddit Pro\content\styles\cards.css (LANGUAGE_CSS)
+Cursor is on line: 1
+Other open documents:
+- f:\Reddit Pro\content\styles\cards.css (LANGUAGE_CSS)
+</ADDITIONAL_METADATA>

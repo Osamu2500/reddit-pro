@@ -3,124 +3,116 @@
 <head>
   <meta charset="UTF-8">
   <title>Reddit Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <div class="header">
-    <h1>Reddit Pro</h1>
-  </div>
+  <!-- Ambient background glows -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
 
-  <div class="section">
-    <div class="section-title">Layout</div>
-    <div class="layout-options">
-      <label class="layout-option">
-        <input type="radio" name="columns" value="1">
-        <div class="layout-card">
-          <div class="layout-icon linear">
-            <div></div><div></div>
-          </div>
-          <span>Linear</span>
-        </div>
-      </label>
-      <label class="layout-option">
-        <input type="radio" name="columns" value="2">
-        <div class="layout-card">
-          <div class="layout-icon columns-2">
-            <div></div><div></div><div></div><div></div>
-          </div>
-          <span>2 Cols</span>
-        </div>
-      </label>
-      <label class="layout-option">
-        <input type="radio" name="columns" value="3" checked>
-        <div class="layout-card">
-          <div class="layout-icon columns-3">
-            <div></div><div></div><div></div><div></div><div></div><div></div>
-          </div>
-          <span>3 Cols</span>
-        </div>
-      </label>
-      <label class="layout-option">
-        <input type="radio" name="columns" value="4">
-        <div class="layout-card">
-          <div class="layout-icon columns-4">
-            <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
-          </div>
-          <span>4 Cols</span>
-        </div>
-      </label>
-      <label class="layout-option">
-        <input type="radio" name="columns" value="5">
-        <div class="layout-card">
-          <div class="layout-icon columns-5">
-            <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
-          </div>
-          <span>5 Cols</span>
-        </div>
-      </label>
-      <label class="layout-option">
-        <input type="radio" name="columns" value="6">
-        <div class="layout-card">
-          <div class="layout-icon columns-6">
-            <div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div>
-          </div>
-          <span>6 Cols</span>
-        </div>
-      </label>
+  <div class="container">
+    <div class="header">
+      <div class="logo-container">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="url(#paint0_linear)"/>
+          <path d="M2 17L12 22L22 17" stroke="url(#paint0_linear)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 12L12 17L22 12" stroke="url(#paint0_linear)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <defs>
+            <linearGradient id="paint0_linear" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#FF4500"/>
+              <stop offset="1" stop-color="#FF8700"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <h1>Reddit <span>Pro</span></h1>
+      </div>
     </div>
-  </div>
 
-  <hr>
+    <div class="section">
+      <div class="section-header">
+        <svg class="section-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 3H10V10H3V3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 3H21V10H14V3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 14H21V21H14V14Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 14H10V21H3V14Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="section-title">Grid Layout</div>
+      </div>
+      <div class="slider-container">
+        <input type="range" id="columnsSlider" min="1" max="10" value="3" class="modern-slider">
+        <div class="slider-labels">
+          <span class="slider-min">1</span>
+          <span class="slider-val" id="columnsValueDisplay">3 Columns</span>
+          <span class="slider-max">10</span>
+        </div>
+      </div>
+    </div>
 
-  <div class="section">
-    <div class="section-title">Options</div>
-    <div class="toggle-row">
-      <span>Auto Fit (Ultrawide)</span>
-      <label class="switch">
-        <input type="checkbox" id="autoFit">
-        <span class="slider round"></span>
-      </label>
-    </div>
-    <div class="toggle-row">
-      <span>Smart Auto-Play Audio</span>
-      <label class="switch">
-        <input type="checkbox" id="autoPlayAudio">
-        <span class="slider round"></span>
-      </label>
-    </div>
-    <div class="toggle-row">
-      <span>Compact Cards</span>
-      <label class="switch">
-        <input type="checkbox" id="compactCards">
-        <span class="slider round"></span>
-      </label>
-    </div>
-  </div>
-
-  <hr>
-
-  <div class="section">
-    <div class="section-title">Filters &amp; Hide</div>
-    <div class="toggle-row">
-      <span>Promoted / Ads</span>
-      <label class="switch">
-        <input type="checkbox" id="hidePromoted" checked>
-        <span class="slider round"></span>
-      </label>
-    </div>
-    <div class="toggle-row">
-      <span>Left Sidebar</span>
-      <label class="switch">
-        <input type="checkbox" id="hideSidebar">
-        <span class="slider round"></span>
-      </label>
-    </div>
-    <div class="toggle-row">
-      <span>Scrollbar</span>
-      <label class="switch">
-        <input type="checkbox" id="hideScrollbar" checked>
-        <span class="slider round"></span>
-      </label>
+    <div class="section">
+      <div class="section-header">
+        <svg class="section-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 20V10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 20V4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 20V16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="section-title">Preferences</div>
+      </div>
+      <div class="toggle-group">
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label">Auto Fit Grid</span>
+            <span class="toggle-desc">Scale columns on ultrawide monitors</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="autoFit">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label">Hide Promoted</span>
+            <span class="toggle-desc">Remove all sponsored ads</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="hidePromoted" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label">Smart Audio</span>
+            <span class="toggle-desc">Auto-play audio for visible videos</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="autoPlayAudio">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label">Hide Left Sidebar</span>
+            <span class="toggle-desc">Expand feed full width</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="hideSidebar">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label">Compact Cards</span>
+            <span class="toggle-desc">Hide text bodies for tighter grid</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="compactCards">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-label">Hide Scrollbar</span>
+            <span class="toggle-desc">Cleaner aesthetic (scrolling works)</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="hideScrollbar" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
     </div>
   </div>
 

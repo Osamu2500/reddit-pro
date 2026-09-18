@@ -1,3 +1,8 @@
+/**
+ * @file audio-observer.js
+ * @description Manages auto-playing and auto-muting of Reddit video/audio players based on scroll position.
+ * Uses IntersectionObserver to detect visible players and calculates the closest to the center.
+ */
 window.RedditPro = window.RedditPro || {};
 
 window.RedditPro.AudioObserver = (function() {
