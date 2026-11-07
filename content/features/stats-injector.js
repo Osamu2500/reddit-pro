@@ -1,30 +1,25 @@
 /**
  * @file stats-injector.js
- * @description Extracts post IDs, batches them to the Reddit API, and injects
- * hidden metrics like exact score and upvote ratio directly into the post UI.
+ * @description Fetches Reddit post metrics in batches and injects them into post cards.
  */
-
 window.RedditPro = window.RedditPro || {};
 
-window.RedditPro.StatsInjector = (function() {
-  // One API ID can correspond to more than one rendered node during SPA updates.
+window.RedditPro.StatsInjector = (function () {
   const pendingPosts = new Map();
   const retryCounts = new Map();
+  const pendingInjection = new WeakMap();
   let fetchTimeout = null;
   let isFlushing = false;
   const FETCH_DELAY_MS = 250;
   const MAX_RETRIES = 2;
   const MAX_BATCH_SIZE = 100;
+  const CREDIT_BAR_WAIT_MS = 8000;
   const injectedPosts = new WeakSet();
 
   function init() {
-    // Initialization is intentionally lazy; posts are queued by DOMObserver.
+    // Posts are queued lazily by DOMObserver.
   }
 
-  /**
-   * Called by dom-observer when a new post is added to the DOM.
-   * @param {Element} postNode
-   */
   function queuePost(postNode) {
     if (!postNode || injectedPosts.has(postNode)) return;
 
@@ -49,8 +44,7 @@ window.RedditPro.StatsInjector = (function() {
 
     try {
       for (let offset = 0; offset < entries.length; offset += MAX_BATCH_SIZE) {
-        const batch = entries.slice(offset, offset + MAX_BATCH_SIZE);
-        await fetchBatch(batch);
+        await fetchBatch(entries.slice(offset, offset + MAX_BATCH_SIZE));
       }
     } finally {
       isFlushing = false;
@@ -61,21 +55,24 @@ window.RedditPro.StatsInjector = (function() {
   }
 
   async function fetchBatch(batch) {
-    const ids = batch.map(([id]) => id);
-    const idsQuery = ids.join(',');
+    const idsQuery = batch.map(([id]) => id).join(',');
 
     try {
       const response = await fetch(
         `https://www.reddit.com/api/info.json?id=${encodeURIComponent(idsQuery)}`
       );
-      if (!response.ok) throw new Error(`Reddit API returned HTTP ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`Reddit API returned HTTP ${response.status}`);
+      }
 
       const json = await response.json();
       const children = json?.data?.children;
-      if (!Array.isArray(children)) throw new Error('Reddit API returned an invalid response');
+      if (!Array.isArray(children)) {
+        throw new Error('Reddit API returned an invalid response');
+      }
 
       const statsMap = new Map();
-      children.forEach(child => {
+      children.forEach((child) => {
         if (child?.kind === 't3' && child.data?.name) {
           statsMap.set(child.data.name, child.data);
         }
@@ -84,7 +81,7 @@ window.RedditPro.StatsInjector = (function() {
       batch.forEach(([id, nodes]) => {
         const data = statsMap.get(id);
         if (!data) return;
-        nodes.forEach(node => injectStats(node, data));
+        nodes.forEach((node) => injectStats(node, data));
         retryCounts.delete(id);
       });
     } catch (error) {
@@ -97,27 +94,58 @@ window.RedditPro.StatsInjector = (function() {
         }
 
         retryCounts.set(id, attempts + 1);
-        nodes.forEach(node => {
-          if (node.isConnected && !injectedPosts.has(node)) {
-            if (!pendingPosts.has(id)) pendingPosts.set(id, new Set());
-            pendingPosts.get(id).add(node);
-          }
+        nodes.forEach((node) => {
+          if (!node.isConnected || injectedPosts.has(node)) return;
+          if (!pendingPosts.has(id)) pendingPosts.set(id, new Set());
+          pendingPosts.get(id).add(node);
         });
       });
     }
   }
 
-  /**
-   * @param {Element} postNode
-   * @param {Object} data
-   */
   function injectStats(postNode, data) {
     if (!postNode?.isConnected || injectedPosts.has(postNode)) return;
 
-    // Do not mark the node complete until its destination exists; Reddit can
-    // attach the credit bar after the post element itself has been discovered.
     const creditBar = postNode.querySelector('[slot="credit-bar"]');
-    if (!creditBar) return;
+    if (!creditBar) {
+      waitForCreditBar(postNode, data);
+      return;
+    }
+
+    renderStats(postNode, creditBar, data);
+  }
+
+  function waitForCreditBar(postNode, data) {
+    if (pendingInjection.has(postNode)) return;
+
+    const observer = new MutationObserver(() => {
+      if (!postNode.isConnected) {
+        stopWaiting(postNode);
+        return;
+      }
+
+      const creditBar = postNode.querySelector('[slot="credit-bar"]');
+      if (creditBar) {
+        stopWaiting(postNode);
+        renderStats(postNode, creditBar, data);
+      }
+    });
+
+    const timeout = setTimeout(() => stopWaiting(postNode), CREDIT_BAR_WAIT_MS);
+    pendingInjection.set(postNode, { observer, timeout });
+    observer.observe(postNode, { childList: true, subtree: true });
+  }
+
+  function stopWaiting(postNode) {
+    const pending = pendingInjection.get(postNode);
+    if (!pending) return;
+    pending.observer.disconnect();
+    clearTimeout(pending.timeout);
+    pendingInjection.delete(postNode);
+  }
+
+  function renderStats(postNode, creditBar, data) {
+    if (!postNode.isConnected || injectedPosts.has(postNode)) return;
 
     const statsContainer = document.createElement('div');
     statsContainer.className = 'rg-pro-stats';

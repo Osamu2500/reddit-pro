@@ -1,144 +1,135 @@
 /**
  * @file dom-observer.js
- * @description Watches Reddit's SPA DOM for new posts and batch containers.
- *
- * Improvements over v1:
- *  - Uses requestAnimationFrame batching instead of requestIdleCallback
- *    (rIC can fire too late after page becomes interactive)
- *  - Attaches image load triggers at the DOM-observer level so masonry
- *    always knows the moment a card's images settle
- *  - Sweep debounce reduced from 150ms → 80ms for snappier batch detection
- *  - Removed audio observation from batch tags (audio observer handles itself)
+ * @description Watches Reddit's SPA DOM for new posts, media players, and feed batches.
  */
 window.RedditPro = window.RedditPro || {};
 
-window.RedditPro.DOMObserver = (function() {
-  let mo = null;
+window.RedditPro.DOMObserver = (function () {
+  let observer = null;
   let sweepTimer = null;
   let rafPending = false;
-  let mutationBatch = [];
+  const mutationBatch = new Set();
 
-  const POST_TAGS = new Set(['shreddit-post', 'article', 'shreddit-ad-post']);
-  const BATCH_TAGS = new Set([
-    'faceplate-batch', 'shreddit-feed',
-    'profile-feed', 'shreddit-profile-feed', 'shreddit-user-feed',
-  ]);
+  const POST_SELECTOR = 'shreddit-post, shreddit-ad-post, article, .Post';
+  const BATCH_SELECTOR =
+    'faceplate-batch, shreddit-feed, profile-feed, shreddit-profile-feed, shreddit-user-feed';
+  const PLAYER_SELECTOR = 'shreddit-player';
 
-  function handleAddedNode(node) {
-    if (node.nodeType !== 1) return;
-    const tag = node.tagName.toLowerCase();
+  function processPost(node) {
     const settings = window.RedditPro.Settings.get();
 
-    if (node.hasAttribute('data-rg-processed')) return;
-    node.setAttribute('data-rg-processed', 'true');
+    const aspectRatioNode = node.querySelector('[id$="-aspect-ratio"]');
+    if (aspectRatioNode?.style.aspectRatio) {
+      node.style.setProperty('--card-aspect-ratio', aspectRatioNode.style.aspectRatio);
+    }
 
-    if (POST_TAGS.has(tag) || (node.classList && node.classList.contains('Post'))) {
-      // Proactively extract aspect ratio from Reddit's DOM before images load
-      // We will use this to pre-allocate space while the card is loading to prevent massive layout jumps!
-      const arNode = node.querySelector('[id$="-aspect-ratio"]');
-      if (arNode && arNode.style.aspectRatio) {
-        node.style.setProperty('--card-aspect-ratio', arNode.style.aspectRatio);
-      }
+    if (!node.hasAttribute('data-rg-stable')) {
+      window.RedditPro.Masonry.processCard(node);
+    }
 
-      // Only process unstable cards
-      if (!node.hasAttribute('data-rg-stable')) {
-        window.RedditPro.Masonry.processCard(node);
-      }
+    window.RedditPro.AudioObserver?.observeIn(node);
 
-      if (window.RedditPro.AudioObserver) {
-        window.RedditPro.AudioObserver.observeIn(node);
-      }
+    if (
+      settings.hidePromoted &&
+      (node.tagName.toLowerCase() === 'shreddit-ad-post' || node.hasAttribute('ad-id'))
+    ) {
+      node.setAttribute('data-reddit-grid-is-ad', 'true');
+    } else if (!settings.hidePromoted) {
+      node.removeAttribute('data-reddit-grid-is-ad');
+    }
 
-      // Promoted post hiding
-      if (settings.hidePromoted &&
-          (tag === 'shreddit-ad-post' || node.hasAttribute('ad-id'))) {
-        node.setAttribute('data-reddit-grid-is-ad', 'true');
-      }
+    window.RedditPro.Filters?.applyToCard(node);
+    window.RedditPro.StatsInjector?.queuePost(node);
+  }
 
-      // Subreddit/keyword filters
-      if (window.RedditPro.Filters) {
-        window.RedditPro.Filters.applyToCard(node);
-      }
+  function handleElement(node) {
+    if (node.nodeType !== 1 || node.hasAttribute('data-rg-processed')) return;
 
-      // Pro Stats Injector
-      if (window.RedditPro.StatsInjector) {
-        window.RedditPro.StatsInjector.queuePost(node);
-      }
+    const tag = node.tagName.toLowerCase();
+    if (node.matches(POST_SELECTOR)) {
+      node.setAttribute('data-rg-processed', 'true');
+      processPost(node);
+      return;
+    }
 
-    } else if (BATCH_TAGS.has(tag)) {
-      // New batch container added — schedule a sweep after a short settle time
+    if (node.matches(BATCH_SELECTOR)) {
+      node.setAttribute('data-rg-processed', 'true');
       scheduleNewSweep();
+      window.RedditPro.AudioObserver?.observeIn(node);
+      window.RedditPro.Virtualizer?.observeBatch(node);
+      return;
+    }
 
-      // Let audio observer scan for any players inside the new batch
-      if (window.RedditPro.AudioObserver) {
-        window.RedditPro.AudioObserver.observeIn(node);
-      }
-      
-      // Wire up virtualization for infinite scroll memory management
-      if (window.RedditPro.Virtualizer) {
-        window.RedditPro.Virtualizer.observeBatch(node);
-      }
+    if (node.matches(PLAYER_SELECTOR)) {
+      node.setAttribute('data-rg-processed', 'true');
+      window.RedditPro.AudioObserver?.observe(node);
+      return;
+    }
 
-    } else if (tag === 'shreddit-player') {
-      if (window.RedditPro.AudioObserver) {
-        window.RedditPro.AudioObserver.observe(node);
-      }
-
-    } else if (tag === 'img') {
-      // An image was added directly (e.g. lazy-loaded into existing card)
-      // Walk up to find the parent card and trigger recalculation on load
-      const card = node.closest('shreddit-post, article');
-      if (card) {
-        if (!node.complete) {
-          node.addEventListener('load', () => {
-            window.RedditPro.Masonry.recalculateCard(card);
-          }, { once: true, passive: true });
-        }
+    if (node.tagName === 'IMG') {
+      node.setAttribute('data-rg-processed', 'true');
+      const card = node.closest(POST_SELECTOR);
+      if (card && !node.complete) {
+        node.addEventListener(
+          'load',
+          () => window.RedditPro.Masonry.recalculateCard(card),
+          { once: true, passive: true }
+        );
       }
     }
   }
 
+  function handleAddedNode(root) {
+    if (root.nodeType !== 1) return;
+
+    handleElement(root);
+    root.querySelectorAll?.(
+      `${POST_SELECTOR}, ${BATCH_SELECTOR}, ${PLAYER_SELECTOR}, img`
+    ).forEach(handleElement);
+  }
+
   function scheduleNewSweep() {
     clearTimeout(sweepTimer);
-    // Tight debounce: 80ms to quickly detect batch end, then one rAF for paint sync
     sweepTimer = setTimeout(() => {
-      requestAnimationFrame(() => {
-        window.RedditPro.Masonry.sweepNew();
-      });
+      requestAnimationFrame(() => window.RedditPro.Masonry.sweepNew());
     }, 80);
   }
 
   function processMutations() {
-    const batch = mutationBatch.splice(0);
+    const batch = Array.from(mutationBatch);
+    mutationBatch.clear();
     rafPending = false;
-    batch.forEach(node => handleAddedNode(node));
+    batch.forEach(handleAddedNode);
+  }
+
+  function enqueueNodes(nodes) {
+    nodes.forEach((node) => mutationBatch.add(node));
+    if (!rafPending && mutationBatch.size > 0) {
+      rafPending = true;
+      requestAnimationFrame(processMutations);
+    }
   }
 
   function start() {
-    if (mo) return;
+    if (observer || !document.documentElement) return;
 
-    mo = new MutationObserver((mutations) => {
-      for (const m of mutations) {
-        for (const node of m.addedNodes) {
-          mutationBatch.push(node);
-        }
-      }
-      if (!rafPending && mutationBatch.length > 0) {
-        rafPending = true;
-        // rAF is better than rIC here: we want to run before the next paint
-        // so that loading states are set before the browser composites
-        requestAnimationFrame(processMutations);
-      }
+    observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => enqueueNodes(Array.from(mutation.addedNodes)));
     });
 
-    const target = document.querySelector('main') || document.documentElement;
-    mo.observe(target, { childList: true, subtree: true });
+    // Observe the document root so Reddit replacing <main> does not orphan the observer.
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+
+    // Existing posts may already be present before the observer is attached.
+    handleAddedNode(document.documentElement);
+    scheduleNewSweep();
   }
 
   function stop() {
-    if (mo) { mo.disconnect(); mo = null; }
+    observer?.disconnect();
+    observer = null;
     clearTimeout(sweepTimer);
-    mutationBatch = [];
+    mutationBatch.clear();
     rafPending = false;
   }
 

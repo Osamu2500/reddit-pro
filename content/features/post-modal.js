@@ -1,18 +1,20 @@
 /**
  * @file post-modal.js
- * @description Intercepts clicks on posts and opens them in a beautiful glassmorphic modal
- * to preserve the user's scroll position in the infinite masonry feed.
+ * @description Opens Reddit post threads in a modal without losing feed scroll position.
  */
-
 window.RedditPro = window.RedditPro || {};
 
-window.RedditPro.PostModal = (function() {
+window.RedditPro.PostModal = (function () {
   let modalContainer = null;
   let isModalOpen = false;
   let originalTitle = document.title;
   let originalUrl = location.href;
+  let requestController = null;
+  let requestId = 0;
+  let clearTimer = null;
 
   function init() {
+    if (document.getElementById('rg-post-modal')) return;
     createModalDOM();
     attachListeners();
   }
@@ -21,17 +23,20 @@ window.RedditPro.PostModal = (function() {
     modalContainer = document.createElement('div');
     modalContainer.id = 'rg-post-modal';
     modalContainer.className = 'rg-modal-hidden';
-    
+    modalContainer.setAttribute('role', 'dialog');
+    modalContainer.setAttribute('aria-modal', 'true');
+    modalContainer.setAttribute('aria-label', 'Reddit post');
+
     modalContainer.innerHTML = `
       <div class="rg-modal-backdrop"></div>
       <div class="rg-modal-content">
-        <button class="rg-modal-close" aria-label="Close">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+        <button class="rg-modal-close" type="button" aria-label="Close post">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" aria-hidden="true">
             <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
           </svg>
         </button>
         <div class="rg-modal-scroll-area">
-          <div id="rg-modal-loader">
+          <div id="rg-modal-loader" role="status" aria-live="polite">
             <div class="rg-spinner"></div>
           </div>
           <div id="rg-modal-body"></div>
@@ -40,154 +45,165 @@ window.RedditPro.PostModal = (function() {
     `;
 
     document.body.appendChild(modalContainer);
-
-    // Close on backdrop click
     modalContainer.querySelector('.rg-modal-backdrop').addEventListener('click', closeModal);
-    // Close on X button click
     modalContainer.querySelector('.rg-modal-close').addEventListener('click', closeModal);
   }
 
   function attachListeners() {
-    // We use capturing phase to intercept before Reddit's SPA router
     document.addEventListener('click', handlePostClick, true);
-    
-    // Listen for back button to close modal instead of navigating away
     window.addEventListener('popstate', handlePopState);
-    
-    // Close on Escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && isModalOpen) {
-        closeModal();
-      }
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && isModalOpen) closeModal();
     });
   }
 
-  function handlePostClick(e) {
-    // Only intercept left clicks without modifier keys
-    if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey) return;
+  function handlePostClick(event) {
+    if (
+      event.button !== 0 ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      event.altKey
+    ) return;
 
-    // Find if the click is on a post link (title, comments button, or the post itself)
-    const link = e.target.closest('a[href*="/comments/"]');
-    if (!link) return;
+    const link = event.target.closest?.('a[href*="/comments/"]');
+    if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
 
-    // Make sure it's a link to a post in the current subreddit or feed
-    const href = link.getAttribute('href');
-    if (!href || href.startsWith('http') && !href.includes(location.host)) return;
+    let targetUrl;
+    try {
+      targetUrl = new URL(link.href, location.href);
+    } catch {
+      return;
+    }
 
-    e.preventDefault();
-    e.stopPropagation(); // Stop Reddit's router
-    
-    openModal(href);
+    if (
+      targetUrl.origin !== location.origin ||
+      !/\/comments\/[a-z0-9]+\//i.test(targetUrl.pathname)
+    ) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    openModal(targetUrl.href);
+  }
+
+  function getModalElements() {
+    return {
+      body: modalContainer.querySelector('#rg-modal-body'),
+      loader: modalContainer.querySelector('#rg-modal-loader'),
+      close: modalContainer.querySelector('.rg-modal-close'),
+    };
   }
 
   async function openModal(url) {
-    if (isModalOpen) return;
-    isModalOpen = true;
+    if (isModalOpen || !modalContainer) return;
 
-    // Save current state
+    isModalOpen = true;
+    requestId += 1;
+    const activeRequestId = requestId;
+    requestController?.abort();
+    requestController = new AbortController();
+
+    clearTimeout(clearTimer);
     originalUrl = location.href;
     originalTitle = document.title;
 
-    // Update URL without reloading (so sharing/copying URL works)
-    history.pushState({ redditProModal: true }, '', url);
+    history.pushState(
+      { ...(history.state || {}), redditProModal: true, redditProModalUrl: url },
+      '',
+      url
+    );
 
-    // Show modal and loader
+    const { body, loader, close } = getModalElements();
+    body.replaceChildren();
+    loader.style.display = 'flex';
     modalContainer.classList.remove('rg-modal-hidden');
     document.body.classList.add('rg-modal-open');
-    
-    const bodyContainer = document.getElementById('rg-modal-body');
-    const loader = document.getElementById('rg-modal-loader');
-    
-    bodyContainer.innerHTML = '';
-    loader.style.display = 'flex';
+    close.focus();
 
     try {
-      // Fetch the page HTML
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Failed to fetch post');
-      const html = await res.text();
+      const response = await fetch(url, {
+        credentials: 'same-origin',
+        signal: requestController.signal,
+      });
+      if (!response.ok) throw new Error(`Post request failed: HTTP ${response.status}`);
 
-      // Parse the HTML
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(html, 'text/html');
-      
-      // Update document title to the post's title
-      if (doc.title) {
-        document.title = doc.title;
-      }
+      const html = await response.text();
+      if (!isModalOpen || activeRequestId !== requestId) return;
 
-      // Extract the main content (usually inside <main> or a specific faceplate layout)
-      // Reddit's post page has a specific structure. We need the <shreddit-post> and the comment tree.
-      const postContent = doc.querySelector('shreddit-post');
-      const commentTree = doc.querySelector('comment-tree') || doc.querySelector('shreddit-comment-tree');
-      
-      // If we can't find the web components, fallback to main
-      let contentToInject = '';
-      if (postContent) {
-        contentToInject += postContent.outerHTML;
-      }
-      if (commentTree) {
-        contentToInject += commentTree.outerHTML;
-      }
-      
-      if (!contentToInject) {
-        const main = doc.querySelector('main');
-        if (main) contentToInject = main.innerHTML;
-      }
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const post = doc.querySelector('shreddit-post');
+      const comments =
+        doc.querySelector('comment-tree') || doc.querySelector('shreddit-comment-tree');
+      const main = doc.querySelector('main');
+      const sources = post || comments ? [post, comments].filter(Boolean) : main ? [main] : [];
 
-      loader.style.display = 'none';
-      
-      if (contentToInject) {
-        bodyContainer.innerHTML = contentToInject;
-        
-        // Execute any scripts that might have been injected (Reddit uses faceplate initialization)
-        // Note: For web components like <shreddit-post>, the browser usually initializes them automatically
-        // if the custom elements are already registered on the page.
-      } else {
-        bodyContainer.innerHTML = '<div class="rg-error">Could not parse post content.</div>';
-      }
-      
-    } catch (err) {
-      console.error('RedditPro Modal Error:', err);
-      loader.style.display = 'none';
-      bodyContainer.innerHTML = '<div class="rg-error">Failed to load post. Check your connection.</div>';
+      if (sources.length === 0) throw new Error('Reddit post content was not found');
+
+      const fragment = document.createDocumentFragment();
+      sources.forEach((source) => {
+        const clone = document.importNode(source, true);
+        sanitizeClone(clone);
+        fragment.appendChild(clone);
+      });
+
+      if (!isModalOpen || activeRequestId !== requestId) return;
+      body.replaceChildren(fragment);
+      if (doc.title) document.title = doc.title;
+    } catch (error) {
+      if (error.name === 'AbortError') return;
+      if (!isModalOpen || activeRequestId !== requestId) return;
+      console.error('RedditPro Modal Error:', error);
+      body.textContent = 'Unable to load this post. Please try again.';
+      body.classList.add('rg-error');
+    } finally {
+      if (isModalOpen && activeRequestId === requestId) loader.style.display = 'none';
     }
+  }
+
+  function sanitizeClone(root) {
+    root.querySelectorAll('script, object, embed').forEach((element) => element.remove());
+
+    const elements = [root, ...root.querySelectorAll('*')];
+    elements.forEach((element) => {
+      [...element.attributes].forEach((attribute) => {
+        const name = attribute.name.toLowerCase();
+        const value = attribute.value.trim();
+        if (name.startsWith('on')) element.removeAttribute(attribute.name);
+        if (
+          ['href', 'src', 'xlink:href', 'formaction'].includes(name) &&
+          /^javascript:/i.test(value)
+        ) {
+          element.removeAttribute(attribute.name);
+        }
+      });
+    });
+  }
+
+  function hideModal() {
+    isModalOpen = false;
+    requestId += 1;
+    requestController?.abort();
+    requestController = null;
+    modalContainer.classList.add('rg-modal-hidden');
+    document.body.classList.remove('rg-modal-open');
+    document.title = originalTitle;
+
+    clearTimer = setTimeout(() => {
+      if (!isModalOpen) getModalElements().body.replaceChildren();
+    }, 300);
   }
 
   function closeModal() {
     if (!isModalOpen) return;
-    isModalOpen = false;
+    const shouldGoBack = history.state?.redditProModal === true;
+    hideModal();
 
-    // Restore URL
-    if (history.state && history.state.redditProModal) {
-      history.back(); // This triggers popstate, which we handle, but we need to ensure we don't close twice
-    } else {
-      history.replaceState(null, '', originalUrl);
-    }
-    
-    document.title = originalTitle;
-
-    modalContainer.classList.add('rg-modal-hidden');
-    document.body.classList.remove('rg-modal-open');
-    
-    // Clear content to free memory and stop background videos
-    setTimeout(() => {
-      document.getElementById('rg-modal-body').innerHTML = '';
-    }, 300); // Wait for fade out animation
+    if (shouldGoBack) history.back();
+    else history.replaceState(null, '', originalUrl);
   }
 
-  function handlePopState(_e) {
-    if (isModalOpen) {
-      // User pressed back button while modal was open
-      isModalOpen = false;
-      modalContainer.classList.add('rg-modal-hidden');
-      document.body.classList.remove('rg-modal-open');
-      document.title = originalTitle;
-      
-      setTimeout(() => {
-        document.getElementById('rg-modal-body').innerHTML = '';
-      }, 300);
-    }
+  function handlePopState() {
+    if (isModalOpen) hideModal();
   }
 
   return { init };

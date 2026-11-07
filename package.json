@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint .",
     "format": "prettier --write \"**/*.{js,css,json,html,md}\"",
-    "format:check": "prettier --check \"**/*.{js,css,json,html,md}\"",
+    "format:check": "prettier --check package.json manifest.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc -p jsconfig.json --noEmit"

@@ -1,43 +1,77 @@
 /**
  * @file audio-observer.js
- * @description Manages auto-playing and auto-muting of Reddit video/audio players based on scroll position.
- * Uses IntersectionObserver to detect visible players and calculates the closest to the center.
+ * @description Gives audio focus to the visible Reddit player nearest the viewport center.
  */
 window.RedditPro = window.RedditPro || {};
 
-window.RedditPro.AudioObserver = (function() {
+window.RedditPro.AudioObserver = (function () {
   const visible = new Set();
   let debounceTimer = null;
 
-  const observer = new IntersectionObserver((entries) => {
-    const settings = window.RedditPro.Settings.get();
-    if (!settings.autoPlayAudio) return;
-    
-    for (const entry of entries) {
-      if (entry.isIntersecting) {
-        visible.add(entry.target);
-      } else {
-        visible.delete(entry.target);
-        mutePlayer(entry.target);
-      }
-    }
-    scheduleUpdate();
-  }, { threshold: 0.1 });
+  function getVideo(player) {
+    return player.querySelector('video') || player.shadowRoot?.querySelector('video') || null;
+  }
 
   function mutePlayer(player) {
-    player.muted = true;
+    const video = getVideo(player);
+    if (video) video.muted = true;
+    if ('muted' in player) player.muted = true;
     player.setAttribute('muted', '');
-    const v = player.querySelector('video') ||
-              (player.shadowRoot && player.shadowRoot.querySelector('video'));
-    if (v) v.muted = true;
   }
 
   function unmutePlayer(player) {
-    player.muted = false;
+    const video = getVideo(player);
+    if (video) {
+      video.muted = false;
+    }
+    if ('muted' in player) player.muted = false;
     player.removeAttribute('muted');
-    const v = player.querySelector('video') ||
-              (player.shadowRoot && player.shadowRoot.querySelector('video'));
-    if (v) { v.muted = false; v.volume = 1; }
+  }
+
+  function muteAll() {
+    visible.forEach(mutePlayer);
+  }
+
+  function updateFocus() {
+    const settings = window.RedditPro.Settings.get();
+
+    for (const player of visible) {
+      if (!player.isConnected) visible.delete(player);
+    }
+
+    if (
+      !settings.autoPlayAudio ||
+      visible.size === 0 ||
+      /\/comments\/[a-z0-9]+\//i.test(location.pathname)
+    ) {
+      muteAll();
+      return;
+    }
+
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    let best = null;
+    let bestDistance = Infinity;
+
+    visible.forEach((player) => {
+      const rect = player.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+
+      const distance = Math.hypot(
+        rect.left + rect.width / 2 - centerX,
+        rect.top + rect.height / 2 - centerY
+      );
+
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        best = player;
+      }
+    });
+
+    visible.forEach((player) => {
+      if (player === best) unmutePlayer(player);
+      else mutePlayer(player);
+    });
   }
 
   function scheduleUpdate() {
@@ -45,43 +79,55 @@ window.RedditPro.AudioObserver = (function() {
     debounceTimer = setTimeout(() => requestAnimationFrame(updateFocus), 80);
   }
 
-  function updateFocus() {
-    const settings = window.RedditPro.Settings.get();
-    
-    // Purge disconnected nodes to prevent memory leaks in the SPA
-    for (const player of visible) {
-      if (!player.isConnected) visible.delete(player);
-    }
+  const observer =
+    typeof IntersectionObserver === 'function'
+      ? new IntersectionObserver(
+          (entries) => {
+            const settings = window.RedditPro.Settings.get();
 
-    if (visible.size === 0 || !settings.autoPlayAudio) return;
-    if (/\/comments\/[a-z0-9]+\//.test(location.href)) return;
+            entries.forEach((entry) => {
+              if (entry.isIntersecting && settings.autoPlayAudio) {
+                visible.add(entry.target);
+              } else {
+                visible.delete(entry.target);
+                mutePlayer(entry.target);
+              }
+            });
 
-    // Calculate strict exact-center
-    const cy = window.innerHeight / 2;
-    const cx = window.innerWidth / 2;
-    let best = null, minDist = Infinity;
-
-    visible.forEach(player => {
-      const r = player.getBoundingClientRect();
-      const dist = Math.hypot(r.top + r.height / 2 - cy, r.left + r.width / 2 - cx);
-      if (dist < minDist) { minDist = dist; best = player; }
-    });
-
-    visible.forEach(player => (player === best ? unmutePlayer(player) : mutePlayer(player)));
-  }
-
-  function muteAll() { visible.forEach(mutePlayer); }
+            scheduleUpdate();
+          },
+          { threshold: 0.1 }
+        )
+      : null;
 
   function observe(node) {
-    if (node && node.tagName) observer.observe(node);
+    if (observer && node?.tagName === 'SHREDDIT-PLAYER') {
+      observer.observe(node);
+    }
   }
 
   function observeIn(root) {
+    if (!root?.querySelectorAll) return;
+    if (root.matches?.('shreddit-player')) observe(root);
     root.querySelectorAll('shreddit-player').forEach(observe);
   }
 
-  // Hook into scroll to keep audio centered
-  window.addEventListener('scroll', scheduleUpdate, { passive: true });
+  function disconnectAll() {
+    if (observer) observer.disconnect();
+    muteAll();
+    visible.clear();
+    clearTimeout(debounceTimer);
+  }
 
-  return { observe, observeIn, updateFocus, scheduleUpdate, muteAll };
+  window.addEventListener('scroll', scheduleUpdate, { passive: true });
+  window.addEventListener('resize', scheduleUpdate, { passive: true });
+
+  if (window.RedditPro.Settings?.subscribe) {
+    window.RedditPro.Settings.subscribe((settings) => {
+      if (!settings.autoPlayAudio) muteAll();
+      else scheduleUpdate();
+    });
+  }
+
+  return { observe, observeIn, updateFocus, scheduleUpdate, muteAll, disconnectAll };
 })();
