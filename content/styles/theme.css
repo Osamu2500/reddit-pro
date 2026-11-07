@@ -1,15 +1,15 @@
 /*
   Reddit Pro — theme.css  v5
   ═══════════════════════════════════════════════════════════════════════════
-  NOTION MINIMAL + GLASSMORPHISM
+  REFINED MINIMAL CARD SURFACES
   ═══════════════════════════════════════════════════════════════════════════
 
   Design Language:
   ─ Notion Minimal: Clean, flat structure, no heavy drop shadows, no 3D
                     bevels, structured padding, sharp or lightly rounded
                     corners (12px).
-  ─ Glassmorphism:  Retains subtle backdrop blur behind the flat surfaces.
-                    Single 1px solid semi-transparent borders.
+  ─ Surface-first: Opaque, restrained card surfaces with crisp borders.
+                    No per-card backdrop blur; low-cost hover feedback.
 */
 
 /* ═══════════════════════════════════════════════════════════════════════════
