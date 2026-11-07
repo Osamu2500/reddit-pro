@@ -16,84 +16,87 @@
    DESIGN TOKEN SYSTEM
    ═══════════════════════════════════════════════════════════════════════════ */
 :root {
-
   /* ── Blur & Optical Engine ── */
-  --rg-blur:            24px;
-  --rg-blur-sm:         12px;          
-  --rg-saturation:      150%;
-  --rg-brightness:      1.02;
+  --rg-blur: 24px;
+  --rg-blur-sm: 12px;
+  --rg-saturation: 150%;
+  --rg-brightness: 1.02;
 
   /* ── Card Background Layers (light) ── */
-  --rg-glass-base:      rgba(255, 255, 255, 0.94);
-  --rg-card-hover-bg:   rgba(255, 255, 255, 0.98);
+  --rg-glass-base: rgba(255, 255, 255, 0.94);
+  --rg-card-hover-bg: rgba(255, 255, 255, 0.98);
   --rg-card-border-hover: rgba(0, 0, 0, 0.16);
-  
+
   /* ── Flat Border ── */
-  --rg-bw:              1px;           /* Crisp 1px line */
-  --rg-border:          rgba(0, 0, 0, 0.08);
-  --rg-border-inner:    rgba(255, 255, 255, 0.40);
+  --rg-bw: 1px; /* Crisp 1px line */
+  --rg-border: rgba(0, 0, 0, 0.08);
+  --rg-border-inner: rgba(255, 255, 255, 0.4);
 
   /* ── Radius ── */
-  --rg-radius:          16px;          /* Notion standard radius */
-  --rg-radius-inner:    15px;          
-  --rg-radius-pill:     6px;           /* Buttons are more rectangular now */
+  --rg-radius: 14px; /* Notion standard radius */
+  --rg-radius-inner: 12px;
+  --rg-radius-pill: 8px; /* Legacy alias */
+  --rg-radius-btn: 8px; /* Squircle button corner radius */
 
   /* ── Flat Shadow System ── */
   /* Replaced 7-layer clay with a single ambient minimal shadow */
-  --rg-shadow:          0 4px 12px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
-  --rg-shadow-hover:    0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+  --rg-shadow: 0 4px 12px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+  --rg-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
 
   /* ── Accent Colors ── */
-  --rg-accent:          #ff4500;
-  --rg-accent-rgb:      255, 69, 0;
-  --rg-downvote:        #7193ff;
-  --rg-downvote-rgb:    113, 147, 255;
+  --rg-accent: #ff4500;
+  --rg-accent-rgb: 255, 69, 0;
+  --rg-downvote: #7193ff;
+  --rg-downvote-rgb: 113, 147, 255;
 
   /* ── Flat Buttons ── */
-  --rg-btn-bg:          transparent;
-  --rg-btn-bg-hover:    rgba(0, 0, 0, 0.04);
-  --rg-btn-border:      transparent;
-  --rg-btn-border-hover: rgba(0, 0, 0, 0.08);
-  --rg-btn-shadow:      none;
+  --rg-btn-bg: rgba(0, 0, 0, 0.03);
+  --rg-btn-bg-hover: rgba(0, 0, 0, 0.07);
+  --rg-btn-border: rgba(0, 0, 0, 0.08);
+  --rg-btn-border-hover: rgba(0, 0, 0, 0.16);
+  --rg-btn-shadow: none;
 
   /* ── Structural Strips ── */
-  --rg-credit-bg:       transparent;
-  --rg-credit-border:   rgba(0, 0, 0, 0.06);
-  --rg-action-bg:       transparent;
-  --rg-action-border:   rgba(0, 0, 0, 0.06);
+  --rg-credit-bg: transparent;
+  --rg-credit-border: rgba(0, 0, 0, 0.06);
+  --rg-action-bg: transparent;
+  --rg-action-border: rgba(0, 0, 0, 0.06);
 
   /* ── Text ── */
-  --rg-text-muted:      rgba(0, 0, 0, 0.50);
+  --rg-text: rgba(0, 0, 0, 0.88);
+  --rg-text-muted: rgba(0, 0, 0, 0.5);
 }
 
 /* ─────────────────────────────────────────────
    DARK MODE TOKEN OVERRIDES
    ───────────────────────────────────────────── */
 body.rg-theme-dark {
-  --rg-glass-base:      rgba(27, 29, 33, 0.96);
-  --rg-card-hover-bg:   rgba(32, 34, 39, 0.98);
+  --rg-glass-base: rgba(27, 29, 33, 0.96);
+  --rg-card-hover-bg: rgba(32, 34, 39, 0.98);
   --rg-card-border-hover: rgba(255, 255, 255, 0.16);
-  
-  --rg-border:          rgba(255, 255, 255, 0.08);
-  --rg-border-inner:    rgba(255, 255, 255, 0.03);
 
-  --rg-shadow:          0 4px 12px rgba(0, 0, 0, 0.20), 0 1px 3px rgba(0, 0, 0, 0.10);
-  --rg-shadow-hover:    0 8px 24px rgba(0, 0, 0, 0.30), 0 2px 6px rgba(0, 0, 0, 0.15);
+  --rg-border: rgba(255, 255, 255, 0.08);
+  --rg-border-inner: rgba(255, 255, 255, 0.03);
 
-  --rg-btn-bg-hover:    rgba(255, 255, 255, 0.08);
-  --rg-btn-border-hover: rgba(255, 255, 255, 0.12);
+  --rg-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.1);
+  --rg-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.15);
 
-  --rg-credit-border:   rgba(255, 255, 255, 0.06);
-  --rg-action-border:   rgba(255, 255, 255, 0.06);
-  --rg-text-muted:      rgba(255, 255, 255, 0.40);
+  --rg-btn-bg: rgba(255, 255, 255, 0.06);
+  --rg-btn-bg-hover: rgba(255, 255, 255, 0.12);
+  --rg-btn-border: rgba(255, 255, 255, 0.08);
+  --rg-btn-border-hover: rgba(255, 255, 255, 0.18);
+
+  --rg-credit-border: rgba(255, 255, 255, 0.06);
+  --rg-action-border: rgba(255, 255, 255, 0.06);
+  --rg-text: rgba(255, 255, 255, 0.92);
+  --rg-text-muted: rgba(255, 255, 255, 0.45);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    CARD SURFACE — NOTION MINIMAL GLASS
    ═══════════════════════════════════════════════════════════════════════════ */
-body:not([data-reddit-grid-cols="1"]) shreddit-post,
-body:not([data-reddit-grid-cols="1"]) .Post {
-
+body:not([data-reddit-grid-cols='1']) shreddit-post,
+body:not([data-reddit-grid-cols='1']) .Post {
   border-radius: var(--rg-radius) !important;
   background: var(--rg-glass-base) !important;
 
@@ -108,82 +111,82 @@ body:not([data-reddit-grid-cols="1"]) .Post {
   /* Flat shadow */
   box-shadow: var(--rg-shadow) !important;
 
-  position:  relative !important;
+  position: relative !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    ::before — INNER BORDER 
    Subtle inner highlight for glass edge crispness (Notion dark mode uses this)
    ═══════════════════════════════════════════════════════════════════════════ */
-body:not([data-reddit-grid-cols="1"]) shreddit-post::before,
-body:not([data-reddit-grid-cols="1"]) .Post::before {
-  content:        ""     !important;
-  display:        block  !important;
-  position:       absolute !important;
-  inset:          0      !important;
-  border-radius:  var(--rg-radius-inner) !important;
-  border:         1px solid var(--rg-border-inner) !important;
-  pointer-events: none   !important;
-  z-index:        0      !important;
+body:not([data-reddit-grid-cols='1']) shreddit-post::before,
+body:not([data-reddit-grid-cols='1']) .Post::before {
+  content: '' !important;
+  display: block !important;
+  position: absolute !important;
+  inset: 0 !important;
+  border-radius: var(--rg-radius-inner) !important;
+  border: 1px solid var(--rg-border-inner) !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
 }
 
 /* Disable the old edge glow ring */
-body:not([data-reddit-grid-cols="1"]) shreddit-post::after,
-body:not([data-reddit-grid-cols="1"]) .Post::after {
+body:not([data-reddit-grid-cols='1']) shreddit-post::after,
+body:not([data-reddit-grid-cols='1']) .Post::after {
   display: none !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    GPU SMEAR BUG FIX
    ═══════════════════════════════════════════════════════════════════════════ */
-body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="post-header"],
-body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="credit-bar"],
-body:not([data-reddit-grid-cols="1"]) shreddit-post::part(post-header),
-body:not([data-reddit-grid-cols="1"]) shreddit-post::part(credit-bar),
-body:not([data-reddit-grid-cols="1"]) shreddit-post-header {
+body:not([data-reddit-grid-cols='1']) shreddit-post [slot='post-header'],
+body:not([data-reddit-grid-cols='1']) shreddit-post [slot='credit-bar'],
+body:not([data-reddit-grid-cols='1']) shreddit-post::part(post-header),
+body:not([data-reddit-grid-cols='1']) shreddit-post::part(credit-bar),
+body:not([data-reddit-grid-cols='1']) shreddit-post-header {
   position: relative !important;
-  top:  auto !important;
+  top: auto !important;
   left: auto !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    RESET INTERNAL BACKGROUNDS
    ═══════════════════════════════════════════════════════════════════════════ */
-body:not([data-reddit-grid-cols="1"]) shreddit-post::part(action-bar),
-body:not([data-reddit-grid-cols="1"]) shreddit-post::part(credit-bar),
-body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="credit-bar"],
-body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="action-bar"],
-body:not([data-reddit-grid-cols="1"]) shreddit-post > div,
-body:not([data-reddit-grid-cols="1"]) shreddit-post > section {
-  background:       transparent !important;
+body:not([data-reddit-grid-cols='1']) shreddit-post::part(action-bar),
+body:not([data-reddit-grid-cols='1']) shreddit-post::part(credit-bar),
+body:not([data-reddit-grid-cols='1']) shreddit-post [slot='credit-bar'],
+body:not([data-reddit-grid-cols='1']) shreddit-post [slot='action-bar'],
+body:not([data-reddit-grid-cols='1']) shreddit-post > div,
+body:not([data-reddit-grid-cols='1']) shreddit-post > section {
+  background: transparent !important;
   background-color: transparent !important;
-  box-shadow:       none !important;
+  box-shadow: none !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    CREDIT BAR — header strip 
    Flat, minimal layout. 
    ═══════════════════════════════════════════════════════════════════════════ */
-body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="credit-bar"],
-body:not([data-reddit-grid-cols="1"]) shreddit-post-header {
-  background:    var(--rg-credit-bg)     !important;
+body:not([data-reddit-grid-cols='1']) shreddit-post [slot='credit-bar'],
+body:not([data-reddit-grid-cols='1']) shreddit-post-header {
+  background: var(--rg-credit-bg) !important;
   /* Very subtle dividing line */
   border-bottom: 1px solid var(--rg-credit-border) !important;
   border-radius: var(--rg-radius-inner) var(--rg-radius-inner) 0 0 !important;
-  padding:       12px 14px 10px 14px !important;
-  position:      relative !important;
-  z-index:       1 !important;
+  padding: 12px 14px 10px 14px !important;
+  position: relative !important;
+  z-index: 1 !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    ACTION BAR — bottom strip
    ═══════════════════════════════════════════════════════════════════════════ */
-body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="action-bar"],
-body:not([data-reddit-grid-cols="1"]) shreddit-post shreddit-post-action-bar {
-  background:    var(--rg-action-bg)     !important;
-  border-top:    1px solid var(--rg-action-border) !important;
+body:not([data-reddit-grid-cols='1']) shreddit-post [slot='action-bar'],
+body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-post-action-bar {
+  background: var(--rg-action-bg) !important;
+  border-top: 1px solid var(--rg-action-border) !important;
   border-radius: 0 0 var(--rg-radius-inner) var(--rg-radius-inner) !important;
-  padding:       8px 14px 10px 14px !important;
+  padding: 8px 14px 10px 14px !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -193,12 +196,11 @@ body shreddit-post.rg-filtered-out {
   display: none !important;
 }
 
-
 /* =====================================================================
    MASONRY CARD FINISH — clearer surfaces, calmer hover and focus states
    ===================================================================== */
-body:not([data-reddit-grid-cols="1"]) shreddit-post,
-body:not([data-reddit-grid-cols="1"]) .Post {
+body:not([data-reddit-grid-cols='1']) shreddit-post,
+body:not([data-reddit-grid-cols='1']) .Post {
   background: var(--rg-glass-base) !important;
   border-color: var(--rg-border) !important;
   border-radius: var(--rg-radius) !important;
@@ -210,40 +212,40 @@ body:not([data-reddit-grid-cols="1"]) .Post {
 }
 
 @media (hover: hover) and (pointer: fine) {
-  body:not([data-reddit-grid-cols="1"]) shreddit-post:hover,
-  body:not([data-reddit-grid-cols="1"]) .Post:hover {
+  body:not([data-reddit-grid-cols='1']) shreddit-post:hover,
+  body:not([data-reddit-grid-cols='1']) .Post:hover {
     background: var(--rg-card-hover-bg) !important;
     border-color: var(--rg-card-border-hover) !important;
     box-shadow: var(--rg-shadow-hover) !important;
   }
 }
 
-body:not([data-reddit-grid-cols="1"]) shreddit-post:focus-within,
-body:not([data-reddit-grid-cols="1"]) .Post:focus-within {
+body:not([data-reddit-grid-cols='1']) shreddit-post:focus-within,
+body:not([data-reddit-grid-cols='1']) .Post:focus-within {
   border-color: rgba(var(--rg-accent-rgb), 0.42) !important;
   box-shadow:
-    0 0 0 2px rgba(var(--rg-accent-rgb), 0.10),
+    0 0 0 2px rgba(var(--rg-accent-rgb), 0.1),
     var(--rg-shadow) !important;
 }
 
-body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="post-media-container"],
-body:not([data-reddit-grid-cols="1"]) shreddit-post gallery-carousel,
-body:not([data-reddit-grid-cols="1"]) shreddit-post shreddit-player,
-body:not([data-reddit-grid-cols="1"]) shreddit-post .shreddit-player-wrapper {
+body:not([data-reddit-grid-cols='1']) shreddit-post [slot='post-media-container'],
+body:not([data-reddit-grid-cols='1']) shreddit-post gallery-carousel,
+body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-player,
+body:not([data-reddit-grid-cols='1']) shreddit-post .shreddit-player-wrapper {
   border-radius: 10px !important;
   overflow: hidden !important;
 }
 
-body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="title"],
-body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="post-title"],
-body:not([data-reddit-grid-cols="1"]) shreddit-post-title {
+body:not([data-reddit-grid-cols='1']) shreddit-post [slot='title'],
+body:not([data-reddit-grid-cols='1']) shreddit-post [slot='post-title'],
+body:not([data-reddit-grid-cols='1']) shreddit-post-title {
   letter-spacing: -0.012em !important;
   text-wrap: pretty;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body:not([data-reddit-grid-cols="1"]) shreddit-post,
-  body:not([data-reddit-grid-cols="1"]) .Post {
+  body:not([data-reddit-grid-cols='1']) shreddit-post,
+  body:not([data-reddit-grid-cols='1']) .Post {
     transition: none !important;
   }
 }

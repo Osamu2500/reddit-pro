@@ -1,19 +1,20 @@
 /**
  * @file masonry.js
- * @description Masonry grid engine for Reddit Pro.
+ * @description Masonry grid engine and responsive column controller for Reddit Pro.
  *
- * Key improvements over v1:
- *  - Dynamic ROW_GAP read from CSS instead of hardcoded constant
+ * Key capabilities:
+ *  - Responsive container-driven column calculation (1-8 columns)
+ *  - Live feed container ResizeObserver for viewport & sidebar changes
+ *  - Dynamic ROW_GAP read from computed CSS
  *  - Safe first-measurement state for newly inserted cards
- *  - Image load listeners so masonry recalculates the moment an image
- *    inside a card finishes loading (biggest cause of mid-scroll reflow)
- *  - Marks cards stable after the first valid measurement
- *  - Removed all expanded-card logic (feature deleted)
+ *  - Image load listeners to recalculate on media load
+ *  - Marks cards stable after valid measurement
+ *  - Controlled layout diagnostics
  */
 // @ts-nocheck
 window.RedditPro = window.RedditPro || {};
 
-window.RedditPro.Masonry = (function() {
+window.RedditPro.Masonry = (function () {
   let resizePending = false;
   const resizeQueue = new Map(); // Emptied every frame
   const heightCache = new WeakMap();
@@ -21,18 +22,142 @@ window.RedditPro.Masonry = (function() {
   const imgListeners = new WeakSet();
   let viewportSweepTimer = 0;
 
+  let feedObserver = null;
+  let activeObservedFeed = null;
+  let lastFeedWidth = 0;
+  let effectiveColumns = 0;
+
   const ROW_HEIGHT = 1;
   const HEIGHT_EPSILON = 0.5;
 
+  const FEED_SELECTORS = [
+    'shreddit-feed',
+    'shreddit-profile-feed',
+    'profile-feed',
+    '[data-testid="post-list"]',
+    'main > div:has(> shreddit-post)',
+    'main > div:has(> article)',
+  ];
+
+  const POST_SELECTORS = ['shreddit-post', 'shreddit-ad-post', 'article', '.Post'].join(',');
+
   /**
-   * Read the actual column gap from computed CSS so the span math
-   * always matches the rendered layout (fixes the gap-mismatch bug).
+   * Calculates the number of responsive columns that fit within the container.
+   * Supports 1 to 8 columns based on actual available container width,
+   * minimum card width, column gap, and maximum column constraint.
+   *
+   * @param {number} containerWidth
+   * @param {any} [settings]
    * @returns {number}
    */
+  function calculateColumns(containerWidth, settings) {
+    const s = settings || (window.RedditPro.Settings ? window.RedditPro.Settings.get() : {});
+    if (s.columns === '1') return 1;
+
+    const minCardWidth =
+      typeof s.minCardWidth === 'number' && s.minCardWidth >= 160 ? s.minCardWidth : 280;
+    const maxColumns = s.autoFit
+      ? s.maxColumns || 8
+      : Math.min(s.maxColumns || 8, parseInt(s.columns, 10) || 3);
+    const columnGap = typeof s.columnGap === 'number' && s.columnGap >= 0 ? s.columnGap : 12;
+
+    if (!containerWidth || containerWidth <= 0) {
+      return Math.max(1, Math.min(maxColumns, parseInt(s.columns, 10) || 3));
+    }
+
+    const fitted = Math.floor((containerWidth + columnGap) / (minCardWidth + columnGap));
+    return Math.max(1, Math.min(maxColumns, fitted));
+  }
+
+  function getActiveFeedContainer() {
+    for (const selector of FEED_SELECTORS) {
+      const el = document.querySelector(selector);
+      if (el && el.isConnected) return el;
+    }
+    return document.querySelector('main');
+  }
+
+  function updateColumnsForContainer(containerWidth) {
+    const settings = window.RedditPro.Settings ? window.RedditPro.Settings.get() : {};
+    const cols = calculateColumns(containerWidth, settings);
+    const previousCols = effectiveColumns;
+    effectiveColumns = cols;
+
+    const body = document.body;
+    if (body) {
+      body.style.setProperty('--reddit-cols', String(cols));
+      body.setAttribute('data-reddit-grid-cols', String(cols));
+    }
+    const container = activeObservedFeed || getActiveFeedContainer();
+    if (container) {
+      container.style.setProperty('--reddit-cols', String(cols));
+    }
+
+    if (window.RedditPro.Diagnostics) {
+      window.RedditPro.Diagnostics.checkLayout(container || body);
+    }
+
+    if (previousCols !== 0 && previousCols !== cols) {
+      sweepAll();
+    }
+    return cols;
+  }
+
+  function observeFeedContainer() {
+    const container = getActiveFeedContainer();
+    if (!container) return;
+
+    if (container !== activeObservedFeed) {
+      if (feedObserver && activeObservedFeed) {
+        feedObserver.unobserve(activeObservedFeed);
+      }
+      activeObservedFeed = container;
+
+      if (!feedObserver) {
+        feedObserver = new ResizeObserver((entries) => {
+          for (const entry of entries) {
+            const width = entry.contentRect
+              ? entry.contentRect.width
+              : entry.target.getBoundingClientRect().width;
+            if (width <= 0) continue;
+            if (Math.abs(width - lastFeedWidth) < 2) continue;
+            lastFeedWidth = width;
+            updateColumnsForContainer(width);
+          }
+        });
+      }
+      feedObserver.observe(container);
+    }
+
+    const rect = container.getBoundingClientRect();
+    if (rect.width > 0) {
+      lastFeedWidth = rect.width;
+      updateColumnsForContainer(rect.width);
+    }
+  }
+
+  /**
+   * Identifies the immediate feed grid container for a card element.
+   * Prevents treating outer page layout wrappers (e.g. shreddit-app > .grid) as card grids.
+   * @param {Element} element
+   * @returns {Element | null}
+   */
   function getGridContainer(element) {
-    let ancestor = element;
-    while (ancestor && ancestor !== document.body) {
-      if (getComputedStyle(ancestor).display.includes('grid')) return ancestor;
+    if (!element) return null;
+    const feed = element.closest(
+      'shreddit-feed, shreddit-profile-feed, profile-feed, [data-testid="post-list"]'
+    );
+    if (feed && getComputedStyle(feed).display.includes('grid')) return feed;
+
+    let ancestor = element.parentElement;
+    while (ancestor && ancestor !== document.body && ancestor.tagName !== 'SHREDDIT-APP') {
+      if (
+        ancestor.id !== 'left-sidebar-container' &&
+        !ancestor.classList.contains('grid-container')
+      ) {
+        const display = getComputedStyle(ancestor).display;
+        if (display.includes('grid')) return ancestor;
+      }
       ancestor = ancestor.parentElement;
     }
     return null;
@@ -58,10 +183,6 @@ window.RedditPro.Masonry = (function() {
     heightCache.delete(card);
   }
 
-  const POST_SELECTORS = [
-    'shreddit-post', 'shreddit-ad-post', 'article', '.Post'
-  ].join(',');
-
   const observer = new ResizeObserver((entries) => {
     for (const entry of entries) {
       const el = entry.target;
@@ -76,8 +197,6 @@ window.RedditPro.Masonry = (function() {
       if (Math.abs(height - cachedHeight) < HEIGHT_EPSILON) continue;
       heightCache.set(el, height);
 
-      // We defer the span math to flush() (rAF) to prevent layout thrashing
-      // caused by getComputedStyle inside the ResizeObserver callback.
       resizeQueue.set(el, height);
     }
 
@@ -109,15 +228,9 @@ window.RedditPro.Masonry = (function() {
       const expectedRowEnd = `span ${span}`;
       const currentRowEnd = gridItem.style.getPropertyValue('grid-row-end');
 
-      // The data attribute can survive third-party style changes. Validate the
-      // actual inline row-end too, otherwise a forced sweep can preserve a stale
-      // span even when the cached data attribute claims the measurement is right.
       if (currentSpan !== String(span) || currentRowEnd !== expectedRowEnd) {
         gridItem.style.setProperty('grid-row-end', expectedRowEnd, 'important');
         gridItem.setAttribute('data-rg-span', span);
-        // The measured height already represents the current rendered layout.
-        // Mark it stable now; waiting for three more ResizeObserver notifications
-        // is unreliable because unchanged elements do not emit more notifications.
         gridItem.setAttribute('data-rg-stable', '1');
         gridItem.removeAttribute('data-rg-loading');
       } else if (!gridItem.hasAttribute('data-rg-stable')) {
@@ -144,7 +257,6 @@ window.RedditPro.Masonry = (function() {
   /**
    * Attach load listeners to all images/videos inside a card (including Shadow DOM)
    * so masonry recalculates the moment each media finishes loading.
-   * This is the #1 cause of mid-scroll card reflow.
    * @param {Element} el
    */
   function attachImageListeners(el) {
@@ -152,13 +264,16 @@ window.RedditPro.Masonry = (function() {
     imgListeners.add(el);
 
     const media = getMediaElementsDeep(el);
-    media.forEach(node => {
+    media.forEach((node) => {
       const tag = node.tagName.toLowerCase();
       if (tag === 'img' && !node.complete) {
         node.addEventListener('load', () => recalculateCard(el), { once: true, passive: true });
         node.addEventListener('error', () => recalculateCard(el), { once: true, passive: true });
       } else if (tag === 'video' && node.readyState < 3) {
-        node.addEventListener('loadeddata', () => recalculateCard(el), { once: true, passive: true });
+        node.addEventListener('loadeddata', () => recalculateCard(el), {
+          once: true,
+          passive: true,
+        });
       }
     });
   }
@@ -172,15 +287,12 @@ window.RedditPro.Masonry = (function() {
     const gridItem = el.closest('faceplate-tracker') || el;
 
     if (settings.columns !== '1' && settings.masonry && hasMultipleGridColumns(el)) {
-      // Mark as pending; CSS keeps the card visible but temporarily non-interactive
       if (!gridItem.hasAttribute('data-rg-span') && !gridItem.hasAttribute('data-rg-stable')) {
         gridItem.setAttribute('data-rg-loading', '1');
       }
       observer.observe(el);
       attachImageListeners(el);
-      // ResizeObserver does not replay an entry when an already-observed card
-      // is force-swept. Schedule an explicit measurement so settings changes,
-      // route resumes and width changes cannot leave stale row spans behind.
+
       requestAnimationFrame(() => {
         if (!el.isConnected) return;
         const height = el.getBoundingClientRect().height;
@@ -205,27 +317,34 @@ window.RedditPro.Masonry = (function() {
     'profile-feed',
     '[data-testid="post-list"]',
     'main > div:has(> shreddit-post)',
-    'main > div:has(> article)'
+    'main > div:has(> article)',
   ].join(',');
 
   function processGridHeaders(force = false) {
     const settings = window.RedditPro.Settings.get();
     if (settings.columns === '1' || !settings.masonry) return;
-    document.querySelectorAll(GRID_CONTAINERS).forEach(container => {
-      Array.from(container.children).forEach(child => {
-        // Skip cards (they are handled by POST_SELECTORS) and structural batch/loader elements
+    document.querySelectorAll(GRID_CONTAINERS).forEach((container) => {
+      Array.from(container.children).forEach((child) => {
         if (
           child.matches(POST_SELECTORS) ||
-          child.matches('faceplate-tracker, faceplate-batch, shreddit-async-loader, shreddit-subreddit-discovery-unit, hr, style, script, template')
-        ) return;
-        
+          child.matches(
+            'faceplate-tracker, faceplate-batch, shreddit-async-loader, shreddit-subreddit-discovery-unit, hr, style, script, template'
+          )
+        )
+          return;
+
+        // Ensure non-card header elements span all columns instead of occupying a single card column
+        if (child.style.getPropertyValue('grid-column') !== '1 / -1') {
+          child.style.setProperty('grid-column', '1 / -1', 'important');
+        }
+
         if (force || !child.hasAttribute('data-rg-stable')) {
-           if (force) {
-             child.removeAttribute('data-rg-stable');
-             child.removeAttribute('data-rg-loading');
-             heightCache.delete(child);
-           }
-           processCard(child);
+          if (force) {
+            child.removeAttribute('data-rg-stable');
+            child.removeAttribute('data-rg-loading');
+            heightCache.delete(child);
+          }
+          processCard(child);
         }
       });
     });
@@ -234,14 +353,15 @@ window.RedditPro.Masonry = (function() {
   function sweepNew() {
     const settings = window.RedditPro.Settings.get();
     if (settings.columns === '1' || !settings.masonry) return;
-    document.querySelectorAll(POST_SELECTORS).forEach(el => {
+    document.querySelectorAll(POST_SELECTORS).forEach((el) => {
       if (!el.hasAttribute('data-rg-stable')) processCard(el);
     });
     processGridHeaders(false);
   }
 
   function sweepAll() {
-    document.querySelectorAll(POST_SELECTORS).forEach(el => {
+    observeFeedContainer();
+    document.querySelectorAll(POST_SELECTORS).forEach((el) => {
       const gridItem = el.closest('faceplate-tracker') || el;
       gridItem.removeAttribute('data-rg-stable');
       gridItem.removeAttribute('data-rg-loading');
@@ -253,19 +373,31 @@ window.RedditPro.Masonry = (function() {
 
   function disconnectAll() {
     observer.disconnect();
+    if (feedObserver && activeObservedFeed) {
+      feedObserver.unobserve(activeObservedFeed);
+      activeObservedFeed = null;
+    }
     resizeQueue.clear();
     resizePending = false;
   }
 
-  // A breakpoint can turn the feed into a one-column layout without changing
-  // the user's saved column setting. Re-scan after resize so observation and
-  // row spans are enabled/cleared for the effective layout, not just settings.
-  window.addEventListener('resize', () => {
-    clearTimeout(viewportSweepTimer);
-    viewportSweepTimer = window.setTimeout(() => {
-      if (window.RedditPro.Settings.get().columns !== '1') sweepAll();
-    }, 140);
-  }, { passive: true });
+  window.addEventListener(
+    'resize',
+    () => {
+      clearTimeout(viewportSweepTimer);
+      viewportSweepTimer = window.setTimeout(() => {
+        if (window.RedditPro.Settings.get().columns !== '1') {
+          const container = getActiveFeedContainer();
+          if (container) {
+            const rect = container.getBoundingClientRect();
+            if (rect.width > 0) updateColumnsForContainer(rect.width);
+          }
+          sweepAll();
+        }
+      }, 140);
+    },
+    { passive: true }
+  );
 
   /**
    * @param {Element} el
@@ -277,5 +409,62 @@ window.RedditPro.Masonry = (function() {
     processCard(el);
   }
 
-  return { processCard, sweepNew, sweepAll, disconnectAll, recalculateCard };
+  // Controlled diagnostics for layout verification without production noise
+  window.RedditPro.Diagnostics = {
+    isEnabled() {
+      try {
+        return Boolean(
+          window.__RP_DEBUG ||
+          (typeof localStorage !== 'undefined' &&
+            localStorage.getItem('reddit_pro_debug') === 'true')
+        );
+      } catch {
+        return false;
+      }
+    },
+    log(event, data) {
+      if (!this.isEnabled()) return;
+      console.warn(`[RedditPro:Diagnostics] ${event}`, data);
+    },
+    checkLayout(feedContainer) {
+      if (!this.isEnabled() || !feedContainer) return null;
+      try {
+        const computed = getComputedStyle(feedContainer);
+        const rect = feedContainer.getBoundingClientRect();
+        const cards = Array.from(feedContainer.querySelectorAll(POST_SELECTORS)).slice(0, 10);
+        const cardWidths = cards.map((c) => Math.round(c.getBoundingClientRect().width));
+        const isOverflowing = cards.some((c) => c.getBoundingClientRect().right > rect.right + 2);
+
+        const info = {
+          containerWidth: Math.round(rect.width),
+          calculatedColumnCount:
+            effectiveColumns ||
+            parseInt(getComputedStyle(document.body).getPropertyValue('--reddit-cols'), 10) ||
+            1,
+          computedGridColumns: computed.gridTemplateColumns,
+          columnGap: computed.columnGap,
+          rowGap: computed.rowGap,
+          firstCardWidth: cardWidths[0] || 0,
+          cardWidths,
+          isOverflowing,
+        };
+        this.log('Layout Geometry', info);
+        return info;
+      } catch {
+        return null;
+      }
+    },
+  };
+
+  return {
+    processCard,
+    sweepNew,
+    sweepAll,
+    disconnectAll,
+    recalculateCard,
+    calculateColumns,
+    observeFeedContainer,
+    updateColumnsForContainer,
+    getEffectiveColumns: () => effectiveColumns,
+  };
 })();

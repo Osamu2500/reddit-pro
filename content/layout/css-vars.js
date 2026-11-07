@@ -5,7 +5,7 @@
 
 window.RedditPro = window.RedditPro || {};
 
-window.RedditPro.CSSVars = (function() {
+window.RedditPro.CSSVars = (function () {
   /** @type {HTMLStyleElement | null} */
   let scrollbarStyleTag = null;
 
@@ -33,21 +33,27 @@ window.RedditPro.CSSVars = (function() {
     body.setAttribute('data-reddit-grid-compact', String(settings.compactCards));
     body.setAttribute('data-reddit-grid-hide-promoted', String(settings.hidePromoted));
     body.setAttribute('data-reddit-grid-hide-sidebar', String(settings.hideSidebar));
-    
-    if (settings.theme === 'dark' || (settings.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+
+    if (
+      settings.theme === 'dark' ||
+      (settings.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    ) {
       body.classList.add('rg-theme-dark');
     } else {
       body.classList.remove('rg-theme-dark');
     }
 
-    body.style.setProperty('--reddit-col-gap', settings.masonry ? 'clamp(10px, 1.15vw, 18px)' : '10px');
-    body.style.setProperty('--reddit-row-gap', settings.masonry ? 'clamp(10px, 1vw, 16px)' : '10px');
-    body.style.setProperty('--reddit-batch-gap', settings.masonry ? 'clamp(16px, 2vw, 24px)' : '10px');
+    const colGap = (typeof settings.columnGap === 'number' ? settings.columnGap : 12) + 'px';
+    const rowGap = (typeof settings.rowGap === 'number' ? settings.rowGap : 12) + 'px';
+    body.style.setProperty('--reddit-col-gap', colGap);
+    body.style.setProperty('--reddit-row-gap', rowGap);
+    body.style.setProperty('--reddit-batch-gap', rowGap);
 
     manageScrollbar(settings.hideScrollbar);
 
     if (window.RedditPro.Masonry) {
       if (settings.columns !== '1') {
+        window.RedditPro.Masonry.observeFeedContainer();
         requestAnimationFrame(() => window.RedditPro.Masonry.sweepAll());
       } else {
         window.RedditPro.Masonry.disconnectAll();

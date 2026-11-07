@@ -18,6 +18,10 @@ window.RedditPro = window.RedditPro || {};
  * @property {boolean} hideScrollbar
  * @property {boolean} enableFilters
  * @property {string} theme
+ * @property {number} [minCardWidth]
+ * @property {number} [maxColumns]
+ * @property {number} [columnGap]
+ * @property {number} [rowGap]
  */
 
 window.RedditPro.Settings = (function () {
@@ -32,6 +36,10 @@ window.RedditPro.Settings = (function () {
     hideScrollbar: true,
     enableFilters: true,
     theme: 'system',
+    minCardWidth: 280,
+    maxColumns: 8,
+    columnGap: 12,
+    rowGap: 12,
   };
 
   let userSettings = { ...DEFAULT_SETTINGS };
@@ -58,6 +66,22 @@ window.RedditPro.Settings = (function () {
       hideScrollbar: merged.hideScrollbar === true,
       enableFilters: merged.enableFilters === true,
       theme: themes.includes(merged.theme) ? merged.theme : DEFAULT_SETTINGS.theme,
+      minCardWidth:
+        typeof merged.minCardWidth === 'number' && merged.minCardWidth >= 160
+          ? merged.minCardWidth
+          : DEFAULT_SETTINGS.minCardWidth,
+      maxColumns:
+        typeof merged.maxColumns === 'number' && merged.maxColumns >= 1 && merged.maxColumns <= 10
+          ? merged.maxColumns
+          : DEFAULT_SETTINGS.maxColumns,
+      columnGap:
+        typeof merged.columnGap === 'number' && merged.columnGap >= 0
+          ? merged.columnGap
+          : DEFAULT_SETTINGS.columnGap,
+      rowGap:
+        typeof merged.rowGap === 'number' && merged.rowGap >= 0
+          ? merged.rowGap
+          : DEFAULT_SETTINGS.rowGap,
     };
   }
 
