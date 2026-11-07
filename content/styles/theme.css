@@ -24,7 +24,9 @@
   --rg-brightness:      1.02;
 
   /* ── Card Background Layers (light) ── */
-  --rg-glass-base:      transparent;
+  --rg-glass-base:      rgba(255, 255, 255, 0.94);
+  --rg-card-hover-bg:   rgba(255, 255, 255, 0.98);
+  --rg-card-border-hover: rgba(0, 0, 0, 0.16);
   
   /* ── Flat Border ── */
   --rg-bw:              1px;           /* Crisp 1px line */
@@ -32,8 +34,8 @@
   --rg-border-inner:    rgba(255, 255, 255, 0.40);
 
   /* ── Radius ── */
-  --rg-radius:          12px;          /* Notion standard radius */
-  --rg-radius-inner:    11px;          
+  --rg-radius:          16px;          /* Notion standard radius */
+  --rg-radius-inner:    15px;          
   --rg-radius-pill:     6px;           /* Buttons are more rectangular now */
 
   /* ── Flat Shadow System ── */
@@ -68,7 +70,9 @@
    DARK MODE TOKEN OVERRIDES
    ───────────────────────────────────────────── */
 body.rg-theme-dark {
-  --rg-glass-base:      transparent;
+  --rg-glass-base:      rgba(27, 29, 33, 0.96);
+  --rg-card-hover-bg:   rgba(32, 34, 39, 0.98);
+  --rg-card-border-hover: rgba(255, 255, 255, 0.16);
   
   --rg-border:          rgba(255, 255, 255, 0.08);
   --rg-border-inner:    rgba(255, 255, 255, 0.03);
@@ -94,14 +98,9 @@ body:not([data-reddit-grid-cols="1"]) .Post {
   background: var(--rg-glass-base) !important;
 
   /* Glass optics */
-  -webkit-backdrop-filter:
-    blur(var(--rg-blur))
-    saturate(var(--rg-saturation))
-    brightness(var(--rg-brightness)) !important;
-  backdrop-filter:
-    blur(var(--rg-blur))
-    saturate(var(--rg-saturation))
-    brightness(var(--rg-brightness)) !important;
+  /* Solid surfaces are cheaper to composite than a large blur on every card. */
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
 
   /* Flat minimal border */
   border: var(--rg-bw) solid var(--rg-border) !important;
@@ -192,4 +191,59 @@ body:not([data-reddit-grid-cols="1"]) shreddit-post shreddit-post-action-bar {
    ═══════════════════════════════════════════════════════════════════════════ */
 body shreddit-post.rg-filtered-out {
   display: none !important;
+}
+
+
+/* =====================================================================
+   MASONRY CARD FINISH — clearer surfaces, calmer hover and focus states
+   ===================================================================== */
+body:not([data-reddit-grid-cols="1"]) shreddit-post,
+body:not([data-reddit-grid-cols="1"]) .Post {
+  background: var(--rg-glass-base) !important;
+  border-color: var(--rg-border) !important;
+  border-radius: var(--rg-radius) !important;
+  box-shadow: var(--rg-shadow) !important;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  body:not([data-reddit-grid-cols="1"]) shreddit-post:hover,
+  body:not([data-reddit-grid-cols="1"]) .Post:hover {
+    background: var(--rg-card-hover-bg) !important;
+    border-color: var(--rg-card-border-hover) !important;
+    box-shadow: var(--rg-shadow-hover) !important;
+  }
+}
+
+body:not([data-reddit-grid-cols="1"]) shreddit-post:focus-within,
+body:not([data-reddit-grid-cols="1"]) .Post:focus-within {
+  border-color: rgba(var(--rg-accent-rgb), 0.42) !important;
+  box-shadow:
+    0 0 0 2px rgba(var(--rg-accent-rgb), 0.10),
+    var(--rg-shadow) !important;
+}
+
+body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="post-media-container"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post gallery-carousel,
+body:not([data-reddit-grid-cols="1"]) shreddit-post shreddit-player,
+body:not([data-reddit-grid-cols="1"]) shreddit-post .shreddit-player-wrapper {
+  border-radius: 10px !important;
+  overflow: hidden !important;
+}
+
+body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="title"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post [slot="post-title"],
+body:not([data-reddit-grid-cols="1"]) shreddit-post-title {
+  letter-spacing: -0.012em !important;
+  text-wrap: pretty;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body:not([data-reddit-grid-cols="1"]) shreddit-post,
+  body:not([data-reddit-grid-cols="1"]) .Post {
+    transition: none !important;
+  }
 }
