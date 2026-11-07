@@ -6,6 +6,8 @@ window.RedditPro = window.RedditPro || {};
 
 window.RedditPro.AudioObserver = (function () {
   /** @type {Set<HTMLElement>} */
+  const observed = new Set();
+  /** @type {Set<HTMLElement>} */
   const visible = new Set();
   /** @type {number | undefined} */
   let debounceTimer;
@@ -26,9 +28,7 @@ window.RedditPro.AudioObserver = (function () {
   /** @param {HTMLElement} player */
   function unmutePlayer(player) {
     const video = getVideo(player);
-    if (video) {
-      video.muted = false;
-    }
+    if (video) video.muted = false;
     if ('muted' in player) player.muted = false;
     player.removeAttribute('muted');
   }
@@ -42,6 +42,12 @@ window.RedditPro.AudioObserver = (function () {
 
     for (const player of visible) {
       if (!player.isConnected) visible.delete(player);
+    }
+    for (const player of observed) {
+      if (!player.isConnected) {
+        observed.delete(player);
+        observer?.unobserve(player);
+      }
     }
 
     if (
@@ -67,7 +73,6 @@ window.RedditPro.AudioObserver = (function () {
         rect.left + rect.width / 2 - centerX,
         rect.top + rect.height / 2 - centerY
       );
-
       if (distance < bestDistance) {
         bestDistance = distance;
         best = player;
@@ -89,18 +94,17 @@ window.RedditPro.AudioObserver = (function () {
     typeof IntersectionObserver === 'function'
       ? new IntersectionObserver(
           (entries) => {
-            const settings = window.RedditPro.Settings.get();
-
             entries.forEach((entry) => {
               const player = /** @type {HTMLElement} */ (entry.target);
-              if (entry.isIntersecting && settings.autoPlayAudio) {
+              if (entry.isIntersecting) {
+                // Keep visibility state current even while audio focus is disabled.
+                // Otherwise re-enabling may wait forever for another threshold crossing.
                 visible.add(player);
               } else {
                 visible.delete(player);
                 mutePlayer(player);
               }
             });
-
             scheduleUpdate();
           },
           { threshold: 0.1 }
@@ -109,8 +113,19 @@ window.RedditPro.AudioObserver = (function () {
 
   /** @param {Element} node */
   function observe(node) {
-    if (observer && node?.tagName === 'SHREDDIT-PLAYER') {
-      observer.observe(node);
+    if (!(node instanceof HTMLElement) || node.tagName !== 'SHREDDIT-PLAYER') return;
+    if (observed.has(node)) return;
+    observed.add(node);
+
+    if (observer) observer.observe(node);
+    else {
+      const rect = node.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0 &&
+          rect.bottom > 0 && rect.right > 0 &&
+          rect.top < window.innerHeight && rect.left < window.innerWidth) {
+        visible.add(node);
+      }
+      scheduleUpdate();
     }
   }
 
@@ -125,6 +140,7 @@ window.RedditPro.AudioObserver = (function () {
     if (observer) observer.disconnect();
     muteAll();
     visible.clear();
+    observed.clear();
     clearTimeout(debounceTimer);
   }
 
@@ -132,7 +148,7 @@ window.RedditPro.AudioObserver = (function () {
   window.addEventListener('resize', scheduleUpdate, { passive: true });
 
   if (window.RedditPro.Settings?.subscribe) {
-    window.RedditPro.Settings.subscribe(/** @param {{ autoPlayAudio: boolean }} settings */ (settings) => {
+    window.RedditPro.Settings.subscribe((settings) => {
       if (!settings.autoPlayAudio) muteAll();
       else scheduleUpdate();
     });
