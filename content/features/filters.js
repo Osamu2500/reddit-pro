@@ -13,6 +13,8 @@ window.RedditPro.Filters = (function () {
   const DEFAULT_FILTERS = { keywords: [], flairs: [], mediaType: 'all' };
   /** @type {FilterState} */
   let activeFilters = { ...DEFAULT_FILTERS };
+  /** @type {WeakMap<HTMLElement, { value: string, priority: string }>} */
+  const originalDisplay = new WeakMap();
 
   /** @param {unknown} value */
   function normalizeList(value) {
@@ -75,11 +77,35 @@ window.RedditPro.Filters = (function () {
     applyToAll();
   }
 
+  /** @param {HTMLElement} gridItem */
+  function restoreCard(gridItem) {
+    if (!gridItem.classList.contains('rg-filtered-out')) return;
+    gridItem.classList.remove('rg-filtered-out');
+
+    const previous = originalDisplay.get(gridItem);
+    if (previous?.value) {
+      gridItem.style.setProperty('display', previous.value, previous.priority);
+    } else {
+      gridItem.style.removeProperty('display');
+    }
+    originalDisplay.delete(gridItem);
+  }
+
+  /** @param {HTMLElement} gridItem */
+  function hideCard(gridItem) {
+    if (!gridItem.classList.contains('rg-filtered-out')) {
+      originalDisplay.set(gridItem, {
+        value: gridItem.style.getPropertyValue('display'),
+        priority: gridItem.style.getPropertyPriority('display'),
+      });
+    }
+    gridItem.classList.add('rg-filtered-out');
+    gridItem.style.setProperty('display', 'none', 'important');
+  }
+
   function restoreFilteredCards() {
     document.querySelectorAll('.rg-filtered-out').forEach((element) => {
-      const gridItem = /** @type {HTMLElement} */ (element);
-      gridItem.classList.remove('rg-filtered-out');
-      gridItem.style.removeProperty('display');
+      restoreCard(/** @type {HTMLElement} */ (element));
     });
   }
 
@@ -106,10 +132,7 @@ window.RedditPro.Filters = (function () {
     const settings = window.RedditPro.Settings.get();
 
     if (!settings.enableFilters) {
-      if (gridItem.classList.contains('rg-filtered-out')) {
-        gridItem.classList.remove('rg-filtered-out');
-        gridItem.style.removeProperty('display');
-      }
+      restoreCard(gridItem);
       return;
     }
 
@@ -136,11 +159,9 @@ window.RedditPro.Filters = (function () {
     const shouldHide = keywordMatch || flairMatch || !mediaMatch;
 
     if (shouldHide) {
-      gridItem.classList.add('rg-filtered-out');
-      gridItem.style.setProperty('display', 'none', 'important');
-    } else if (gridItem.classList.contains('rg-filtered-out')) {
-      gridItem.classList.remove('rg-filtered-out');
-      gridItem.style.removeProperty('display');
+      hideCard(gridItem);
+    } else {
+      restoreCard(gridItem);
     }
   }
 
