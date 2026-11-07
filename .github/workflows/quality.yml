@@ -22,6 +22,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Report dependency advisories
+        run: |
+          npm audit --json > /tmp/reddit-pro-audit.json || true
+          node -e "const report = JSON.parse(require('fs').readFileSync('/tmp/reddit-pro-audit.json', 'utf8')); for (const [name, item] of Object.entries(report.vulnerabilities || {})) console.log(name + ': ' + item.severity + ', direct=' + item.isDirect + ', range=' + item.range + ', fix=' + JSON.stringify(item.fixAvailable)); console.log('Summary:', JSON.stringify(report.metadata?.vulnerabilities || {}));"
+
       - name: Check configuration formatting
         run: npm run format:check
 
