@@ -78,4 +78,21 @@ describe('Filters Module', () => {
       },
     }, expect.any(Function));
   });
+
+
+  it('restores an existing inline display value and its priority', () => {
+    const card = document.createElement('shreddit-post');
+    card.setAttribute('post-title', 'A keyboard review');
+    card.style.setProperty('display', 'flex', 'important');
+    document.body.appendChild(card);
+
+    window.RedditPro.Filters.setFilters({ keywords: ['keyboard'] });
+    expect(card.style.getPropertyValue('display')).toBe('none');
+
+    window.RedditPro.Filters.setFilters({ keywords: [] });
+    expect(card.style.getPropertyValue('display')).toBe('flex');
+    expect(card.style.getPropertyPriority('display')).toBe('important');
+    expect(card.classList.contains('rg-filtered-out')).toBe(false);
+  });
+
 });
