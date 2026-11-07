@@ -13,6 +13,7 @@ describe('Audio observer', () => {
   let settingsListener;
 
   beforeEach(() => {
+    vi.useFakeTimers();
     window.RedditPro = {};
     settings = { autoPlayAudio: false };
     settingsListener = null;
@@ -43,6 +44,8 @@ describe('Audio observer', () => {
 
   afterEach(() => {
     window.RedditPro.AudioObserver?.disconnectAll();
+    vi.clearAllTimers();
+    vi.useRealTimers();
     delete globalThis.IntersectionObserver;
     vi.restoreAllMocks();
     document.body.replaceChildren();
