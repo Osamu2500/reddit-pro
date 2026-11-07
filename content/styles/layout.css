@@ -36,13 +36,23 @@ body[data-reddit-grid-cols="10"] { --reddit-cols: 10; }
 @media (max-width: 1100px) {
   body[data-reddit-grid-cols="4"],
   body[data-reddit-grid-cols="5"],
-  body[data-reddit-grid-cols="6"] { --reddit-cols: 3; }
+  body[data-reddit-grid-cols="6"],
+  body[data-reddit-grid-cols="7"],
+  body[data-reddit-grid-cols="8"],
+  body[data-reddit-grid-cols="9"],
+  body[data-reddit-grid-cols="10"],
+  body[data-reddit-grid-autofit="true"] { --reddit-cols: 3; }
 }
 @media (max-width: 850px) {
   body[data-reddit-grid-cols="3"],
   body[data-reddit-grid-cols="4"],
   body[data-reddit-grid-cols="5"],
-  body[data-reddit-grid-cols="6"] { --reddit-cols: 2; }
+  body[data-reddit-grid-cols="6"],
+  body[data-reddit-grid-cols="7"],
+  body[data-reddit-grid-cols="8"],
+  body[data-reddit-grid-cols="9"],
+  body[data-reddit-grid-cols="10"],
+  body[data-reddit-grid-autofit="true"] { --reddit-cols: 2; }
 }
 @media (max-width: 600px) { body { --reddit-cols: 1 !important; } }
 

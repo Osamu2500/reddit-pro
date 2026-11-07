@@ -30,11 +30,14 @@ window.RedditPro.Masonry = (function() {
    * always matches the rendered layout (fixes the gap-mismatch bug).
    * @returns {number}
    */
-  function getRowGap() {
-    const raw = getComputedStyle(document.documentElement)
-      .getPropertyValue('--reddit-col-gap')
-      .trim();
-    return parseFloat(raw) || 8;
+  function getGridRowGap(element) {
+    let ancestor = element;
+    while (ancestor && ancestor !== document.body) {
+      const style = getComputedStyle(ancestor);
+      if (style.display.includes('grid')) return parseFloat(style.rowGap) || 0;
+      ancestor = ancestor.parentElement;
+    }
+    return 0;
   }
 
   const POST_SELECTORS = [
@@ -69,18 +72,17 @@ window.RedditPro.Masonry = (function() {
   function flush() {
     resizePending = false;
     const settings = window.RedditPro.Settings.get();
-    if (settings.columns === '1') {
+    if (settings.columns === '1' || !settings.masonry) {
       resizeQueue.clear();
       return;
     }
 
-    const rowGap = getRowGap();
-
     for (const [el, height] of resizeQueue) {
       if (height <= 0) continue;
 
-      const span = Math.ceil((height + rowGap) / ROW_HEIGHT);
       const gridItem = el.closest('faceplate-tracker') || el;
+      const rowGap = getGridRowGap(gridItem);
+      const span = Math.ceil((height + rowGap) / (ROW_HEIGHT + rowGap));
       const currentSpan = gridItem.getAttribute('data-rg-span');
 
       if (currentSpan !== String(span)) {
@@ -148,7 +150,7 @@ window.RedditPro.Masonry = (function() {
     const settings = window.RedditPro.Settings.get();
     const gridItem = el.closest('faceplate-tracker') || el;
 
-    if (settings.columns !== '1') {
+    if (settings.columns !== '1' && settings.masonry) {
       // Mark as loading so it stays invisible until first span is set
       if (!gridItem.hasAttribute('data-rg-span') && !gridItem.hasAttribute('data-rg-stable')) {
         gridItem.setAttribute('data-rg-loading', '1');
@@ -175,7 +177,8 @@ window.RedditPro.Masonry = (function() {
   ].join(',');
 
   function processGridHeaders(force = false) {
-    if (window.RedditPro.Settings.get().columns === '1') return;
+    const settings = window.RedditPro.Settings.get();
+    if (settings.columns === '1' || !settings.masonry) return;
     document.querySelectorAll(GRID_CONTAINERS).forEach(container => {
       Array.from(container.children).forEach(child => {
         // Skip cards (they are handled by POST_SELECTORS) and structural batch/loader elements
@@ -197,7 +200,8 @@ window.RedditPro.Masonry = (function() {
   }
 
   function sweepNew() {
-    if (window.RedditPro.Settings.get().columns === '1') return;
+    const settings = window.RedditPro.Settings.get();
+    if (settings.columns === '1' || !settings.masonry) return;
     document.querySelectorAll(POST_SELECTORS).forEach(el => {
       if (!el.hasAttribute('data-rg-stable')) processCard(el);
     });

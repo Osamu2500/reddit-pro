@@ -80,7 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 b.setAttribute('data-reddit-grid-compact',       String(s.compactCards));
                 b.setAttribute('data-reddit-grid-hide-promoted', String(s.hidePromoted));
                 b.setAttribute('data-reddit-grid-hide-sidebar',  String(s.hideSidebar));
-                b.style.setProperty('--reddit-cols', s.columns);
 
                 if (window.RedditPro?.Settings) {
                   window.RedditPro.Settings.save(s);
