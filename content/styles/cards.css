@@ -23,12 +23,13 @@ body:not([data-reddit-grid-cols="1"]) .Post {
   overflow:      hidden !important;
 }
 
-/* Hardware Acceleration & Layout Containment for stable cards */
-body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable="1"],
-body:not([data-reddit-grid-cols="1"]) faceplate-tracker[data-rg-stable="1"] {
-  will-change: transform !important;
-  contain: layout style !important;
-  content-visibility: auto !important;
+/* Keep measured cards in the normal rendering pipeline.
+   content-visibility can substitute intrinsic sizes for off-screen cards and
+   corrupt the height used by the masonry row-span calculation. */
+body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable="1"] {
+  content-visibility: visible !important;
+  contain: none !important;
+  will-change: auto !important;
 }
 
 /* Elevate card z-index when a dropdown menu inside it is open */
