@@ -41,7 +41,10 @@ window.RedditPro.AudioObserver = (function () {
     const settings = window.RedditPro.Settings.get();
 
     for (const player of visible) {
-      if (!player.isConnected) visible.delete(player);
+      if (!player.isConnected) {
+        mutePlayer(player);
+        visible.delete(player);
+      }
     }
     for (const player of observed) {
       if (!player.isConnected) {
@@ -120,9 +123,14 @@ window.RedditPro.AudioObserver = (function () {
     if (observer) observer.observe(node);
     else {
       const rect = node.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0 &&
-          rect.bottom > 0 && rect.right > 0 &&
-          rect.top < window.innerHeight && rect.left < window.innerWidth) {
+      if (
+        rect.width > 0 &&
+        rect.height > 0 &&
+        rect.bottom > 0 &&
+        rect.right > 0 &&
+        rect.top < window.innerHeight &&
+        rect.left < window.innerWidth
+      ) {
         visible.add(node);
       }
       scheduleUpdate();
