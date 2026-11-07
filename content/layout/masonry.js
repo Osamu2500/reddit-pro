@@ -19,6 +19,7 @@ window.RedditPro.Masonry = (function() {
   const heightCache = new WeakMap();
   // Track which posts we've attached image listeners to
   const imgListeners = new WeakSet();
+  let viewportSweepTimer = 0;
 
   const ROW_HEIGHT = 1;
   const HEIGHT_EPSILON = 0.5;
@@ -250,6 +251,16 @@ window.RedditPro.Masonry = (function() {
     resizeQueue.clear();
     resizePending = false;
   }
+
+  // A breakpoint can turn the feed into a one-column layout without changing
+  // the user's saved column setting. Re-scan after resize so observation and
+  // row spans are enabled/cleared for the effective layout, not just settings.
+  window.addEventListener('resize', () => {
+    clearTimeout(viewportSweepTimer);
+    viewportSweepTimer = window.setTimeout(() => {
+      if (window.RedditPro.Settings.get().columns !== '1') sweepAll();
+    }, 140);
+  }, { passive: true });
 
   /**
    * @param {Element} el
