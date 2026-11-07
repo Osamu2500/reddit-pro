@@ -47,7 +47,7 @@ window.RedditPro.Masonry = (function() {
     const grid = getGridContainer(element);
     if (!grid) return true;
     const columns = getComputedStyle(grid).gridTemplateColumns.trim();
-    return columns ? columns.split(/\\s+/).length > 1 : false;
+    return columns ? columns.split(/\s+/).length > 1 : false;
   }
 
   function clearGridItem(gridItem, card) {
