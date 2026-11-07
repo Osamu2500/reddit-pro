@@ -17,13 +17,12 @@ window.RedditPro = window.RedditPro || {};
 window.RedditPro.Masonry = (function() {
   let resizePending = false;
   const resizeQueue = new Map(); // Emptied every frame
-  const stableCount = new WeakMap(); // WeakMap prevents memory leaks for removed nodes
   const heightCache = new WeakMap();
   // Track which posts we've attached image listeners to
   const imgListeners = new WeakSet();
 
   const ROW_HEIGHT = 1;
-  const STABILITY_THRESHOLD = 3;
+  const HEIGHT_EPSILON = 0.5;
 
   /**
    * Read the actual column gap from computed CSS so the span math
@@ -55,7 +54,7 @@ window.RedditPro.Masonry = (function() {
 
       // Smart caching: only process if height changed by more than 2px
       const cachedHeight = heightCache.get(el) || 0;
-      if (Math.abs(height - cachedHeight) < 2) continue;
+      if (Math.abs(height - cachedHeight) < HEIGHT_EPSILON) continue;
       heightCache.set(el, height);
 
       // We defer the span math to flush() (rAF) to prevent layout thrashing
@@ -88,20 +87,14 @@ window.RedditPro.Masonry = (function() {
       if (currentSpan !== String(span)) {
         gridItem.style.setProperty('grid-row-end', `span ${span}`, 'important');
         gridItem.setAttribute('data-rg-span', span);
-        gridItem.removeAttribute('data-rg-stable');
-        stableCount.set(gridItem, 0);
-
-        // First time this card gets a span: remove loading state so it fades in
-        if (gridItem.hasAttribute('data-rg-loading')) {
-          gridItem.removeAttribute('data-rg-loading');
-        }
-      } else {
-        const count = (stableCount.get(gridItem) || 0) + 1;
-        stableCount.set(gridItem, count);
-        if (count >= STABILITY_THRESHOLD) {
-          gridItem.setAttribute('data-rg-stable', '1');
-          gridItem.removeAttribute('data-rg-loading');
-        }
+        // The measured height already represents the current rendered layout.
+        // Mark it stable now; waiting for three more ResizeObserver notifications
+        // is unreliable because unchanged elements do not emit more notifications.
+        gridItem.setAttribute('data-rg-stable', '1');
+        gridItem.removeAttribute('data-rg-loading');
+      } else if (!gridItem.hasAttribute('data-rg-stable')) {
+        gridItem.setAttribute('data-rg-stable', '1');
+        gridItem.removeAttribute('data-rg-loading');
       }
     }
     resizeQueue.clear();
@@ -157,13 +150,28 @@ window.RedditPro.Masonry = (function() {
       }
       observer.observe(el);
       attachImageListeners(el);
+      // ResizeObserver does not replay an entry when an already-observed card
+      // is force-swept. Schedule an explicit measurement so settings changes,
+      // route resumes and width changes cannot leave stale row spans behind.
+      requestAnimationFrame(() => {
+        if (!el.isConnected) return;
+        const height = el.getBoundingClientRect().height;
+        if (height > 0) {
+          heightCache.set(el, height);
+          resizeQueue.set(el, height);
+          if (!resizePending) {
+            resizePending = true;
+            requestAnimationFrame(flush);
+          }
+        }
+      });
     } else {
       observer.unobserve(el);
       gridItem.style.removeProperty('grid-row-end');
       gridItem.removeAttribute('data-rg-span');
       gridItem.removeAttribute('data-rg-stable');
       gridItem.removeAttribute('data-rg-loading');
-      stableCount.delete(gridItem);
+      heightCache.delete(el);
     }
   }
 
