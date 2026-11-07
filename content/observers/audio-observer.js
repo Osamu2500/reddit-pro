@@ -156,10 +156,13 @@ window.RedditPro.AudioObserver = (function () {
   window.addEventListener('resize', scheduleUpdate, { passive: true });
 
   if (window.RedditPro.Settings?.subscribe) {
-    window.RedditPro.Settings.subscribe((settings) => {
+    window.RedditPro.Settings.subscribe(
+      /** @param {{ autoPlayAudio: boolean }} settings */
+      (settings) => {
       if (!settings.autoPlayAudio) muteAll();
-      else scheduleUpdate();
-    });
+        else scheduleUpdate();
+      }
+    );
   }
 
   return { observe, observeIn, updateFocus, scheduleUpdate, muteAll, disconnectAll };
