@@ -71,7 +71,7 @@ window.RedditPro.Masonry = (function() {
 
       if (height <= 0) continue;
 
-      // Smart caching: only process if height changed by more than 2px
+      // Ignore sub-pixel noise while retaining small real layout changes
       const cachedHeight = heightCache.get(el) || 0;
       if (Math.abs(height - cachedHeight) < HEIGHT_EPSILON) continue;
       heightCache.set(el, height);
@@ -172,7 +172,7 @@ window.RedditPro.Masonry = (function() {
     const gridItem = el.closest('faceplate-tracker') || el;
 
     if (settings.columns !== '1' && settings.masonry && hasMultipleGridColumns(el)) {
-      // Mark as loading so it stays invisible until first span is set
+      // Mark as pending; CSS keeps the card visible but temporarily non-interactive
       if (!gridItem.hasAttribute('data-rg-span') && !gridItem.hasAttribute('data-rg-stable')) {
         gridItem.setAttribute('data-rg-loading', '1');
       }
