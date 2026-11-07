@@ -107,7 +107,7 @@ window.RedditPro.Filters = (function () {
     const flairLower = flair.toLowerCase();
     const hasVideo = !!card.querySelector('shreddit-player, video');
     const hasImage = !!card.querySelector(
-      'shreddit-media-lightbox, shreddit-image, img[src], img[srcset]'
+      'shreddit-media-lightbox, shreddit-image, [slot="post-media-container"] img, img[alt="Post image"]'
     );
 
     const keywordMatch = activeFilters.keywords.some((keyword) =>

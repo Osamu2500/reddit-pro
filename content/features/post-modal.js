@@ -115,6 +115,7 @@ window.RedditPro.PostModal = (function () {
 
     const { body, loader, close } = getModalElements();
     body.replaceChildren();
+    body.classList.remove('rg-error');
     loader.style.display = 'flex';
     modalContainer.classList.remove('rg-modal-hidden');
     document.body.classList.add('rg-modal-open');

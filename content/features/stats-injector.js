@@ -35,7 +35,14 @@ window.RedditPro.StatsInjector = (function () {
   }
 
   async function flushQueue() {
-    if (isFlushing || pendingPosts.size === 0) return;
+    if (isFlushing) {
+      fetchTimeout = null;
+      return;
+    }
+    if (pendingPosts.size === 0) {
+      fetchTimeout = null;
+      return;
+    }
 
     isFlushing = true;
     fetchTimeout = null;

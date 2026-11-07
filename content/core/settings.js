@@ -48,14 +48,14 @@ window.RedditPro.Settings = (function () {
     return {
       ...merged,
       columns: /^(?:[1-9]|10)$/.test(columns) ? columns : DEFAULT_SETTINGS.columns,
-      autoFit: Boolean(merged.autoFit),
-      masonry: Boolean(merged.masonry),
-      compactCards: Boolean(merged.compactCards),
-      hidePromoted: Boolean(merged.hidePromoted),
-      hideSidebar: Boolean(merged.hideSidebar),
-      autoPlayAudio: Boolean(merged.autoPlayAudio),
-      hideScrollbar: Boolean(merged.hideScrollbar),
-      enableFilters: Boolean(merged.enableFilters),
+      autoFit: merged.autoFit === true,
+      masonry: merged.masonry === true,
+      compactCards: merged.compactCards === true,
+      hidePromoted: merged.hidePromoted === true,
+      hideSidebar: merged.hideSidebar === true,
+      autoPlayAudio: merged.autoPlayAudio === true,
+      hideScrollbar: merged.hideScrollbar === true,
+      enableFilters: merged.enableFilters === true,
       theme: themes.includes(merged.theme) ? merged.theme : DEFAULT_SETTINGS.theme,
     };
   }
