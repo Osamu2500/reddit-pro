@@ -1,83 +1,88 @@
 # Reddit Pro — Chrome Extension
 
-A premium Chrome extension that transforms Reddit's linear feed into a beautiful, fully customizable **masonry grid layout** with glassmorphic card design, smart audio focus, and clean browsing features.
+Reddit Pro is a Manifest V3 Chrome extension that adds a configurable grid and browsing enhancements to Reddit.
 
----
+## Features
 
-## ✨ Features
+- **Responsive grid layout** — choose 1–10 columns; narrow viewports automatically cap the effective column count.
+- **Masonry cards** — uses card measurements to size grid rows as post content and media load.
+- **Glass-style cards** — visual card styling and hover effects.
+- **Smart audio focus** — gives audio focus to the visible Reddit player nearest the viewport center when enabled.
+- **Promoted-post hiding** — hides Reddit ad and promoted-post elements.
+- **Left-sidebar control** — optionally hide the left navigation/sidebar to widen the feed.
+- **Compact cards** — reduce post-body and metadata space.
+- **Auto Fit** — scale the column count on wide displays.
+- **Scrollbar control** — hide the page scrollbar without disabling scrolling.
+- **Post modal** — open eligible post links in a modal while preserving the feed's scroll position.
+- **Post statistics** — batch-load Reddit post metadata and display the upvote ratio and OC marker where the post layout exposes a credit bar.
+- **Theme support** — system, light, and dark theme settings are supported by the settings layer.
 
-- **Masonry Grid Layout** — 2–6 configurable columns with natural card heights
-- **Glassmorphic Cards** — Frosted glass aesthetic with hover lift animations
-- **Smart Auto-Play Audio** — Mutes all videos except the one closest to your viewport center
-- **Infinite Scroll Compatible** — No scroll-to-top jumps; Reddit's virtual scroller is fully preserved
-- **Post Open/Close Stable** — Opening a post thread reverts to linear; closing restores your grid
-- **Hide Ads / Promoted Posts** — Completely removes sponsored content
-- **Hide Left Sidebar** — Full-width feed mode
-- **Compact Mode** — Tighter cards with hidden text body
-- **Auto Fit (Ultrawide)** — Automatically scales columns at 1400px / 1800px / 2200px
-- **Scrollbar Hide** — Clean, distraction-free browsing
-- **Keyboard Shortcuts** — `Alt+1` through `Alt+6` to switch column count instantly
+The filtering module supports keyword, flair, and media-type rules and persists them in extension storage. It currently exposes a content-script API; a dedicated popup editor for those rules is not yet included.
 
----
+## Installation
 
-## 🚀 Installation
+1. Download or clone this repository.
+2. Open `chrome://extensions` in Chrome.
+3. Enable **Developer mode**.
+4. Select **Load unpacked**.
+5. Choose the repository folder containing `manifest.json`.
+6. Open Reddit and configure the extension from its toolbar popup.
 
-1. Clone or download this repository
-2. Open Chrome and go to `chrome://extensions`
-3. Enable **Developer mode** (top right toggle)
-4. Click **Load unpacked**
-5. Select the `reddit-grid-extension` folder
-6. Navigate to [reddit.com](https://reddit.com) — the grid applies automatically!
+## Project structure
 
----
-
-## 🛠 Project Structure
-
-```
-reddit-grid-extension/
-├── manifest.json          # Extension manifest (MV3)
+```text
+.
+├── manifest.json
 ├── content/
-│   ├── content.js         # Core logic: masonry, routing, observers, audio
-│   └── grid.css           # Static stylesheet injected at document_start
+│   ├── core/
+│   │   ├── error-boundary.js
+│   │   ├── lifecycle.js
+│   │   └── settings.js
+│   ├── features/
+│   │   ├── filters.js
+│   │   ├── post-modal.js
+│   │   └── stats-injector.js
+│   ├── layout/
+│   │   ├── css-vars.js
+│   │   ├── masonry.js
+│   │   └── virtualizer.js
+│   ├── observers/
+│   │   ├── audio-observer.js
+│   │   └── dom-observer.js
+│   └── styles/
 ├── popup/
-│   ├── popup.html         # Extension popup UI
-│   ├── popup.css          # Popup styling
-│   └── popup.js           # Popup settings logic
-└── icons/
-    ├── icon16.png
-    ├── icon48.png
-    └── icon128.png
+│   ├── popup.html
+│   ├── popup.css
+│   └── popup.js
+├── tests/
+│   └── unit/
+└── types/
+    └── global.d.ts
 ```
 
----
+## Architecture notes
 
-## 🧠 Architecture
+- **Manifest V3 injection:** Reddit styles and content scripts are declared in `manifest.json` and injected at `document_start`.
+- **Settings:** `Settings` merges stored preferences with defaults and supports temporary route overrides (for example, switching to one column on a post thread).
+- **SPA lifecycle:** `Lifecycle` watches History API changes, `popstate`, `hashchange`, and document-title mutations to switch between feed and thread behavior.
+- **DOM discovery:** `DOMObserver` watches the document root with a `MutationObserver`, scans already-present posts when it starts, and batches mutation work with animation frames.
+- **Masonry:** `Masonry` uses `ResizeObserver` and animation-frame batching to calculate grid row spans as post content changes.
+- **Feed batches:** selected Reddit batch wrappers are currently flattened with `display: contents` so cards can participate in one continuous grid. This is a compatibility-sensitive area because Reddit also uses these wrappers for feed loading and intersection observation; it needs regression testing against live Reddit pages.
+- **Virtualizer:** `virtualizer.js` is currently a deprecated compatibility stub, not an active virtualization engine.
 
-- **Static CSS injection** at `document_start` eliminates flash of unstyled content (FOUC)
-- **CSS custom properties** (`--reddit-cols`, `--reddit-gap`) drive all layout changes — no style tag re-injection
-- **LifecycleManager** coordinates all observers as a single unit — halted on post threads, resumed on feeds
-- **MasonryManager** uses a `ResizeObserver` with rAF-batching to compute `grid-row-end` spans without layout thrash
-- **SPA Navigation** intercepted via `pushState`/`replaceState` patching + `popstate` + title observer + interval fallback
-- **faceplate-batch** elements remain as sub-grid containers (NOT `display:contents`) to preserve Reddit's IntersectionObserver bounding boxes for infinite scroll
+## Development
 
----
+Requires Node.js 20 or newer.
 
-## 📝 Changelog
+```bash
+npm ci
+npm run lint
+npm run typecheck
+npm test
+```
 
-### v2.0
-- Fixed: Cards stuck at top after hard refresh (multi-sweep masonry boot)
-- Fixed: Page jumping to top during infinite scroll (faceplate-batch bounding box preserved)
-- Fixed: UI reverting to default after opening/closing a post (routing logic rebuilt from userSettings)
-- Fixed: Extension settings not persisting as the true default view
-- Fixed: Sidebar label corrected to "Left Sidebar"
-- Added: `pushState`/`replaceState` interception for reliable SPA navigation detection
-- Renamed: Extension rebranded to **Reddit Pro**
+GitHub Actions runs the same quality checks on pushes and pull requests to `master`. Dependency advisories are also reported in CI; the security-maintenance workflow can regenerate the lockfile, apply compatible fixes, and commit them only after lint, type checks, and tests pass.
 
-### v1.1
-- Initial release with grid layout, masonry, glassmorphic design
-
----
-
-## 📄 License
+## License
 
 MIT

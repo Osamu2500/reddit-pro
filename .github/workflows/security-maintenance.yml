@@ -1,6 +1,7 @@
 name: Security Dependency Maintenance
 
 on:
+  workflow_dispatch:
   push:
     branches: ["master"]
     paths:
