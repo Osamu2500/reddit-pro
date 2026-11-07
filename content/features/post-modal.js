@@ -15,6 +15,8 @@ window.RedditPro.PostModal = (function () {
   let requestId = 0;
   /** @type {number | undefined} */
   let clearTimer;
+  /** @type {HTMLElement | null} */
+  let returnFocusElement = null;
 
   function init() {
     if (document.getElementById('rg-post-modal')) return;
@@ -128,6 +130,7 @@ window.RedditPro.PostModal = (function () {
     loader.style.display = 'flex';
     modalContainer.classList.remove('rg-modal-hidden');
     document.body.classList.add('rg-modal-open');
+    returnFocusElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     close.focus();
 
     try {
@@ -203,6 +206,8 @@ window.RedditPro.PostModal = (function () {
     modalContainer.classList.add('rg-modal-hidden');
     document.body.classList.remove('rg-modal-open');
     document.title = originalTitle;
+    returnFocusElement?.focus({ preventScroll: true });
+    returnFocusElement = null;
 
     clearTimer = setTimeout(() => {
       if (!isModalOpen) getModalElements().body.replaceChildren();
