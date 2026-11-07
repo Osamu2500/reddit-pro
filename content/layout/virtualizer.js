@@ -9,7 +9,7 @@ window.RedditPro.Virtualizer = (function() {
   function init() {}
   function start() {}
   function disconnect() {}
-  function observeBatch(batch) {}
+  function observeBatch(_batch) {}
 
   return { init, start, disconnect, observeBatch };
 })();

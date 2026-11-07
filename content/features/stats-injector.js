@@ -7,7 +7,7 @@
 window.RedditPro = window.RedditPro || {};
 
 window.RedditPro.StatsInjector = (function() {
-  let pendingIds = new Set();
+  const pendingIds = new Set();
   let fetchTimeout = null;
   const FETCH_DELAY_MS = 250; // Batch requests every 250ms
   const injectedPosts = new WeakSet();
@@ -89,7 +89,7 @@ window.RedditPro.StatsInjector = (function() {
     const statsContainer = document.createElement('div');
     statsContainer.className = 'rg-pro-stats';
     
-    let html = `<span class="rg-stat-ratio" title="Upvote Ratio">👍 ${upvoteRatio}%</span>`;
+    let html = `<span class="rg-stat-ratio" title="Upvote Ratio (${score} pts)">👍 ${upvoteRatio}%</span>`;
     
     if (isOC) {
       html += `<span class="rg-stat-oc" title="Original Content">OC</span>`;

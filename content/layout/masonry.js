@@ -166,26 +166,23 @@ window.RedditPro.Masonry = (function() {
   }
 
   const GRID_CONTAINERS = [
-    'shreddit-feed > faceplate-batch',
-    'main > div > faceplate-batch',
-    'shreddit-async-loader > faceplate-batch',
-    'shreddit-feed > faceplate-batch > div',
-    'main > div > faceplate-batch > div',
-    'shreddit-async-loader > faceplate-batch > div',
-    'shreddit-feed:not(:has(> faceplate-batch))',
-    'main > div:not(:has(> faceplate-batch))',
-    'shreddit-async-loader:not(:has(> faceplate-batch))',
-    'shreddit-profile-feed faceplate-batch > div',
-    'profile-feed faceplate-batch > div',
-    '[data-testid="post-list"]'
+    'shreddit-feed',
+    'shreddit-profile-feed',
+    'profile-feed',
+    '[data-testid="post-list"]',
+    'main > div:has(> shreddit-post)',
+    'main > div:has(> article)'
   ].join(',');
 
   function processGridHeaders(force = false) {
     if (window.RedditPro.Settings.get().columns === '1') return;
     document.querySelectorAll(GRID_CONTAINERS).forEach(container => {
       Array.from(container.children).forEach(child => {
-        // Skip cards (they are handled by POST_SELECTORS)
-        if (child.matches(POST_SELECTORS) || child.matches('faceplate-tracker')) return;
+        // Skip cards (they are handled by POST_SELECTORS) and structural batch/loader elements
+        if (
+          child.matches(POST_SELECTORS) ||
+          child.matches('faceplate-tracker, faceplate-batch, shreddit-async-loader, shreddit-subreddit-discovery-unit, hr, style, script, template')
+        ) return;
         
         if (force || !child.hasAttribute('data-rg-stable')) {
            if (force) {

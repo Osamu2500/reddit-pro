@@ -176,7 +176,7 @@ window.RedditPro.PostModal = (function() {
     }, 300); // Wait for fade out animation
   }
 
-  function handlePopState(e) {
+  function handlePopState(_e) {
     if (isModalOpen) {
       // User pressed back button while modal was open
       isModalOpen = false;

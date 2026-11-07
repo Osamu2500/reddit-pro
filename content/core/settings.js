@@ -52,17 +52,23 @@ window.RedditPro.Settings = (function() {
   function load() {
     return new Promise((resolve) => {
       try {
-        chrome.storage.sync.get(DEFAULT_SETTINGS, (result) => {
-          if (chrome.runtime.lastError) {
-             console.warn("Storage warning:", chrome.runtime.lastError);
-          }
-          // @ts-ignore - Chrome storage return type allows this merging
-          userSettings = { ...DEFAULT_SETTINGS, ...result };
-          activeSettings = { ...userSettings };
+        if (typeof chrome !== 'undefined' && chrome.storage?.sync) {
+          chrome.storage.sync.get(DEFAULT_SETTINGS, (result) => {
+            if (chrome.runtime?.lastError) {
+              console.warn("Storage warning:", chrome.runtime.lastError);
+            }
+            // @ts-ignore - Chrome storage return type allows this merging
+            userSettings = { ...DEFAULT_SETTINGS, ...result };
+            activeSettings = { ...userSettings };
+            isLoaded = true;
+            notifyListeners();
+            resolve(userSettings);
+          });
+        } else {
           isLoaded = true;
           notifyListeners();
           resolve(userSettings);
-        });
+        }
       } catch (err) {
         console.warn("Storage API unavailable", err);
         resolve(userSettings);
@@ -78,12 +84,16 @@ window.RedditPro.Settings = (function() {
     userSettings = { ...userSettings, ...newSettings };
     activeSettings = { ...userSettings };
     try {
-      chrome.storage.sync.set(userSettings, () => {
-        if (chrome.runtime.lastError) {
-          console.warn("Storage warning:", chrome.runtime.lastError);
-        }
+      if (typeof chrome !== 'undefined' && chrome.storage?.sync) {
+        chrome.storage.sync.set(userSettings, () => {
+          if (chrome.runtime?.lastError) {
+            console.warn("Storage warning:", chrome.runtime.lastError);
+          }
+          notifyListeners();
+        });
+      } else {
         notifyListeners();
-      });
+      }
     } catch (err) {
       console.warn("Storage API unavailable", err);
       notifyListeners();
@@ -124,6 +134,26 @@ window.RedditPro.Settings = (function() {
    */
   function notifyListeners() {
     listeners.forEach(cb => cb(activeSettings));
+  }
+
+  // Cross-context messaging and storage synchronization
+  if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
+    chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+      if (message && message.type === 'UPDATE_SETTINGS' && message.settings) {
+        save(message.settings);
+        if (typeof sendResponse === 'function') {
+          sendResponse({ ok: true });
+        }
+      }
+    });
+  }
+
+  if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
+    chrome.storage.onChanged.addListener((_changes, areaName) => {
+      if (areaName === 'sync') {
+        load();
+      }
+    });
   }
 
   return { load, save, get, updateActive, subscribe };

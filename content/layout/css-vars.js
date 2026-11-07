@@ -45,6 +45,14 @@ window.RedditPro.CSSVars = (function() {
     body.style.setProperty('--reddit-batch-gap', settings.masonry ? 'clamp(16px, 2vw, 24px)' : '8px');
 
     manageScrollbar(settings.hideScrollbar);
+
+    if (window.RedditPro.Masonry) {
+      if (settings.columns !== '1') {
+        requestAnimationFrame(() => window.RedditPro.Masonry.sweepAll());
+      } else {
+        window.RedditPro.Masonry.disconnectAll();
+      }
+    }
   }
 
   /**

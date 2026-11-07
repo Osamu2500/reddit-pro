@@ -3,19 +3,29 @@ import fs from 'fs';
 import path from 'path';
 
 // Read and eval the settings module directly for testing
-const code = fs.readFileSync(path.resolve(__dirname, '../../content/core/settings.js'), 'utf8');
+const filePath = path.resolve(process.cwd(), 'content/core/settings.js');
+const code = fs.readFileSync(filePath, 'utf8');
 
 describe('Settings Module', () => {
   beforeEach(() => {
     // Reset DOM environment
     window.RedditPro = {};
     
-    // Mock chrome storage API
-    global.chrome = {
+    // Mock chrome storage API and runtime API
+    globalThis.chrome = {
+      runtime: {
+        lastError: null,
+        onMessage: {
+          addListener: vi.fn()
+        }
+      },
       storage: {
         sync: {
           get: vi.fn((defaults, cb) => cb({ ...defaults, columns: '4', masonry: false })),
-          set: vi.fn((data, cb) => cb())
+          set: vi.fn((_data, cb) => { if (cb) cb(); })
+        },
+        onChanged: {
+          addListener: vi.fn()
         }
       }
     };
@@ -39,7 +49,7 @@ describe('Settings Module', () => {
     
     window.RedditPro.Settings.save({ columns: '2' });
     
-    expect(global.chrome.storage.sync.set).toHaveBeenCalled();
+    expect(globalThis.chrome.storage.sync.set).toHaveBeenCalled();
     expect(listener).toHaveBeenCalledWith(expect.objectContaining({ columns: '2' }));
   });
 
@@ -50,6 +60,6 @@ describe('Settings Module', () => {
     
     const current = window.RedditPro.Settings.get();
     expect(current.columns).toBe('1');
-    expect(global.chrome.storage.sync.set).not.toHaveBeenCalledTimes(2); // Only called on initial save mock if any
+    expect(globalThis.chrome.storage.sync.set).not.toHaveBeenCalledTimes(2); // Only called on initial save mock if any
   });
 });

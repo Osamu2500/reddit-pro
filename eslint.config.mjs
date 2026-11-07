@@ -19,5 +19,13 @@ export default [
       "prefer-const": "error",
       "no-console": ["warn", { allow: ["warn", "error"] }]
     }
+  },
+  {
+    files: ["tests/**"],
+    languageOptions: {
+      globals: {
+        ...globals.node
+      }
+    }
   }
 ];
