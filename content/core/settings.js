@@ -1,7 +1,7 @@
 /**
  * @file settings.js
  * @description Core settings manager for Reddit Pro.
- * Handles loading, saving, and broadcasting settings changes.
+ * Handles loading, saving, temporary route overrides, and broadcasting settings changes.
  */
 
 window.RedditPro = window.RedditPro || {};
@@ -17,11 +17,10 @@ window.RedditPro = window.RedditPro || {};
  * @property {boolean} autoPlayAudio
  * @property {boolean} hideScrollbar
  * @property {boolean} enableFilters
- * @property {string} theme - 'dark', 'light', or 'system'
+ * @property {string} theme
  */
 
-window.RedditPro.Settings = (function() {
-  /** @type {RedditProSettings} */
+window.RedditPro.Settings = (function () {
   const DEFAULT_SETTINGS = {
     columns: '3',
     autoFit: false,
@@ -32,127 +31,131 @@ window.RedditPro.Settings = (function() {
     autoPlayAudio: true,
     hideScrollbar: true,
     enableFilters: true,
-    theme: 'system'
+    theme: 'system',
   };
 
-  /** @type {RedditProSettings} */
   let userSettings = { ...DEFAULT_SETTINGS };
-  /** @type {RedditProSettings} */
   let activeSettings = { ...DEFAULT_SETTINGS };
-  /** @type {boolean} */
+  let activeOverrides = {};
   let isLoaded = false;
-  
-  /** @type {Array<(settings: RedditProSettings) => void>} */
-  const listeners = [];
+  const listeners = new Set();
 
-  /**
-   * Loads settings from chrome.storage.
-   * @returns {Promise<RedditProSettings>}
-   */
+  function normalizeSettings(settings) {
+    const merged = { ...DEFAULT_SETTINGS, ...(settings || {}) };
+    const columns = String(merged.columns);
+    const themes = ['dark', 'light', 'system'];
+
+    return {
+      ...merged,
+      columns: /^(?:[1-9]|10)$/.test(columns) ? columns : DEFAULT_SETTINGS.columns,
+      autoFit: Boolean(merged.autoFit),
+      masonry: Boolean(merged.masonry),
+      compactCards: Boolean(merged.compactCards),
+      hidePromoted: Boolean(merged.hidePromoted),
+      hideSidebar: Boolean(merged.hideSidebar),
+      autoPlayAudio: Boolean(merged.autoPlayAudio),
+      hideScrollbar: Boolean(merged.hideScrollbar),
+      enableFilters: Boolean(merged.enableFilters),
+      theme: themes.includes(merged.theme) ? merged.theme : DEFAULT_SETTINGS.theme,
+    };
+  }
+
+  function applyActiveSettings() {
+    activeSettings = { ...userSettings, ...activeOverrides };
+  }
+
   function load() {
     return new Promise((resolve) => {
       try {
         if (typeof chrome !== 'undefined' && chrome.storage?.sync) {
           chrome.storage.sync.get(DEFAULT_SETTINGS, (result) => {
             if (chrome.runtime?.lastError) {
-              console.warn("Storage warning:", chrome.runtime.lastError);
+              console.warn('Storage warning:', chrome.runtime.lastError);
             }
-            // @ts-ignore - Chrome storage return type allows this merging
-            userSettings = { ...DEFAULT_SETTINGS, ...result };
-            activeSettings = { ...userSettings };
+            userSettings = normalizeSettings(result);
+            applyActiveSettings();
             isLoaded = true;
             notifyListeners();
-            resolve(userSettings);
+            resolve({ ...userSettings });
           });
         } else {
+          userSettings = normalizeSettings(userSettings);
+          applyActiveSettings();
           isLoaded = true;
           notifyListeners();
-          resolve(userSettings);
+          resolve({ ...userSettings });
         }
-      } catch (err) {
-        console.warn("Storage API unavailable", err);
-        resolve(userSettings);
+      } catch (error) {
+        console.warn('Storage API unavailable', error);
+        isLoaded = true;
+        notifyListeners();
+        resolve({ ...userSettings });
       }
     });
   }
 
-  /**
-   * Saves partial settings to storage.
-   * @param {Partial<RedditProSettings>} newSettings
-   */
   function save(newSettings) {
-    userSettings = { ...userSettings, ...newSettings };
-    activeSettings = { ...userSettings };
+    userSettings = normalizeSettings({ ...userSettings, ...(newSettings || {}) });
+    applyActiveSettings();
+
+    const notify = () => notifyListeners();
+
     try {
       if (typeof chrome !== 'undefined' && chrome.storage?.sync) {
         chrome.storage.sync.set(userSettings, () => {
           if (chrome.runtime?.lastError) {
-            console.warn("Storage warning:", chrome.runtime.lastError);
+            console.warn('Storage warning:', chrome.runtime.lastError);
           }
-          notifyListeners();
+          notify();
         });
       } else {
-        notifyListeners();
+        notify();
       }
-    } catch (err) {
-      console.warn("Storage API unavailable", err);
-      notifyListeners();
+    } catch (error) {
+      console.warn('Storage API unavailable', error);
+      notify();
     }
   }
 
-  /**
-   * Gets the current active settings.
-   * @returns {RedditProSettings}
-   */
   function get() {
     return { ...activeSettings };
   }
 
-  /**
-   * Overrides settings temporarily (e.g. for post pages).
-   * @param {Partial<RedditProSettings>} overrides
-   */
   function updateActive(overrides) {
-    activeSettings = { ...userSettings, ...overrides };
+    activeOverrides = { ...(overrides || {}) };
+    applyActiveSettings();
     notifyListeners();
   }
 
-  /**
-   * Subscribes to setting changes.
-   * @param {(settings: RedditProSettings) => void} callback
-   */
   function subscribe(callback) {
-    listeners.push(callback);
-    if (isLoaded) {
-      callback(activeSettings);
-    }
+    if (typeof callback !== 'function') return () => {};
+    listeners.add(callback);
+    if (isLoaded) callback(get());
+    return () => listeners.delete(callback);
   }
 
-  /**
-   * Notifies all registered listeners of current settings.
-   * @private
-   */
   function notifyListeners() {
-    listeners.forEach(cb => cb(activeSettings));
+    listeners.forEach((callback) => {
+      try {
+        callback(get());
+      } catch (error) {
+        console.error('[Reddit Pro] Settings listener failed:', error);
+      }
+    });
   }
 
-  // Cross-context messaging and storage synchronization
   if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
     chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-      if (message && message.type === 'UPDATE_SETTINGS' && message.settings) {
+      if (message?.type === 'UPDATE_SETTINGS' && message.settings) {
         save(message.settings);
-        if (typeof sendResponse === 'function') {
-          sendResponse({ ok: true });
-        }
+        if (typeof sendResponse === 'function') sendResponse({ ok: true });
       }
     });
   }
 
   if (typeof chrome !== 'undefined' && chrome.storage?.onChanged) {
     chrome.storage.onChanged.addListener((_changes, areaName) => {
-      if (areaName === 'sync') {
-        load();
-      }
+      if (areaName === 'sync') load();
     });
   }
 
