@@ -40,8 +40,9 @@ window.RedditPro.CSSVars = (function() {
       body.classList.remove('rg-theme-dark');
     }
 
-    body.style.setProperty('--reddit-col-gap', settings.masonry ? 'clamp(8px, 1vw, 16px)' : '4px');
-    body.style.setProperty('--reddit-batch-gap', settings.masonry ? 'clamp(16px, 2vw, 24px)' : '8px');
+    body.style.setProperty('--reddit-col-gap', settings.masonry ? 'clamp(10px, 1.15vw, 18px)' : '10px');
+    body.style.setProperty('--reddit-row-gap', settings.masonry ? 'clamp(10px, 1vw, 16px)' : '10px');
+    body.style.setProperty('--reddit-batch-gap', settings.masonry ? 'clamp(16px, 2vw, 24px)' : '10px');
 
     manageScrollbar(settings.hideScrollbar);
 
