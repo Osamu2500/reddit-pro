@@ -22,9 +22,12 @@ window.RedditPro.DOMObserver = (function () {
   function processPost(node) {
     const settings = window.RedditPro.Settings.get();
 
-    const aspectRatioNode = node.querySelector('[id$="-aspect-ratio"]');
+    const aspectRatioNode = /** @type {HTMLElement | null} */ (
+      node.querySelector('[id$="-aspect-ratio"]')
+    );
+    const postElement = /** @type {HTMLElement} */ (node);
     if (aspectRatioNode?.style.aspectRatio) {
-      node.style.setProperty('--card-aspect-ratio', aspectRatioNode.style.aspectRatio);
+      postElement.style.setProperty('--card-aspect-ratio', aspectRatioNode.style.aspectRatio);
     }
 
     if (!node.hasAttribute('data-rg-stable')) {
@@ -73,7 +76,8 @@ window.RedditPro.DOMObserver = (function () {
     if (node.tagName === 'IMG') {
       node.setAttribute('data-rg-processed', 'true');
       const card = node.closest(POST_SELECTOR);
-      if (card && !node.complete) {
+      const image = /** @type {HTMLImageElement} */ (node);
+      if (card && !image.complete) {
         node.addEventListener(
           'load',
           () => window.RedditPro.Masonry.recalculateCard(card),
@@ -104,7 +108,9 @@ window.RedditPro.DOMObserver = (function () {
     const batch = Array.from(mutationBatch);
     mutationBatch.clear();
     rafPending = false;
-    batch.forEach(handleAddedNode);
+    batch.forEach((node) => {
+      if (node instanceof Element) handleAddedNode(node);
+    });
   }
 
   /** @param {Node[]} nodes */

@@ -71,7 +71,9 @@ window.RedditPro.PostModal = (function () {
     ) return;
 
     if (!(event.target instanceof Element)) return;
-    const link = event.target.closest('a[href*="/comments/"]');
+    const link = /** @type {HTMLAnchorElement | null} */ (
+      event.target.closest('a[href*="/comments/"]')
+    );
     if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
 
     let targetUrl;
@@ -92,6 +94,7 @@ window.RedditPro.PostModal = (function () {
   }
 
   function getModalElements() {
+    if (!modalContainer) throw new Error('Post modal has not been initialized');
     return {
       body: /** @type {HTMLElement} */ (modalContainer.querySelector('#rg-modal-body')),
       loader: /** @type {HTMLElement} */ (modalContainer.querySelector('#rg-modal-loader')),
@@ -177,7 +180,7 @@ window.RedditPro.PostModal = (function () {
 
     const elements = [root, ...Array.from(root.querySelectorAll('*'))];
     elements.forEach((element) => {
-      [...element.attributes].forEach((attribute) => {
+      Array.from(element.attributes).forEach((attribute) => {
         const name = attribute.name.toLowerCase();
         const value = attribute.value.trim();
         if (name.startsWith('on')) element.removeAttribute(attribute.name);
@@ -192,6 +195,7 @@ window.RedditPro.PostModal = (function () {
   }
 
   function hideModal() {
+    if (!modalContainer) return;
     isModalOpen = false;
     requestId += 1;
     requestController?.abort();

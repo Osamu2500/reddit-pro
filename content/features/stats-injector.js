@@ -33,7 +33,7 @@ window.RedditPro.StatsInjector = (function () {
 
     const baseId = id.split('-')[0];
     if (!pendingPosts.has(baseId)) pendingPosts.set(baseId, new Set());
-    pendingPosts.get(baseId).add(postNode);
+    pendingPosts.get(baseId)?.add(postNode);
 
     if (fetchTimeout) clearTimeout(fetchTimeout);
     fetchTimeout = setTimeout(flushQueue, FETCH_DELAY_MS);
@@ -110,7 +110,7 @@ window.RedditPro.StatsInjector = (function () {
         nodes.forEach((node) => {
           if (!node.isConnected || injectedPosts.has(node)) return;
           if (!pendingPosts.has(id)) pendingPosts.set(id, new Set());
-          pendingPosts.get(id).add(node);
+          pendingPosts.get(id)?.add(node);
         });
       });
     }

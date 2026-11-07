@@ -23,7 +23,8 @@ window.RedditPro.Filters = (function () {
   /** @param {Partial<FilterState>} [filters] */
   function normalizeFilters(filters = {}) {
     const mediaTypes = ['all', 'image', 'video', 'text'];
-    const mediaType = mediaTypes.includes(filters.mediaType) ? filters.mediaType : 'all';
+    const candidate = filters.mediaType ?? 'all';
+    const mediaType = mediaTypes.includes(candidate) ? candidate : 'all';
     return {
       keywords: normalizeList(filters.keywords),
       flairs: normalizeList(filters.flairs),
@@ -45,7 +46,7 @@ window.RedditPro.Filters = (function () {
       });
     }
 
-    window.RedditPro.Settings.subscribe((settings) => {
+    window.RedditPro.Settings.subscribe(/** @param {{ enableFilters: boolean }} settings */ (settings) => {
       if (!settings.enableFilters) restoreFilteredCards();
       else applyToAll();
     });

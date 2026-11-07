@@ -92,11 +92,12 @@ window.RedditPro.AudioObserver = (function () {
             const settings = window.RedditPro.Settings.get();
 
             entries.forEach((entry) => {
+              const player = /** @type {HTMLElement} */ (entry.target);
               if (entry.isIntersecting && settings.autoPlayAudio) {
-                visible.add(entry.target);
+                visible.add(player);
               } else {
-                visible.delete(entry.target);
-                mutePlayer(entry.target);
+                visible.delete(player);
+                mutePlayer(player);
               }
             });
 
@@ -131,7 +132,7 @@ window.RedditPro.AudioObserver = (function () {
   window.addEventListener('resize', scheduleUpdate, { passive: true });
 
   if (window.RedditPro.Settings?.subscribe) {
-    window.RedditPro.Settings.subscribe((settings) => {
+    window.RedditPro.Settings.subscribe(/** @param {{ autoPlayAudio: boolean }} settings */ (settings) => {
       if (!settings.autoPlayAudio) muteAll();
       else scheduleUpdate();
     });

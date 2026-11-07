@@ -81,7 +81,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const tab = tabs[0];
-        if (!tab?.id || !tab.url) return;
+        if (!tab || typeof tab.id !== 'number' || !tab.url) return;
+        const tabId = tab.id;
 
         let hostname;
         try {
@@ -92,13 +93,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!/(^|\.)reddit\.com$/i.test(hostname)) return;
 
         chrome.tabs.sendMessage(
-          tab.id,
+          tabId,
           { type: 'UPDATE_SETTINGS', settings },
           () => {
             if (!chrome.runtime.lastError) return;
 
             chrome.scripting.executeScript({
-              target: { tabId: tab.id },
+              target: { tabId },
               func: applySettingsFallback,
               args: [settings],
             });
