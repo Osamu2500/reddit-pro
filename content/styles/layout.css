@@ -3,13 +3,12 @@
   Handles structural grid, container hiding, and feed layout.
 
   v2 Improvements:
-  - Replaced `display: contents` on batch wrappers (broke event delegation)
-    with proper layout flattening via explicit grid inheritance
-  - Added content-visibility: auto on faceplate-batch for GPU compositing
-    and paint performance (Chrome 85+, Edge 85+, Safari 18+)
+  - Preserves Reddit batch wrappers while flattening them for the feed grid
+    (live event-delegation compatibility still requires browser regression testing)
+  - Uses measured row spans with responsive row and column spacing
   - Added contain-intrinsic-size to prevent scroll-bar jank during virtualization
   - Batch gap now set consistently without !important collision
-  - New posts hidden via data-rg-loading until masonry sets their span
+  - New posts remain visible while their first masonry measurement is pending
 */
 
 :root {
