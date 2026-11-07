@@ -5,13 +5,17 @@
 window.RedditPro = window.RedditPro || {};
 
 window.RedditPro.AudioObserver = (function () {
+  /** @type {Set<HTMLElement>} */
   const visible = new Set();
-  let debounceTimer = null;
+  /** @type {number | undefined} */
+  let debounceTimer;
 
+  /** @param {HTMLElement} player */
   function getVideo(player) {
     return player.querySelector('video') || player.shadowRoot?.querySelector('video') || null;
   }
 
+  /** @param {HTMLElement} player */
   function mutePlayer(player) {
     const video = getVideo(player);
     if (video) video.muted = true;
@@ -19,6 +23,7 @@ window.RedditPro.AudioObserver = (function () {
     player.setAttribute('muted', '');
   }
 
+  /** @param {HTMLElement} player */
   function unmutePlayer(player) {
     const video = getVideo(player);
     if (video) {
@@ -50,6 +55,7 @@ window.RedditPro.AudioObserver = (function () {
 
     const centerX = window.innerWidth / 2;
     const centerY = window.innerHeight / 2;
+    /** @type {HTMLElement | null} */
     let best = null;
     let bestDistance = Infinity;
 
@@ -100,12 +106,14 @@ window.RedditPro.AudioObserver = (function () {
         )
       : null;
 
+  /** @param {Element} node */
   function observe(node) {
     if (observer && node?.tagName === 'SHREDDIT-PLAYER') {
       observer.observe(node);
     }
   }
 
+  /** @param {Element} root */
   function observeIn(root) {
     if (!root?.querySelectorAll) return;
     if (root.matches?.('shreddit-player')) observe(root);

@@ -5,9 +5,13 @@
 window.RedditPro = window.RedditPro || {};
 
 window.RedditPro.StatsInjector = (function () {
+  /** @type {Map<string, Set<Element>>} */
   const pendingPosts = new Map();
+  /** @type {Map<string, number>} */
   const retryCounts = new Map();
+  /** @type {WeakMap<Element, { observer: MutationObserver, timeout: number }>} */
   const pendingInjection = new WeakMap();
+  /** @type {number | null} */
   let fetchTimeout = null;
   let isFlushing = false;
   const FETCH_DELAY_MS = 250;
@@ -20,6 +24,7 @@ window.RedditPro.StatsInjector = (function () {
     // Posts are queued lazily by DOMObserver.
   }
 
+  /** @param {Element} postNode */
   function queuePost(postNode) {
     if (!postNode || injectedPosts.has(postNode)) return;
 
@@ -61,6 +66,7 @@ window.RedditPro.StatsInjector = (function () {
     }
   }
 
+  /** @param {[string, Set<Element>][]} batch */
   async function fetchBatch(batch) {
     const idsQuery = batch.map(([id]) => id).join(',');
 
@@ -110,6 +116,7 @@ window.RedditPro.StatsInjector = (function () {
     }
   }
 
+  /** @param {Element} postNode @param {any} data */
   function injectStats(postNode, data) {
     if (!postNode?.isConnected || injectedPosts.has(postNode)) return;
 
@@ -122,6 +129,7 @@ window.RedditPro.StatsInjector = (function () {
     renderStats(postNode, creditBar, data);
   }
 
+  /** @param {Element} postNode @param {any} data */
   function waitForCreditBar(postNode, data) {
     if (pendingInjection.has(postNode)) return;
 
@@ -143,6 +151,7 @@ window.RedditPro.StatsInjector = (function () {
     observer.observe(postNode, { childList: true, subtree: true });
   }
 
+  /** @param {Element} postNode */
   function stopWaiting(postNode) {
     const pending = pendingInjection.get(postNode);
     if (!pending) return;
@@ -151,6 +160,7 @@ window.RedditPro.StatsInjector = (function () {
     pendingInjection.delete(postNode);
   }
 
+  /** @param {Element} postNode @param {Element} creditBar @param {any} data */
   function renderStats(postNode, creditBar, data) {
     if (!postNode.isConnected || injectedPosts.has(postNode)) return;
 

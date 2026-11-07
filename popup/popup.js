@@ -1,16 +1,19 @@
+/**
+ * @file popup.js
+ * @description Loads, validates, and applies Reddit Pro popup settings.
+ */
 document.addEventListener('DOMContentLoaded', () => {
   const elements = {
-    columns: document.getElementById('columnsSlider'),
+    columns: /** @type {HTMLInputElement | null} */ (document.getElementById('columnsSlider')),
     columnsDisplay: document.getElementById('columnsValueDisplay'),
-    autoFit: document.getElementById('autoFit'),
-    autoPlayAudio: document.getElementById('autoPlayAudio'),
-    compactCards: document.getElementById('compactCards'),
-    hidePromoted: document.getElementById('hidePromoted'),
-    hideSidebar: document.getElementById('hideSidebar'),
-    hideScrollbar: document.getElementById('hideScrollbar')
+    autoFit: /** @type {HTMLInputElement | null} */ (document.getElementById('autoFit')),
+    autoPlayAudio: /** @type {HTMLInputElement | null} */ (document.getElementById('autoPlayAudio')),
+    compactCards: /** @type {HTMLInputElement | null} */ (document.getElementById('compactCards')),
+    hidePromoted: /** @type {HTMLInputElement | null} */ (document.getElementById('hidePromoted')),
+    hideSidebar: /** @type {HTMLInputElement | null} */ (document.getElementById('hideSidebar')),
+    hideScrollbar: /** @type {HTMLInputElement | null} */ (document.getElementById('hideScrollbar')),
   };
 
-  // Default settings — autoFit MUST be false so manual column picks are respected
   const defaultSettings = {
     columns: '3',
     autoFit: false,
@@ -19,93 +22,104 @@ document.addEventListener('DOMContentLoaded', () => {
     compactCards: false,
     hidePromoted: true,
     hideSidebar: false,
-    hideScrollbar: true
+    hideScrollbar: true,
   };
 
-  // Load saved settings and populate UI
   chrome.storage.sync.get(defaultSettings, (settings) => {
-    // Set slider
-    if (elements.columns && settings.columns) {
-      elements.columns.value = settings.columns;
+    if (elements.columns) {
+      elements.columns.value = String(settings.columns);
       if (elements.columnsDisplay) {
-        elements.columnsDisplay.textContent = settings.columns === '1' ? '1 Column' : `${settings.columns} Columns`;
+        elements.columnsDisplay.textContent =
+          settings.columns === '1' ? '1 Column' : `${settings.columns} Columns`;
       }
     }
 
-    // Set checkboxes
-    elements.autoFit.checked       = settings.autoFit;
-    elements.autoPlayAudio.checked = settings.autoPlayAudio;
-    elements.compactCards.checked  = settings.compactCards;
-    elements.hidePromoted.checked  = settings.hidePromoted;
-    elements.hideSidebar.checked   = settings.hideSidebar;
-    elements.hideScrollbar.checked = settings.hideScrollbar;
+    if (elements.autoFit) elements.autoFit.checked = settings.autoFit;
+    if (elements.autoPlayAudio) elements.autoPlayAudio.checked = settings.autoPlayAudio;
+    if (elements.compactCards) elements.compactCards.checked = settings.compactCards;
+    if (elements.hidePromoted) elements.hidePromoted.checked = settings.hidePromoted;
+    if (elements.hideSidebar) elements.hideSidebar.checked = settings.hideSidebar;
+    if (elements.hideScrollbar) elements.hideScrollbar.checked = settings.hideScrollbar;
   });
 
-  // Build current settings from UI state
-  const getSettings = () => {
+  function getSettings() {
     return {
-      columns:       elements.columns ? elements.columns.value : '3',
-      autoFit:       elements.autoFit.checked,
-      autoPlayAudio: elements.autoPlayAudio.checked,
-      masonry:       true,
-      compactCards:  elements.compactCards.checked,
-      hidePromoted:  elements.hidePromoted.checked,
-      hideSidebar:   elements.hideSidebar.checked,
-      hideScrollbar: elements.hideScrollbar.checked
+      columns: elements.columns?.value || '3',
+      autoFit: elements.autoFit?.checked ?? false,
+      autoPlayAudio: elements.autoPlayAudio?.checked ?? true,
+      masonry: true,
+      compactCards: elements.compactCards?.checked ?? false,
+      hidePromoted: elements.hidePromoted?.checked ?? true,
+      hideSidebar: elements.hideSidebar?.checked ?? false,
+      hideScrollbar: elements.hideScrollbar?.checked ?? true,
     };
-  };
+  }
 
-  // Save to storage AND push to the active Reddit tab
-  const saveAndNotify = () => {
+  /** @param {typeof defaultSettings} settings */
+  function applySettingsFallback(settings) {
+    const body = document.body;
+    if (!body) return;
+
+    body.setAttribute('data-reddit-grid-cols', settings.columns);
+    body.setAttribute('data-reddit-grid-autofit', String(settings.autoFit));
+    body.setAttribute('data-reddit-grid-masonry', String(settings.masonry));
+    body.setAttribute('data-reddit-grid-compact', String(settings.compactCards));
+    body.setAttribute('data-reddit-grid-hide-promoted', String(settings.hidePromoted));
+    body.setAttribute('data-reddit-grid-hide-sidebar', String(settings.hideSidebar));
+
+    if (window.RedditPro?.Settings) window.RedditPro.Settings.save(settings);
+  }
+
+  function saveAndNotify() {
     const settings = getSettings();
 
     chrome.storage.sync.set(settings, () => {
-      // Query the active tab
+      if (chrome.runtime.lastError) {
+        console.warn('RedditPro: Could not save settings', chrome.runtime.lastError);
+        return;
+      }
+
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const tab = tabs[0];
-        if (!tab || !tab.url || !tab.url.includes('reddit.com')) return;
+        if (!tab?.id || !tab.url) return;
 
-        // Try sending message — if content script is ready it'll apply immediately
-        chrome.tabs.sendMessage(tab.id, { type: 'UPDATE_SETTINGS', settings }, (_response) => {
-          if (chrome.runtime.lastError) {
-            // Content script not ready — inject it programmatically as fallback
+        let hostname;
+        try {
+          hostname = new URL(tab.url).hostname;
+        } catch {
+          return;
+        }
+        if (!/(^|\.)reddit\.com$/i.test(hostname)) return;
+
+        chrome.tabs.sendMessage(
+          tab.id,
+          { type: 'UPDATE_SETTINGS', settings },
+          () => {
+            if (!chrome.runtime.lastError) return;
+
             chrome.scripting.executeScript({
               target: { tabId: tab.id },
-              func: (s) => {
-                const b = document.body;
-                if (!b) return;
-                b.setAttribute('data-reddit-grid-cols',          s.columns);
-                b.setAttribute('data-reddit-grid-autofit',       String(s.autoFit));
-                b.setAttribute('data-reddit-grid-masonry',       String(s.masonry));
-                b.setAttribute('data-reddit-grid-compact',       String(s.compactCards));
-                b.setAttribute('data-reddit-grid-hide-promoted', String(s.hidePromoted));
-                b.setAttribute('data-reddit-grid-hide-sidebar',  String(s.hideSidebar));
-
-                if (window.RedditPro?.Settings) {
-                  window.RedditPro.Settings.save(s);
-                }
-              },
-              args: [settings]
+              func: applySettingsFallback,
+              args: [settings],
             });
           }
-        });
+        );
       });
     });
-  };
-
-  // Wire up all controls
-  if (elements.columns) {
-    elements.columns.addEventListener('input', (e) => {
-      if (elements.columnsDisplay) {
-        elements.columnsDisplay.textContent = e.target.value === '1' ? '1 Column' : `${e.target.value} Columns`;
-      }
-      saveAndNotify();
-    });
   }
-  elements.autoFit.addEventListener('change',       saveAndNotify);
-  elements.autoPlayAudio.addEventListener('change', saveAndNotify);
-  elements.compactCards.addEventListener('change',  saveAndNotify);
-  elements.hidePromoted.addEventListener('change',  saveAndNotify);
-  elements.hideSidebar.addEventListener('change',   saveAndNotify);
-  elements.hideScrollbar.addEventListener('change', saveAndNotify);
+
+  elements.columns?.addEventListener('input', (event) => {
+    const value = /** @type {HTMLInputElement} */ (event.currentTarget).value;
+    if (elements.columnsDisplay) {
+      elements.columnsDisplay.textContent = value === '1' ? '1 Column' : `${value} Columns`;
+    }
+    saveAndNotify();
+  });
+
+  elements.autoFit?.addEventListener('change', saveAndNotify);
+  elements.autoPlayAudio?.addEventListener('change', saveAndNotify);
+  elements.compactCards?.addEventListener('change', saveAndNotify);
+  elements.hidePromoted?.addEventListener('change', saveAndNotify);
+  elements.hideSidebar?.addEventListener('change', saveAndNotify);
+  elements.hideScrollbar?.addEventListener('change', saveAndNotify);
 });

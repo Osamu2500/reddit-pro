@@ -4,26 +4,30 @@
  */
 window.RedditPro = window.RedditPro || {};
 
+/** @typedef {'all' | 'image' | 'video' | 'text'} FilterMediaType */
+/** @typedef {{ keywords: string[], flairs: string[], mediaType: FilterMediaType }} FilterState */
+
 window.RedditPro.Filters = (function () {
   const STORAGE_KEY = 'redditProFilters';
-  const DEFAULT_FILTERS = {
-    keywords: [],
-    flairs: [],
-    mediaType: 'all',
-  };
+  /** @type {FilterState} */
+  const DEFAULT_FILTERS = { keywords: [], flairs: [], mediaType: 'all' };
+  /** @type {FilterState} */
   let activeFilters = { ...DEFAULT_FILTERS };
 
+  /** @param {unknown} value */
   function normalizeList(value) {
     if (!Array.isArray(value)) return [];
     return [...new Set(value.map((item) => String(item).trim()).filter(Boolean))];
   }
 
+  /** @param {Partial<FilterState>} [filters] */
   function normalizeFilters(filters = {}) {
     const mediaTypes = ['all', 'image', 'video', 'text'];
+    const mediaType = mediaTypes.includes(filters.mediaType) ? filters.mediaType : 'all';
     return {
       keywords: normalizeList(filters.keywords),
       flairs: normalizeList(filters.flairs),
-      mediaType: mediaTypes.includes(filters.mediaType) ? filters.mediaType : 'all',
+      mediaType: /** @type {FilterMediaType} */ (mediaType),
     };
   }
 
@@ -34,7 +38,9 @@ window.RedditPro.Filters = (function () {
           console.warn('RedditPro: Could not load filters', chrome.runtime.lastError);
           return;
         }
-        activeFilters = normalizeFilters(result[STORAGE_KEY]);
+        activeFilters = normalizeFilters(
+          /** @type {Partial<FilterState>} */ (result[STORAGE_KEY])
+        );
         applyToAll();
       });
     }
@@ -53,6 +59,7 @@ window.RedditPro.Filters = (function () {
     };
   }
 
+  /** @param {Partial<FilterState>} filters */
   function setFilters(filters) {
     activeFilters = normalizeFilters({ ...activeFilters, ...filters });
 
@@ -68,17 +75,21 @@ window.RedditPro.Filters = (function () {
   }
 
   function restoreFilteredCards() {
-    document.querySelectorAll('.rg-filtered-out').forEach((gridItem) => {
+    document.querySelectorAll('.rg-filtered-out').forEach((element) => {
+      const gridItem = /** @type {HTMLElement} */ (element);
       gridItem.classList.remove('rg-filtered-out');
       gridItem.style.removeProperty('display');
     });
   }
 
   function applyToAll() {
-    document.querySelectorAll('shreddit-post, shreddit-ad-post, article, .Post').forEach(applyToCard);
+    document.querySelectorAll('shreddit-post, shreddit-ad-post, article, .Post').forEach((card) => {
+      applyToCard(card);
+    });
     window.RedditPro.Masonry?.sweepAll();
   }
 
+  /** @param {Element} card */
   function getCardText(card) {
     const title =
       card.getAttribute('post-title') ||
@@ -88,10 +99,9 @@ window.RedditPro.Filters = (function () {
     return { title: title.trim(), flair: flair.trim() };
   }
 
+  /** @param {Element} card */
   function applyToCard(card) {
-    if (!card?.matches) return;
-
-    const gridItem = card.closest('faceplate-tracker') || card;
+    const gridItem = /** @type {HTMLElement} */ (card.closest('faceplate-tracker') || card);
     const settings = window.RedditPro.Settings.get();
 
     if (!settings.enableFilters) {

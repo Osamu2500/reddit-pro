@@ -5,13 +5,16 @@
 window.RedditPro = window.RedditPro || {};
 
 window.RedditPro.PostModal = (function () {
+  /** @type {HTMLDivElement | null} */
   let modalContainer = null;
   let isModalOpen = false;
   let originalTitle = document.title;
   let originalUrl = location.href;
+  /** @type {AbortController | null} */
   let requestController = null;
   let requestId = 0;
-  let clearTimer = null;
+  /** @type {number | undefined} */
+  let clearTimer;
 
   function init() {
     if (document.getElementById('rg-post-modal')) return;
@@ -45,8 +48,8 @@ window.RedditPro.PostModal = (function () {
     `;
 
     document.body.appendChild(modalContainer);
-    modalContainer.querySelector('.rg-modal-backdrop').addEventListener('click', closeModal);
-    modalContainer.querySelector('.rg-modal-close').addEventListener('click', closeModal);
+    modalContainer.querySelector('.rg-modal-backdrop')?.addEventListener('click', closeModal);
+    modalContainer.querySelector('.rg-modal-close')?.addEventListener('click', closeModal);
   }
 
   function attachListeners() {
@@ -57,6 +60,7 @@ window.RedditPro.PostModal = (function () {
     });
   }
 
+  /** @param {MouseEvent} event */
   function handlePostClick(event) {
     if (
       event.button !== 0 ||
@@ -66,7 +70,8 @@ window.RedditPro.PostModal = (function () {
       event.altKey
     ) return;
 
-    const link = event.target.closest?.('a[href*="/comments/"]');
+    if (!(event.target instanceof Element)) return;
+    const link = event.target.closest('a[href*="/comments/"]');
     if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
 
     let targetUrl;
@@ -88,12 +93,13 @@ window.RedditPro.PostModal = (function () {
 
   function getModalElements() {
     return {
-      body: modalContainer.querySelector('#rg-modal-body'),
-      loader: modalContainer.querySelector('#rg-modal-loader'),
-      close: modalContainer.querySelector('.rg-modal-close'),
+      body: /** @type {HTMLElement} */ (modalContainer.querySelector('#rg-modal-body')),
+      loader: /** @type {HTMLElement} */ (modalContainer.querySelector('#rg-modal-loader')),
+      close: /** @type {HTMLButtonElement} */ (modalContainer.querySelector('.rg-modal-close')),
     };
   }
 
+  /** @param {string} url */
   async function openModal(url) {
     if (isModalOpen || !modalContainer) return;
 
@@ -136,7 +142,11 @@ window.RedditPro.PostModal = (function () {
       const comments =
         doc.querySelector('comment-tree') || doc.querySelector('shreddit-comment-tree');
       const main = doc.querySelector('main');
-      const sources = post || comments ? [post, comments].filter(Boolean) : main ? [main] : [];
+      /** @type {Element[]} */
+      const sources = [];
+      if (post) sources.push(post);
+      if (comments) sources.push(comments);
+      if (sources.length === 0 && main) sources.push(main);
 
       if (sources.length === 0) throw new Error('Reddit post content was not found');
 
@@ -151,7 +161,7 @@ window.RedditPro.PostModal = (function () {
       body.replaceChildren(fragment);
       if (doc.title) document.title = doc.title;
     } catch (error) {
-      if (error.name === 'AbortError') return;
+      if (error instanceof Error && error.name === 'AbortError') return;
       if (!isModalOpen || activeRequestId !== requestId) return;
       console.error('RedditPro Modal Error:', error);
       body.textContent = 'Unable to load this post. Please try again.';
@@ -161,10 +171,11 @@ window.RedditPro.PostModal = (function () {
     }
   }
 
+  /** @param {Element} root */
   function sanitizeClone(root) {
     root.querySelectorAll('script, object, embed').forEach((element) => element.remove());
 
-    const elements = [root, ...root.querySelectorAll('*')];
+    const elements = [root, ...Array.from(root.querySelectorAll('*'))];
     elements.forEach((element) => {
       [...element.attributes].forEach((attribute) => {
         const name = attribute.name.toLowerCase();

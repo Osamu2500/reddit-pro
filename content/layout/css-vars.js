@@ -18,7 +18,7 @@ window.RedditPro.CSSVars = (function() {
 
   /**
    * Applies settings to the document body via data attributes and CSS vars.
-   * @param {import('./settings').RedditProSettings} settings
+   * @param {any} settings
    */
   function applySettingsToDOM(settings) {
     const body = document.body;

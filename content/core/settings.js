@@ -40,7 +40,8 @@ window.RedditPro.Settings = (function () {
   let isLoaded = false;
   const listeners = new Set();
 
-  function normalizeSettings(settings) {
+  /** @param {Partial<RedditProSettings>} [settings] */
+  function normalizeSettings(settings = {}) {
     const merged = { ...DEFAULT_SETTINGS, ...(settings || {}) };
     const columns = String(merged.columns);
     const themes = ['dark', 'light', 'system'];
@@ -94,6 +95,7 @@ window.RedditPro.Settings = (function () {
     });
   }
 
+  /** @param {Partial<RedditProSettings>} newSettings */
   function save(newSettings) {
     userSettings = normalizeSettings({ ...userSettings, ...(newSettings || {}) });
     applyActiveSettings();
@@ -121,12 +123,14 @@ window.RedditPro.Settings = (function () {
     return { ...activeSettings };
   }
 
+  /** @param {Partial<RedditProSettings>} overrides */
   function updateActive(overrides) {
     activeOverrides = { ...(overrides || {}) };
     applyActiveSettings();
     notifyListeners();
   }
 
+  /** @param {(settings: RedditProSettings) => void} callback */
   function subscribe(callback) {
     if (typeof callback !== 'function') return () => {};
     listeners.add(callback);

@@ -5,9 +5,12 @@
 window.RedditPro = window.RedditPro || {};
 
 window.RedditPro.DOMObserver = (function () {
+  /** @type {MutationObserver | null} */
   let observer = null;
-  let sweepTimer = null;
+  /** @type {number | undefined} */
+  let sweepTimer;
   let rafPending = false;
+  /** @type {Set<Node>} */
   const mutationBatch = new Set();
 
   const POST_SELECTOR = 'shreddit-post, shreddit-ad-post, article, .Post';
@@ -15,6 +18,7 @@ window.RedditPro.DOMObserver = (function () {
     'faceplate-batch, shreddit-feed, profile-feed, shreddit-profile-feed, shreddit-user-feed';
   const PLAYER_SELECTOR = 'shreddit-player';
 
+  /** @param {Element} node */
   function processPost(node) {
     const settings = window.RedditPro.Settings.get();
 
@@ -42,6 +46,7 @@ window.RedditPro.DOMObserver = (function () {
     window.RedditPro.StatsInjector?.queuePost(node);
   }
 
+  /** @param {Element} node */
   function handleElement(node) {
     if (node.nodeType !== 1 || node.hasAttribute('data-rg-processed')) return;
 
@@ -78,6 +83,7 @@ window.RedditPro.DOMObserver = (function () {
     }
   }
 
+  /** @param {Element} root */
   function handleAddedNode(root) {
     if (root.nodeType !== 1) return;
 
@@ -101,6 +107,7 @@ window.RedditPro.DOMObserver = (function () {
     batch.forEach(handleAddedNode);
   }
 
+  /** @param {Node[]} nodes */
   function enqueueNodes(nodes) {
     nodes.forEach((node) => mutationBatch.add(node));
     if (!rafPending && mutationBatch.size > 0) {
