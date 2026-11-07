@@ -45,7 +45,6 @@ window.RedditPro.DOMObserver = (function () {
   function handleElement(node) {
     if (node.nodeType !== 1 || node.hasAttribute('data-rg-processed')) return;
 
-    const tag = node.tagName.toLowerCase();
     if (node.matches(POST_SELECTOR)) {
       node.setAttribute('data-rg-processed', 'true');
       processPost(node);
