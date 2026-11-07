@@ -9,7 +9,7 @@
     "format:check": "prettier --check \"**/*.{js,css,json,html,md}\"",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc -p jsconfig.json --noEmit"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.260",
