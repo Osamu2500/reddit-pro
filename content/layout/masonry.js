@@ -106,9 +106,14 @@ window.RedditPro.Masonry = (function() {
       const rowGap = getGridRowGap(gridItem);
       const span = Math.ceil((height + rowGap) / (ROW_HEIGHT + rowGap));
       const currentSpan = gridItem.getAttribute('data-rg-span');
+      const expectedRowEnd = `span ${span}`;
+      const currentRowEnd = gridItem.style.getPropertyValue('grid-row-end');
 
-      if (currentSpan !== String(span)) {
-        gridItem.style.setProperty('grid-row-end', `span ${span}`, 'important');
+      // The data attribute can survive third-party style changes. Validate the
+      // actual inline row-end too, otherwise a forced sweep can preserve a stale
+      // span even when the cached data attribute claims the measurement is right.
+      if (currentSpan !== String(span) || currentRowEnd !== expectedRowEnd) {
+        gridItem.style.setProperty('grid-row-end', expectedRowEnd, 'important');
         gridItem.setAttribute('data-rg-span', span);
         // The measured height already represents the current rendered layout.
         // Mark it stable now; waiting for three more ResizeObserver notifications
