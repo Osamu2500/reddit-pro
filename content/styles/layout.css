@@ -295,9 +295,16 @@ body:not([data-reddit-grid-cols="1"]) faceplate-batch[style] {
 body:not([data-reddit-grid-cols="1"]) faceplate-tracker[data-rg-loading],
 body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-loading],
 body:not([data-reddit-grid-cols="1"]) article[data-rg-loading] {
-  opacity: 0 !important;
-  /* Keep in flow so ResizeObserver can measure the card */
+  opacity: 0.58 !important;
+  /* Keep new posts visible while their first measurement is pending. */
   visibility: visible !important;
-  /* Prevent interaction while invisible */
   pointer-events: none !important;
+  transition: opacity 180ms ease !important;
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  body:not([data-reddit-grid-cols="1"]) [data-rg-loading] {
+    transition: none !important;
+  }
 }
