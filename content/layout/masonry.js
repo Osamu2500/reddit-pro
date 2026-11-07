@@ -4,11 +4,10 @@
  *
  * Key improvements over v1:
  *  - Dynamic ROW_GAP read from CSS instead of hardcoded constant
- *  - "data-rg-loading" pre-hide pattern: new posts are invisible until
- *    their first span is computed, then revealed with CSS animation
+ *  - Safe first-measurement state for newly inserted cards
  *  - Image load listeners so masonry recalculates the moment an image
  *    inside a card finishes loading (biggest cause of mid-scroll reflow)
- *  - STABILITY_THRESHOLD raised to 3 for rock-solid positioning
+ *  - Marks cards stable after the first valid measurement
  *  - Removed all expanded-card logic (feature deleted)
  */
 // @ts-nocheck
@@ -29,14 +28,33 @@ window.RedditPro.Masonry = (function() {
    * always matches the rendered layout (fixes the gap-mismatch bug).
    * @returns {number}
    */
-  function getGridRowGap(element) {
+  function getGridContainer(element) {
     let ancestor = element;
     while (ancestor && ancestor !== document.body) {
-      const style = getComputedStyle(ancestor);
-      if (style.display.includes('grid')) return parseFloat(style.rowGap) || 0;
+      if (getComputedStyle(ancestor).display.includes('grid')) return ancestor;
       ancestor = ancestor.parentElement;
     }
-    return 0;
+    return null;
+  }
+
+  function getGridRowGap(element) {
+    const grid = getGridContainer(element);
+    return grid ? parseFloat(getComputedStyle(grid).rowGap) || 0 : 0;
+  }
+
+  function hasMultipleGridColumns(element) {
+    const grid = getGridContainer(element);
+    if (!grid) return true;
+    const columns = getComputedStyle(grid).gridTemplateColumns.trim();
+    return columns ? columns.split(/\\s+/).length > 1 : false;
+  }
+
+  function clearGridItem(gridItem, card) {
+    gridItem.style.removeProperty('grid-row-end');
+    gridItem.removeAttribute('data-rg-span');
+    gridItem.removeAttribute('data-rg-stable');
+    gridItem.removeAttribute('data-rg-loading');
+    heightCache.delete(card);
   }
 
   const POST_SELECTORS = [
@@ -80,6 +98,10 @@ window.RedditPro.Masonry = (function() {
       if (height <= 0) continue;
 
       const gridItem = el.closest('faceplate-tracker') || el;
+      if (!hasMultipleGridColumns(el)) {
+        clearGridItem(gridItem, el);
+        continue;
+      }
       const rowGap = getGridRowGap(gridItem);
       const span = Math.ceil((height + rowGap) / (ROW_HEIGHT + rowGap));
       const currentSpan = gridItem.getAttribute('data-rg-span');
@@ -143,7 +165,7 @@ window.RedditPro.Masonry = (function() {
     const settings = window.RedditPro.Settings.get();
     const gridItem = el.closest('faceplate-tracker') || el;
 
-    if (settings.columns !== '1' && settings.masonry) {
+    if (settings.columns !== '1' && settings.masonry && hasMultipleGridColumns(el)) {
       // Mark as loading so it stays invisible until first span is set
       if (!gridItem.hasAttribute('data-rg-span') && !gridItem.hasAttribute('data-rg-stable')) {
         gridItem.setAttribute('data-rg-loading', '1');
@@ -167,11 +189,7 @@ window.RedditPro.Masonry = (function() {
       });
     } else {
       observer.unobserve(el);
-      gridItem.style.removeProperty('grid-row-end');
-      gridItem.removeAttribute('data-rg-span');
-      gridItem.removeAttribute('data-rg-stable');
-      gridItem.removeAttribute('data-rg-loading');
-      heightCache.delete(el);
+      clearGridItem(gridItem, el);
     }
   }
 
