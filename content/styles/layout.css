@@ -54,7 +54,21 @@ body[data-reddit-grid-cols="10"] { --reddit-cols: 10; }
   body[data-reddit-grid-cols="10"],
   body[data-reddit-grid-autofit="true"] { --reddit-cols: 2; }
 }
-@media (max-width: 600px) { body { --reddit-cols: 1 !important; } }
+@media (max-width: 600px) {
+  body { --reddit-cols: 1 !important; }
+  body:not([data-reddit-grid-cols="1"]) :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    [data-testid="post-list"],
+    main > div:has(> shreddit-post),
+    main > div:has(> article)
+  ) {
+    grid-auto-rows: auto !important;
+    grid-auto-flow: row !important;
+    row-gap: 12px !important;
+  }
+}
 
 /* =====================================================================
    HIDE SIDEBARS
@@ -147,9 +161,9 @@ body:not([data-reddit-grid-cols="1"]):is(.rg-page-home, .rg-page-community) :is(
   display: grid !important;
   grid-template-columns: repeat(var(--reddit-cols, 3), minmax(0, 1fr)) !important;
   grid-auto-rows: 1px !important;
-  grid-auto-flow: row dense !important;
+  grid-auto-flow: row !important;
   column-gap: var(--reddit-col-gap, 8px) !important;
-  row-gap: 0 !important;
+  row-gap: var(--reddit-row-gap, 12px) !important;
   align-items: start !important;
   width: 100% !important;
   box-sizing: border-box !important;
@@ -205,9 +219,9 @@ body:not([data-reddit-grid-cols="1"]):is(.rg-page-profile, .rg-page-saved) :is(
   display: grid !important;
   grid-template-columns: repeat(var(--reddit-cols, 3), minmax(0, 1fr)) !important;
   grid-auto-rows: 1px !important;
-  grid-auto-flow: row dense !important;
+  grid-auto-flow: row !important;
   column-gap: var(--reddit-col-gap, 8px) !important;
-  row-gap: 0 !important;
+  row-gap: var(--reddit-row-gap, 12px) !important;
   align-items: start !important;
   width: 100% !important;
   box-sizing: border-box !important;
@@ -218,9 +232,9 @@ body:not([data-reddit-grid-cols="1"]).rg-page-search :is([data-testid="post-list
   display: grid !important;
   grid-template-columns: repeat(var(--reddit-cols, 3), minmax(0, 1fr)) !important;
   grid-auto-rows: 1px !important;
-  grid-auto-flow: row dense !important;
+  grid-auto-flow: row !important;
   column-gap: var(--reddit-col-gap, 8px) !important;
-  row-gap: 0 !important;
+  row-gap: var(--reddit-row-gap, 12px) !important;
   align-items: start !important;
   width: 100% !important;
   box-sizing: border-box !important;
@@ -237,8 +251,9 @@ body:not([data-reddit-grid-cols="1"])[data-reddit-grid-masonry="false"] :is(
   [data-testid="post-list"]
 ) {
   grid-auto-rows: auto !important;
+  grid-auto-flow: row !important;
   column-gap: 10px !important;
-  row-gap:    10px !important;
+  row-gap: var(--reddit-row-gap, 10px) !important;
 }
 
 
