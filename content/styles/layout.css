@@ -77,7 +77,12 @@ body[data-reddit-grid-cols='10'] {
       shreddit-feed,
       shreddit-profile-feed,
       profile-feed,
+      shreddit-user-feed,
+      shreddit-custom-feed,
+      custom-feed,
       [data-testid='post-list'],
+      [data-testid='profile-feed'],
+      [data-testid='search-results'],
       main > div:has(> shreddit-post),
       main > div:has(> article)
     ) {
@@ -126,6 +131,29 @@ body[data-reddit-grid-hide-sidebar='true']
   display: none !important;
   width: 0 !important;
   min-width: 0 !important;
+}
+
+/* =====================================================================
+   TOPBAR / HEADER STACKING CLEARANCE
+   Keep Reddit's top navigation bar strictly above scrolling feed cards
+   ===================================================================== */
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    header,
+    header[role='banner'],
+    reddit-header-large,
+    reddit-header-small,
+    reddit-header,
+    shreddit-app > header,
+    shreddit-app > reddit-header-large,
+    shreddit-app > reddit-header-small,
+    shreddit-app > [slot='header'],
+    #header,
+    #sr-header-area
+  ):not(shreddit-post *):not(.Post *) {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
 }
 
 /* =====================================================================
@@ -214,6 +242,8 @@ body:not([data-reddit-grid-cols='1'])
   box-sizing: border-box !important;
   padding: 0 12px !important;
   margin: 0 !important;
+  position: relative !important;
+  z-index: 1 !important;
 }
 
 body[data-reddit-grid-hide-sidebar='true']
@@ -235,6 +265,8 @@ body[data-reddit-grid-hide-sidebar='true']
   ) {
   grid-column: 1 / -1 !important;
   padding: 0 12px !important;
+  position: relative !important;
+  z-index: 1 !important;
 }
 
 /* Flatten and expand inner containers so Reddit's 2-column sidebar grid is neutralized */
@@ -264,17 +296,24 @@ body:not([data-reddit-grid-cols='1']) main {
   width: 100% !important;
   min-width: 0 !important;
   box-sizing: border-box !important;
+  position: relative !important;
+  z-index: 1 !important;
 }
 
 /* =====================================================================
    FEED GRID CONTAINERS
    ===================================================================== */
-body:not([data-reddit-grid-cols='1']):not(.rg-page-post)
+body:not([data-reddit-grid-cols='1']):not(.rg-page-post):not(.rg-page-standalone)
   :is(
     shreddit-feed,
     shreddit-profile-feed,
     profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed,
+    custom-feed,
     [data-testid='post-list'],
+    [data-testid='profile-feed'],
+    [data-testid='search-results'],
     main > div:has(> shreddit-post),
     main > div:has(> article)
   ) {
@@ -290,15 +329,39 @@ body:not([data-reddit-grid-cols='1']):not(.rg-page-post)
 }
 
 /* Non-card headers, carousels, and discovery units must span all columns */
-body:not([data-reddit-grid-cols='1']):not(.rg-page-post)
-  :is(shreddit-feed, shreddit-profile-feed, profile-feed, [data-testid='post-list'])
+body:not([data-reddit-grid-cols='1']):not(.rg-page-post):not(.rg-page-standalone)
+  :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed,
+    custom-feed,
+    [data-testid='post-list'],
+    [data-testid='profile-feed'],
+    [data-testid='search-results'],
+    main
+  )
   > :is(
     shreddit-feed-header,
+    shreddit-profile-header,
+    profile-header,
+    shreddit-profile-tabs,
+    faceplate-tab-group,
+    shreddit-subreddit-header,
+    shreddit-subreddit-banner,
+    shreddit-community-highlights,
+    shreddit-sort-dropdown,
+    shreddit-composer-post-form,
+    shreddit-post-composer,
     [slot='header'],
+    [slot='banner'],
     div:has(> shreddit-sort-dropdown),
     shreddit-subreddit-discovery-unit,
     shreddit-carousel,
     community-recommendations,
+    header,
+    nav,
     hr
   ) {
   grid-column: 1 / -1 !important;
@@ -307,10 +370,28 @@ body:not([data-reddit-grid-cols='1']):not(.rg-page-post)
 }
 
 /* Make injection wrappers transparent to the layout so grids seamlessly stitch together */
-body:not([data-reddit-grid-cols='1']) shreddit-feed > faceplate-batch,
-body:not([data-reddit-grid-cols='1']) shreddit-feed > shreddit-async-loader,
-body:not([data-reddit-grid-cols='1']) shreddit-profile-feed faceplate-batch,
-body:not([data-reddit-grid-cols='1']) profile-feed faceplate-batch,
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed,
+    [data-testid='post-list'],
+    [data-testid='profile-feed']
+  )
+  > faceplate-batch,
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed,
+    [data-testid='post-list'],
+    [data-testid='profile-feed']
+  )
+  > shreddit-async-loader,
 body:not([data-reddit-grid-cols='1']) faceplate-batch,
 body:not([data-reddit-grid-cols='1']) faceplate-batch > div,
 body:not([data-reddit-grid-cols='1']) faceplate-batch > shreddit-async-loader,
@@ -320,18 +401,42 @@ body:not([data-reddit-grid-cols='1']) shreddit-async-loader {
 
 /* Ensure the active loader sentinel at the end of the feed has layout presence so intersection triggers */
 body:not([data-reddit-grid-cols='1']) faceplate-partial,
-body:not([data-reddit-grid-cols='1']) shreddit-feed > shreddit-async-loader:last-child {
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed,
+    [data-testid='post-list'],
+    [data-testid='profile-feed'],
+    [data-testid='search-results']
+  )
+  > shreddit-async-loader:last-child,
+body:not([data-reddit-grid-cols='1']) faceplate-batch > shreddit-async-loader:last-child {
   grid-column: 1 / -1 !important;
   width: 100% !important;
   min-height: 8px !important;
   display: block !important;
 }
 
-/* All post cards and post wrappers take exactly 1 column and 100% width of their grid cell */
+/* All post cards, comments in feeds, and post wrappers take exactly 1 column and 100% width of their grid cell */
 body:not([data-reddit-grid-cols='1']) faceplate-tracker,
 body:not([data-reddit-grid-cols='1']) shreddit-post,
 body:not([data-reddit-grid-cols='1']) article,
 body:not([data-reddit-grid-cols='1']) shreddit-ad-post,
+body:not([data-reddit-grid-cols='1']) shreddit-profile-comment,
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed,
+    faceplate-batch,
+    faceplate-tracker
+  )
+  > shreddit-comment,
 body:not([data-reddit-grid-cols='1']) .Post {
   grid-column: span 1 !important;
   width: 100% !important;
@@ -356,7 +461,17 @@ body:not([data-reddit-grid-cols='1']) faceplate-tracker {
    MASONRY DISABLED STATE
    ===================================================================== */
 body:not([data-reddit-grid-cols='1'])[data-reddit-grid-masonry='false']
-  :is(shreddit-feed, shreddit-profile-feed, profile-feed, [data-testid='post-list']) {
+  :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed,
+    custom-feed,
+    [data-testid='post-list'],
+    [data-testid='profile-feed'],
+    [data-testid='search-results']
+  ) {
   grid-auto-rows: auto !important;
   grid-auto-flow: row !important;
   column-gap: var(--reddit-col-gap, 12px) !important;
@@ -372,14 +487,14 @@ body:not([data-reddit-grid-cols='1']) faceplate-batch:empty {
 }
 
 /* Hide Reddit's batch/feed separators */
-body:not([data-reddit-grid-cols='1']) shreddit-feed hr,
+body:not([data-reddit-grid-cols='1']) :is(shreddit-feed, shreddit-profile-feed, profile-feed, shreddit-user-feed, shreddit-custom-feed) hr,
 body:not([data-reddit-grid-cols='1']) faceplate-batch hr,
 body:not([data-reddit-grid-cols='1']) shreddit-post hr {
   display: none !important;
 }
 
 /* Normalize any inline gap/padding Reddit injects via style attribute */
-body:not([data-reddit-grid-cols='1']) shreddit-feed[style],
+body:not([data-reddit-grid-cols='1']) :is(shreddit-feed, shreddit-profile-feed, profile-feed, shreddit-user-feed, shreddit-custom-feed)[style],
 body:not([data-reddit-grid-cols='1']) faceplate-batch[style] {
   gap: inherit !important;
   padding: 0 !important;
@@ -402,4 +517,27 @@ body:not([data-reddit-grid-cols='1']) article[data-rg-loading] {
   body:not([data-reddit-grid-cols='1']) [data-rg-loading] {
     transition: none !important;
   }
+}
+
+/* =====================================================================
+   PAGE-SPECIFIC GEOMETRY & POLISH
+   ===================================================================== */
+body.rg-page-communities main {
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+  padding: 16px 20px !important;
+}
+
+body:is(.rg-page-profile, .rg-page-saved) :is(shreddit-profile-header, profile-header) {
+  margin-bottom: 12px !important;
+}
+
+body:is(.rg-page-profile, .rg-page-saved) :is(shreddit-profile-tabs, faceplate-tab-group) {
+  margin-bottom: 16px !important;
+}
+
+body.rg-page-standalone main {
+  max-width: 1000px !important;
+  margin: 0 auto !important;
+  padding: 16px 24px !important;
 }

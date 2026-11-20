@@ -21,6 +21,7 @@ body:not([data-reddit-grid-cols='1']) .Post {
   margin: 0 !important;
   padding: 0 !important;
   overflow: hidden !important;
+  isolation: isolate !important;
 }
 
 /* Keep measured cards in the normal rendering pipeline.
@@ -32,10 +33,10 @@ body:not([data-reddit-grid-cols='1']) shreddit-post[data-rg-stable='1'] {
   will-change: auto !important;
 }
 
-/* Elevate card z-index when a dropdown menu inside it is open */
+/* Elevate card z-index when a dropdown menu inside it is open (above sibling cards, below top/sidebar) */
 body:not([data-reddit-grid-cols='1']) shreddit-post:has([open]),
 body:not([data-reddit-grid-cols='1']) shreddit-post:has(:popover-open) {
-  z-index: 9999 !important;
+  z-index: 8 !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -142,7 +143,11 @@ body:not([data-reddit-grid-cols='1'])
   button,
 body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='more' i],
 body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-haspopup='menu'],
-body:not([data-reddit-grid-cols='1']) shreddit-post button.overflow-button {
+body:not([data-reddit-grid-cols='1']) shreddit-post button.overflow-button,
+shreddit-post shreddit-overflow-menu button,
+shreddit-post button[aria-label*='more' i],
+shreddit-post button[aria-haspopup='menu'],
+shreddit-post button.overflow-button {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -150,7 +155,7 @@ body:not([data-reddit-grid-cols='1']) shreddit-post button.overflow-button {
   min-width: 32px !important;
   height: 32px !important;
   padding: 0 !important;
-  border-radius: var(--rg-radius-pill) !important;
+  border-radius: var(--rg-radius-btn, 8px) !important;
 
   background: transparent !important;
   background-color: transparent !important;
@@ -308,6 +313,58 @@ body:not([data-reddit-grid-cols='1']) gallery-carousel img:not(.post-background-
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   GALLERY CAROUSEL SQUIRCLE NAVIGATION CONTROLS
+   ═══════════════════════════════════════════════════════════════════════════ */
+gallery-carousel button,
+gallery-carousel [slot*='button'],
+gallery-carousel button[aria-label*='next' i],
+gallery-carousel button[aria-label*='prev' i],
+gallery-carousel button[aria-label*='previous' i] {
+  border-radius: var(--rg-radius-btn, 8px) !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(0, 0, 0, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease !important;
+}
+
+gallery-carousel button:hover,
+gallery-carousel [slot*='button']:hover {
+  background: rgba(0, 0, 0, 0.8) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  transform: scale(1.05) !important;
+}
+
+gallery-carousel button:active,
+gallery-carousel [slot*='button']:active {
+  transform: scale(0.95) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   VIDEO PLAYER SQUIRCLE CONTROLS
+   ═══════════════════════════════════════════════════════════════════════════ */
+shreddit-player button,
+shreddit-player-2 button,
+.shreddit-player-wrapper button {
+  border-radius: var(--rg-radius-btn, 8px) !important;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    CONTEXT SLOT (Recommendations, e.g. "Because you visited...")
    ═══════════════════════════════════════════════════════════════════════════ */
 body:not([data-reddit-grid-cols='1']) shreddit-post [slot='context'],
@@ -399,7 +456,13 @@ body:not([data-reddit-grid-cols='1']) shreddit-post-action-bar > * {
    ═══════════════════════════════════════════════════════════════════════════ */
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-vote-buttons,
 body:not([data-reddit-grid-cols='1']) shreddit-post vote-buttons,
-body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='vote'] {
+body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='vote'],
+shreddit-post shreddit-vote-buttons,
+shreddit-post vote-buttons,
+shreddit-post [data-post-click-location='vote'],
+shreddit-vote-buttons,
+vote-buttons,
+[data-post-click-location='vote'] {
   display: inline-flex !important;
   flex-direction: row !important;
   align-items: center !important;
@@ -424,7 +487,13 @@ body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='v
 
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-vote-buttons:hover,
 body:not([data-reddit-grid-cols='1']) shreddit-post vote-buttons:hover,
-body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='vote']:hover {
+body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='vote']:hover,
+shreddit-post shreddit-vote-buttons:hover,
+shreddit-post vote-buttons:hover,
+shreddit-post [data-post-click-location='vote']:hover,
+shreddit-vote-buttons:hover,
+vote-buttons:hover,
+[data-post-click-location='vote']:hover {
   background: var(--rg-btn-bg-hover) !important;
   border-color: var(--rg-btn-border-hover) !important;
 }
@@ -432,7 +501,15 @@ body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='v
 /* Upvote and Downvote Buttons Inside Segment */
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-vote-buttons button,
 body:not([data-reddit-grid-cols='1']) shreddit-post vote-buttons button,
-body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='vote'] button {
+body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='vote'] button,
+shreddit-post shreddit-vote-buttons button,
+shreddit-post vote-buttons button,
+shreddit-post [data-post-click-location='vote'] button,
+shreddit-vote-buttons button,
+vote-buttons button,
+[data-post-click-location='vote'] button,
+button[aria-label*='upvote' i],
+button[aria-label*='downvote' i] {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -442,7 +519,7 @@ body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='v
   margin: 0 !important;
   border: none !important;
   background: transparent !important;
-  border-radius: 6px !important;
+  border-radius: calc(var(--rg-radius-btn, 8px) - 2px) !important;
   color: var(--rg-text-muted) !important;
   cursor: pointer !important;
   transition:
@@ -453,7 +530,15 @@ body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='v
 
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-vote-buttons button:hover,
 body:not([data-reddit-grid-cols='1']) shreddit-post vote-buttons button:hover,
-body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='vote'] button:hover {
+body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='vote'] button:hover,
+shreddit-post shreddit-vote-buttons button:hover,
+shreddit-post vote-buttons button:hover,
+shreddit-post [data-post-click-location='vote'] button:hover,
+shreddit-vote-buttons button:hover,
+vote-buttons button:hover,
+[data-post-click-location='vote'] button:hover,
+button[aria-label*='upvote' i]:hover,
+button[aria-label*='downvote' i]:hover {
   background: rgba(128, 128, 128, 0.12) !important;
   color: var(--rg-text) !important;
 }
@@ -463,14 +548,27 @@ body:not([data-reddit-grid-cols='1']) shreddit-post vote-buttons button:active,
 body:not([data-reddit-grid-cols='1'])
   shreddit-post
   [data-post-click-location='vote']
-  button:active {
+  button:active,
+shreddit-post shreddit-vote-buttons button:active,
+shreddit-post vote-buttons button:active,
+shreddit-post [data-post-click-location='vote'] button:active,
+shreddit-vote-buttons button:active,
+vote-buttons button:active,
+[data-post-click-location='vote'] button:active,
+button[aria-label*='upvote' i]:active,
+button[aria-label*='downvote' i]:active {
   transform: scale(0.92) !important;
 }
 
 /* 16x16 standard icons */
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-vote-buttons svg,
 body:not([data-reddit-grid-cols='1']) shreddit-post vote-buttons svg,
-body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='vote'] svg {
+body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='vote'] svg,
+shreddit-post shreddit-vote-buttons svg,
+shreddit-post vote-buttons svg,
+shreddit-post [data-post-click-location='vote'] svg,
+button[aria-label*='upvote' i] svg,
+button[aria-label*='downvote' i] svg {
   width: 16px !important;
   height: 16px !important;
   flex-shrink: 0 !important;
@@ -482,7 +580,10 @@ body:not([data-reddit-grid-cols='1'])
   shreddit-post
   [data-post-click-location='vote']
   faceplate-number,
-body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-vote-buttons faceplate-number {
+body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-vote-buttons faceplate-number,
+shreddit-post faceplate-number,
+shreddit-post [data-post-click-location='vote'] faceplate-number,
+shreddit-post shreddit-vote-buttons faceplate-number {
   flex-shrink: 0 !important;
   min-width: 16px !important;
   height: 28px !important;
@@ -505,7 +606,14 @@ body:not([data-reddit-grid-cols='1'])
   vote-buttons:has(button[aria-label='upvote'][aria-pressed='true']),
 body:not([data-reddit-grid-cols='1'])
   shreddit-post
-  [data-post-click-location='vote']:has(button[aria-label='upvote'][aria-pressed='true']) {
+  [data-post-click-location='vote']:has(button[aria-label='upvote'][aria-pressed='true']),
+shreddit-post
+  :is(shreddit-vote-buttons, vote-buttons, [data-post-click-location='vote']):has(
+    button[aria-label*='upvote' i][aria-pressed='true']
+  ),
+:is(shreddit-vote-buttons, vote-buttons, [data-post-click-location='vote']):has(
+  button[aria-label*='upvote' i][aria-pressed='true']
+) {
   background: rgba(var(--rg-accent-rgb), 0.12) !important;
   border-color: rgba(var(--rg-accent-rgb), 0.4) !important;
 }
@@ -522,7 +630,9 @@ body:not([data-reddit-grid-cols='1'])
   :is(shreddit-vote-buttons, vote-buttons, [data-post-click-location='vote']):has(
     button[aria-label='upvote'][aria-pressed='true']
   )
-  faceplate-number {
+  faceplate-number,
+button[aria-label*='upvote' i][aria-pressed='true'],
+button[aria-label*='upvote' i][aria-pressed='true'] svg {
   color: var(--rg-accent) !important;
   fill: var(--rg-accent) !important;
 }
@@ -536,7 +646,14 @@ body:not([data-reddit-grid-cols='1'])
   vote-buttons:has(button[aria-label='downvote'][aria-pressed='true']),
 body:not([data-reddit-grid-cols='1'])
   shreddit-post
-  [data-post-click-location='vote']:has(button[aria-label='downvote'][aria-pressed='true']) {
+  [data-post-click-location='vote']:has(button[aria-label='downvote'][aria-pressed='true']),
+shreddit-post
+  :is(shreddit-vote-buttons, vote-buttons, [data-post-click-location='vote']):has(
+    button[aria-label*='downvote' i][aria-pressed='true']
+  ),
+:is(shreddit-vote-buttons, vote-buttons, [data-post-click-location='vote']):has(
+  button[aria-label*='downvote' i][aria-pressed='true']
+) {
   background: rgba(var(--rg-downvote-rgb), 0.12) !important;
   border-color: rgba(var(--rg-downvote-rgb), 0.4) !important;
 }
@@ -553,7 +670,9 @@ body:not([data-reddit-grid-cols='1'])
   :is(shreddit-vote-buttons, vote-buttons, [data-post-click-location='vote']):has(
     button[aria-label='downvote'][aria-pressed='true']
   )
-  faceplate-number {
+  faceplate-number,
+button[aria-label*='downvote' i][aria-pressed='true'],
+button[aria-label*='downvote' i][aria-pressed='true'] svg {
   color: var(--rg-downvote) !important;
   fill: var(--rg-downvote) !important;
 }
@@ -571,7 +690,19 @@ body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='share' i
 body:not([data-reddit-grid-cols='1']) shreddit-post a[data-click-id='share'],
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='save'],
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='award'],
-body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='save' i] {
+body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='save' i],
+shreddit-post [data-post-click-location='comments'],
+shreddit-post [data-testid='comments-button'],
+shreddit-post shreddit-comment-button,
+shreddit-post a[data-click-id='comments'],
+shreddit-post [data-post-click-location='share'],
+shreddit-post shreddit-share-button,
+shreddit-post button[aria-label*='share' i],
+shreddit-post a[data-click-id='share'],
+shreddit-post [data-post-click-location='save'],
+shreddit-post [data-post-click-location='award'],
+shreddit-post button[aria-label*='save' i],
+shreddit-post button[aria-label*='award' i] {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -611,7 +742,19 @@ body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='share' i
 body:not([data-reddit-grid-cols='1']) shreddit-post a[data-click-id='share']:hover,
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='save']:hover,
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='award']:hover,
-body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='save' i]:hover {
+body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='save' i]:hover,
+shreddit-post [data-post-click-location='comments']:hover,
+shreddit-post [data-testid='comments-button']:hover,
+shreddit-post shreddit-comment-button:hover,
+shreddit-post a[data-click-id='comments']:hover,
+shreddit-post [data-post-click-location='share']:hover,
+shreddit-post shreddit-share-button:hover,
+shreddit-post button[aria-label*='share' i]:hover,
+shreddit-post a[data-click-id='share']:hover,
+shreddit-post [data-post-click-location='save']:hover,
+shreddit-post [data-post-click-location='award']:hover,
+shreddit-post button[aria-label*='save' i]:hover,
+shreddit-post button[aria-label*='award' i]:hover {
   background: var(--rg-btn-bg-hover) !important;
   border-color: var(--rg-btn-border-hover) !important;
   color: var(--rg-text) !important;
@@ -619,7 +762,10 @@ body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='save' i]
 
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='comments']:active,
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='share']:active,
-body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='save']:active {
+body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='save']:active,
+shreddit-post [data-post-click-location='comments']:active,
+shreddit-post [data-post-click-location='share']:active,
+shreddit-post [data-post-click-location='save']:active {
   transform: scale(0.96) !important;
 }
 
@@ -695,9 +841,12 @@ body:not([data-reddit-grid-cols='1']) shreddit-post .nsfw-tag {
    Flat text button, minimal
    ═══════════════════════════════════════════════════════════════════════════ */
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-testid='join-button'],
-body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='join' i] {
+body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='join' i],
+shreddit-post [data-testid='join-button'],
+shreddit-post button[aria-label*='join' i],
+shreddit-post shreddit-join-button {
   flex-shrink: 0 !important;
-  border-radius: var(--rg-radius-pill) !important;
+  border-radius: var(--rg-radius-btn, 8px) !important;
   padding: 4px 12px !important;
   font-size: 0.75rem !important;
   font-weight: 600 !important;
@@ -712,7 +861,10 @@ body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='join' i]
 }
 
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-testid='join-button']:hover,
-body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='join' i]:hover {
+body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='join' i]:hover,
+shreddit-post [data-testid='join-button']:hover,
+shreddit-post button[aria-label*='join' i]:hover,
+shreddit-post shreddit-join-button:hover {
   background: rgba(var(--rg-accent-rgb), 0.1) !important;
   transform: none !important;
 }
@@ -859,4 +1011,12 @@ body:not([data-reddit-grid-cols='1']) shreddit-post [slot='post-body'] {
   border-radius: 4px;
   font-size: 10px;
   font-weight: 700;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UNIVERSAL INTERACTIVE BUTTON SQUIRCLE / ROUNDED SQUARE SHAPE
+   ═══════════════════════════════════════════════════════════════════════════ */
+:is(shreddit-post, shreddit-comment, #rg-post-modal)
+  :is(button, [role='button']):not([data-rg-circle]) {
+  border-radius: var(--rg-radius-btn, 8px) !important;
 }

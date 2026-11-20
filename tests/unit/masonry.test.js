@@ -410,5 +410,20 @@ describe('Masonry layout engine & responsive columns', () => {
       expect(parseInt(tracker.getAttribute('data-rg-span'), 10)).toBeGreaterThan(20);
       expect(tracker.style.gridRowEnd).toMatch(/^span \d+$/);
     });
+
+    it('verifies CSS rules enforce header z-index clearance above cards and content', () => {
+      const layoutCss = fs.readFileSync(path.resolve(process.cwd(), 'content/styles/layout.css'), 'utf8');
+      const cardsCss = fs.readFileSync(path.resolve(process.cwd(), 'content/styles/cards.css'), 'utf8');
+
+      // Topbar clearance rule
+      expect(layoutCss).toMatch(/reddit-header-large[\s\S]*?z-index:\s*100\s*!important/);
+      expect(layoutCss).toMatch(/shreddit-app > header[\s\S]*?z-index:\s*100\s*!important/);
+
+      // Card stacking isolation rule
+      expect(cardsCss).toMatch(/shreddit-post[\s\S]*?isolation:\s*isolate\s*!important/);
+
+      // Main content wrapper stacking containment
+      expect(layoutCss).toMatch(/z-index:\s*1\s*!important/);
+    });
   });
 });
