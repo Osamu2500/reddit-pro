@@ -61,6 +61,7 @@ window.RedditPro.DOMObserver = (function () {
 
     if (node.matches(BATCH_SELECTOR)) {
       node.setAttribute('data-rg-processed', 'true');
+      window.RedditPro.Masonry?.observeFeedContainer();
       scheduleNewSweep();
       window.RedditPro.AudioObserver?.observeIn(node);
       window.RedditPro.Virtualizer?.observeBatch(node);

@@ -79,7 +79,7 @@ body:not([data-reddit-grid-cols='1']) footer,
 body:not([data-reddit-grid-cols='1']) [data-testid='right-sidebar'],
 body:not([data-reddit-grid-cols='1']) [aria-label='Recent Posts'],
 body:not([data-reddit-grid-cols='1'])
-  :is(grid-layout, shreddit-app > .grid, shreddit-app > [class*='grid'])
+  :is(grid-layout, shreddit-app > .grid, shreddit-app > [class*='grid'], .grid-container)
   > :nth-child(3) {
   display: none !important;
   width: 0 !important;
@@ -125,9 +125,10 @@ body:not([data-reddit-grid-cols='1']) left-nav {
   flex-shrink: 0 !important;
 }
 
-/* Content container strictly occupies column 2 with balanced horizontal padding */
+/* Top-level content wrapper in the page grid strictly occupies column 2 */
 body:not([data-reddit-grid-cols='1'])
-  :is(
+  :is(grid-layout, shreddit-app > .grid, shreddit-app > [class*='grid'], .grid-container)
+  > :is(
     .subgrid-container,
     [class*='subgrid-container'],
     #subgrid-container,
@@ -145,7 +146,8 @@ body:not([data-reddit-grid-cols='1'])
 }
 
 body[data-reddit-grid-hide-sidebar='true']
-  :is(
+  :is(grid-layout, shreddit-app > .grid, shreddit-app > [class*='grid'], .grid-container)
+  > :is(
     .subgrid-container,
     [class*='subgrid-container'],
     #subgrid-container,
@@ -157,10 +159,32 @@ body[data-reddit-grid-hide-sidebar='true']
   padding: 0 12px !important;
 }
 
-body:not([data-reddit-grid-cols='1']) main {
+/* Flatten and expand inner containers so Reddit's 2-column sidebar grid is neutralized */
+body:not([data-reddit-grid-cols='1'])
+  :is(.subgrid-container, [class*='subgrid-container'], #subgrid-container) {
+  max-width: 100% !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+body:not([data-reddit-grid-cols='1'])
+  :is(.main-container, [class*='main-container']) {
   display: block !important;
   max-width: 100% !important;
   width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+body:not([data-reddit-grid-cols='1']) main {
+  display: block !important;
+  grid-column: 1 / -1 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  min-width: 0 !important;
   box-sizing: border-box !important;
 }
 
