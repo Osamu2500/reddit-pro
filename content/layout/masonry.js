@@ -338,20 +338,103 @@ window.RedditPro.Masonry = (function () {
     });
   }
 
+  function getEstimatedHeight(el) {
+    if (!el || typeof el.getBoundingClientRect !== 'function') return 0;
+    const rect = el.getBoundingClientRect();
+    if (rect.height > 120) return rect.height;
+
+    // Check for aspect ratio on the card or media child
+    const ratioVal =
+      el.style?.getPropertyValue?.('--card-aspect-ratio') ||
+      el.getAttribute?.('style')?.match(/--card-aspect-ratio:\s*([0-9./]+)/)?.[1] ||
+      el.querySelector?.('[id$="-aspect-ratio"]')?.style?.aspectRatio ||
+      el.querySelector?.('shreddit-aspect-ratio')?.style?.aspectRatio;
+
+    if (ratioVal) {
+      let ratio = parseFloat(ratioVal);
+      if (isNaN(ratio) || ratio <= 0) {
+        const parts = String(ratioVal).split('/');
+        if (parts.length === 2) {
+          const w = parseFloat(parts[0]);
+          const h = parseFloat(parts[1]);
+          if (w > 0 && h > 0) ratio = w / h;
+        }
+      }
+      if (ratio && ratio > 0.2 && ratio < 5) {
+        const grid = getGridContainer(el);
+        const gridWidth =
+          grid && grid.getBoundingClientRect
+            ? grid.getBoundingClientRect().width
+            : typeof window !== 'undefined'
+              ? window.innerWidth
+              : 1200;
+        const cols =
+          effectiveColumns ||
+          parseInt(document.body?.style.getPropertyValue('--reddit-cols'), 10) ||
+          3;
+        const colGap = getGridRowGap(el) || 12;
+        const cardWidth = Math.max(180, (gridWidth - (cols - 1) * colGap) / cols);
+        const mediaHeight = cardWidth / ratio;
+        // Non-media card content: credit bar (~44px) + title (~40px) + action bar (~40px) = ~124px
+        return Math.round(mediaHeight + 124);
+      }
+    }
+
+    const img = el.querySelector?.('img[width][height]');
+    if (img) {
+      const w = parseFloat(img.getAttribute('width'));
+      const h = parseFloat(img.getAttribute('height'));
+      if (w > 0 && h > 0) {
+        const ratio = w / h;
+        const grid = getGridContainer(el);
+        const gridWidth =
+          grid && grid.getBoundingClientRect
+            ? grid.getBoundingClientRect().width
+            : typeof window !== 'undefined'
+              ? window.innerWidth
+              : 1200;
+        const cols = effectiveColumns || 3;
+        const cardWidth = Math.max(180, gridWidth / cols);
+        return Math.round(cardWidth / ratio + 124);
+      }
+    }
+
+    return rect.height > 0 ? rect.height : 0;
+  }
+
   /**
    * @param {Element} el
+   * @param {boolean} [force]
    */
-  function processCard(el) {
+  function processCard(el, force = false) {
     if (!el || el.nodeType !== 1) return;
     const settings = window.RedditPro.Settings.get();
     const gridItem = el.closest('faceplate-tracker') || el;
 
     if (settings.columns !== '1' && settings.masonry && hasMultipleGridColumns(el)) {
+      // Guard: Never re-process already stable cards unless explicitly forced (e.g. sweepAll on resize)
+      if (
+        !force &&
+        gridItem.hasAttribute('data-rg-stable') &&
+        gridItem.hasAttribute('data-rg-span')
+      ) {
+        return;
+      }
+
       if (!gridItem.hasAttribute('data-rg-span') && !gridItem.hasAttribute('data-rg-stable')) {
         gridItem.setAttribute('data-rg-loading', '1');
       }
       observer.observe(el);
       attachImageListeners(el);
+
+      // Pre-allocate initial span from estimated height so new cards never collapse to 0 or 40px
+      const estimated = getEstimatedHeight(el);
+      if (estimated > 80 && !gridItem.hasAttribute('data-rg-span')) {
+        const rowGap = getGridRowGap(gridItem);
+        const initialSpan = Math.ceil((estimated + rowGap) / (ROW_HEIGHT + rowGap));
+        gridItem.style.setProperty('grid-row-end', `span ${initialSpan}`, 'important');
+        gridItem.setAttribute('data-rg-span', String(initialSpan));
+      }
 
       requestAnimationFrame(() => {
         if (!el.isConnected) return;
@@ -369,6 +452,25 @@ window.RedditPro.Masonry = (function () {
       observer.unobserve(el);
       clearGridItem(gridItem, el);
     }
+  }
+
+  function processBatch(batchNode) {
+    if (!batchNode) return;
+    const settings = window.RedditPro.Settings.get();
+    if (settings.columns === '1' || !settings.masonry) return;
+
+    const posts = batchNode.matches?.(POST_SELECTORS)
+      ? [batchNode]
+      : Array.from(batchNode.querySelectorAll?.(POST_SELECTORS) || []);
+
+    posts.forEach((post) => {
+      const gridItem = post.closest('faceplate-tracker') || post;
+      if (!gridItem.hasAttribute('data-rg-stable')) {
+        processCard(post, false);
+      }
+    });
+
+    processGridHeaders(false);
   }
 
   const GRID_CONTAINERS = [
@@ -414,7 +516,8 @@ window.RedditPro.Masonry = (function () {
     const settings = window.RedditPro.Settings.get();
     if (settings.columns === '1' || !settings.masonry) return;
     document.querySelectorAll(POST_SELECTORS).forEach((el) => {
-      if (!el.hasAttribute('data-rg-stable')) processCard(el);
+      const gridItem = el.closest('faceplate-tracker') || el;
+      if (!gridItem.hasAttribute('data-rg-stable')) processCard(el, false);
     });
     processGridHeaders(false);
   }
@@ -426,7 +529,7 @@ window.RedditPro.Masonry = (function () {
       gridItem.removeAttribute('data-rg-stable');
       gridItem.removeAttribute('data-rg-loading');
       heightCache.delete(el);
-      processCard(el);
+      processCard(el, true);
     });
     processGridHeaders(true);
   }
@@ -522,6 +625,7 @@ window.RedditPro.Masonry = (function () {
 
   return {
     processCard,
+    processBatch,
     sweepNew,
     sweepAll,
     disconnectAll,

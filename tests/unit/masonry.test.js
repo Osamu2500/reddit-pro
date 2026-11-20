@@ -331,5 +331,84 @@ describe('Masonry layout engine & responsive columns', () => {
       window.RedditPro.Masonry.observeSidebarContainer();
       expect(document.body.style.getPropertyValue('--reddit-sidebar-width')).toBe('0px');
     });
+
+    it('protects already stable cards from being re-measured or shifted', () => {
+      const { tracker, card } = makeGrid();
+      tracker.setAttribute('data-rg-stable', '1');
+      tracker.setAttribute('data-rg-span', '45');
+      tracker.style.setProperty('grid-row-end', 'span 45', 'important');
+
+      // Calling processCard without force should respect stability
+      window.RedditPro.Masonry.processCard(card, false);
+      expect(tracker.getAttribute('data-rg-span')).toBe('45');
+      expect(tracker.style.gridRowEnd).toBe('span 45');
+    });
+
+    it('processes only new unmeasured posts in a batch leaving stable posts untouched', () => {
+      const { grid, tracker: stableTracker, card: stableCard } = makeGrid();
+      stableTracker.setAttribute('data-rg-stable', '1');
+      stableTracker.setAttribute('data-rg-span', '50');
+      stableTracker.style.setProperty('grid-row-end', 'span 50', 'important');
+
+      const batch = document.createElement('faceplate-batch');
+      const newTracker = document.createElement('faceplate-tracker');
+      const newCard = document.createElement('shreddit-post');
+      newCard.getBoundingClientRect = () => ({
+        width: 160,
+        height: 300,
+        top: 0,
+        right: 160,
+        bottom: 300,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+      newTracker.append(newCard);
+      batch.append(newTracker);
+      grid.append(batch);
+
+      window.RedditPro.Masonry.processBatch(batch);
+      runFrames();
+
+      // Stable post is 100% untouched
+      expect(stableTracker.getAttribute('data-rg-span')).toBe('50');
+      expect(stableTracker.style.gridRowEnd).toBe('span 50');
+
+      // New post receives its span
+      expect(newTracker.getAttribute('data-rg-span')).toBe('29');
+      expect(newTracker.getAttribute('data-rg-stable')).toBe('1');
+    });
+
+    it('pre-allocates row spans using aspect ratio to eliminate layout shift', () => {
+      const grid = document.createElement('div');
+      grid.style.display = 'grid';
+      grid.style.gridTemplateColumns = '300px 300px';
+      grid.style.rowGap = '10px';
+      document.body.append(grid);
+
+      const tracker = document.createElement('faceplate-tracker');
+      const card = document.createElement('shreddit-post');
+      card.style.setProperty('--card-aspect-ratio', '1.5');
+      card.getBoundingClientRect = () => ({
+        width: 300,
+        height: 60, // Image not yet loaded, rect is tiny
+        top: 0,
+        right: 300,
+        bottom: 60,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+      tracker.append(card);
+      grid.append(tracker);
+
+      window.RedditPro.Masonry.processCard(card);
+
+      // Estimated height: 300 / 1.5 + 124 = 324px. Span: ceil((324 + 10) / 11) = 31
+      expect(parseInt(tracker.getAttribute('data-rg-span'), 10)).toBeGreaterThan(20);
+      expect(tracker.style.gridRowEnd).toMatch(/^span \d+$/);
+    });
   });
 });

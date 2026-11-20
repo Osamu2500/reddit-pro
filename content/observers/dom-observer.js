@@ -61,8 +61,8 @@ window.RedditPro.DOMObserver = (function () {
 
     if (node.matches(BATCH_SELECTOR)) {
       node.setAttribute('data-rg-processed', 'true');
-      window.RedditPro.Masonry?.observeFeedContainer();
-      scheduleNewSweep();
+      window.RedditPro.Masonry?.processBatch(node);
+      observeFeedEnd();
       window.RedditPro.AudioObserver?.observeIn(node);
       window.RedditPro.Virtualizer?.observeBatch(node);
       return;
@@ -96,6 +96,111 @@ window.RedditPro.DOMObserver = (function () {
     root.querySelectorAll?.(
       `${POST_SELECTOR}, ${BATCH_SELECTOR}, ${PLAYER_SELECTOR}, img`
     ).forEach(handleElement);
+  }
+
+  let preloadObserver = null;
+  let lastObservedSentinel = null;
+  let isPreloading = false;
+  let scrollPreloadTimer = 0;
+
+  function triggerNextFeedBatch() {
+    if (isPreloading) return;
+    isPreloading = true;
+
+    // 1. Target Reddit's faceplate-partial (infinite scroll chunks)
+    const partials = document.querySelectorAll(
+      'faceplate-partial[src]:not([data-rg-triggered]), faceplate-partial[loading="lazy"]:not([data-rg-triggered])'
+    );
+    for (const partial of partials) {
+      partial.setAttribute('data-rg-triggered', 'true');
+      partial.setAttribute('loading', 'eager');
+      if (typeof partial.load === 'function') {
+        partial.load();
+      }
+      setTimeout(() => {
+        isPreloading = false;
+      }, 600);
+      return;
+    }
+
+    // 2. Target shreddit-async-loader at the bottom of the feed
+    const loaders = document.querySelectorAll(
+      'shreddit-feed > shreddit-async-loader:last-of-type:not([data-rg-triggered]), faceplate-batch > shreddit-async-loader:last-of-type:not([data-rg-triggered])'
+    );
+    for (const loader of loaders) {
+      loader.setAttribute('data-rg-triggered', 'true');
+      loader.setAttribute('loading', 'eager');
+      if (typeof loader.load === 'function') {
+        loader.load();
+      }
+      setTimeout(() => {
+        isPreloading = false;
+      }, 600);
+      return;
+    }
+
+    // 3. Fallback: load more button
+    const loadBtn = document.querySelector(
+      'button[aria-label*="more posts" i]:not([data-rg-triggered]), button:has(> [slot*="load-more"]):not([data-rg-triggered])'
+    );
+    if (loadBtn) {
+      loadBtn.setAttribute('data-rg-triggered', 'true');
+      /** @type {HTMLElement} */ (loadBtn).click();
+      setTimeout(() => {
+        isPreloading = false;
+      }, 600);
+      return;
+    }
+
+    setTimeout(() => {
+      isPreloading = false;
+    }, 400);
+  }
+
+  function observeFeedEnd() {
+    const feed = document.querySelector(
+      'shreddit-feed, profile-feed, shreddit-profile-feed, [data-testid="post-list"]'
+    );
+    if (!feed) return;
+
+    const sentinel = feed.lastElementChild;
+    if (!sentinel || sentinel === lastObservedSentinel) return;
+
+    if (preloadObserver && lastObservedSentinel) {
+      preloadObserver.unobserve(lastObservedSentinel);
+    }
+    lastObservedSentinel = sentinel;
+
+    if (!preloadObserver && typeof IntersectionObserver !== 'undefined') {
+      preloadObserver = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              triggerNextFeedBatch();
+            }
+          }
+        },
+        {
+          root: null,
+          rootMargin: '2500px 0px',
+          threshold: 0,
+        }
+      );
+    }
+
+    preloadObserver?.observe(sentinel);
+  }
+
+  function handleScrollPreload() {
+    clearTimeout(scrollPreloadTimer);
+    scrollPreloadTimer = window.setTimeout(() => {
+      const doc = document.documentElement;
+      const scrollHeight = doc.scrollHeight || document.body.scrollHeight;
+      const currentScroll = window.scrollY + window.innerHeight;
+      if (scrollHeight - currentScroll < 2200) {
+        triggerNextFeedBatch();
+      }
+    }, 120);
   }
 
   function scheduleNewSweep() {
@@ -154,12 +259,19 @@ window.RedditPro.DOMObserver = (function () {
 
     // Existing posts may already be present before the observer is attached.
     handleAddedNode(document.documentElement);
+    observeFeedEnd();
+    window.addEventListener('scroll', handleScrollPreload, { passive: true });
     scheduleNewSweep();
   }
 
   function stop() {
     observer?.disconnect();
     observer = null;
+    preloadObserver?.disconnect();
+    preloadObserver = null;
+    lastObservedSentinel = null;
+    window.removeEventListener('scroll', handleScrollPreload);
+    clearTimeout(scrollPreloadTimer);
     clearTimeout(sweepTimer);
     mutationBatch.clear();
     rafPending = false;

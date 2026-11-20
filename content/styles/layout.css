@@ -318,6 +318,15 @@ body:not([data-reddit-grid-cols='1']) shreddit-async-loader {
   display: contents !important;
 }
 
+/* Ensure the active loader sentinel at the end of the feed has layout presence so intersection triggers */
+body:not([data-reddit-grid-cols='1']) faceplate-partial,
+body:not([data-reddit-grid-cols='1']) shreddit-feed > shreddit-async-loader:last-child {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  min-height: 8px !important;
+  display: block !important;
+}
+
 /* All post cards and post wrappers take exactly 1 column and 100% width of their grid cell */
 body:not([data-reddit-grid-cols='1']) faceplate-tracker,
 body:not([data-reddit-grid-cols='1']) shreddit-post,

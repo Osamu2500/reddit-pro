@@ -224,8 +224,16 @@ body:not([data-reddit-grid-cols='1'])
   aspect-ratio: auto !important;
 }
 
-/* PRE-ALLOCATE SPACE: While a card is downloading, enforce Reddit's aspect ratio to prevent grid jumping.
-   Once loaded, this lock is released and the container shrink-wraps to the true image height! */
+/* PRE-ALLOCATE SPACE: Enforce Reddit's aspect ratio to prevent grid jumping before and during media loads */
+body:not([data-reddit-grid-cols='1'])
+  shreddit-post[style*='--card-aspect-ratio']
+  shreddit-aspect-ratio:not(:has(gallery-carousel)),
+body:not([data-reddit-grid-cols='1'])
+  shreddit-post[style*='--card-aspect-ratio']
+  div[id$='-aspect-ratio']:not(:has(gallery-carousel)),
+body:not([data-reddit-grid-cols='1'])
+  shreddit-post[style*='--card-aspect-ratio']
+  [slot='post-media-container']:not(:has(gallery-carousel)),
 body:not([data-reddit-grid-cols='1'])
   shreddit-post[data-rg-loading]
   shreddit-aspect-ratio:not(:has(gallery-carousel)),
@@ -236,7 +244,7 @@ body:not([data-reddit-grid-cols='1'])
   shreddit-post[data-rg-loading]
   [slot='post-media-container']:not(:has(gallery-carousel)) {
   aspect-ratio: var(--card-aspect-ratio, auto) !important;
-  min-height: 220px !important;
+  min-height: 200px !important;
 }
 
 body:not([data-reddit-grid-cols='1']) div[id$='-aspect-ratio']:not(:has(gallery-carousel)) > div {
