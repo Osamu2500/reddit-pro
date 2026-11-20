@@ -96,6 +96,32 @@ body.rg-theme-dark {
    CARD SURFACE — NOTION MINIMAL GLASS
    ═══════════════════════════════════════════════════════════════════════════ */
 body:not([data-reddit-grid-cols='1']) shreddit-post,
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed,
+    custom-feed,
+    [data-testid='post-list'],
+    [data-testid='profile-feed'],
+    [data-testid='search-results'],
+    main
+  )
+  article,
+body:not([data-reddit-grid-cols='1']) shreddit-profile-comment,
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed,
+    faceplate-batch,
+    faceplate-tracker
+  )
+  > shreddit-comment,
 body:not([data-reddit-grid-cols='1']) .Post {
   border-radius: var(--rg-radius) !important;
   background: var(--rg-glass-base) !important;
@@ -119,6 +145,32 @@ body:not([data-reddit-grid-cols='1']) .Post {
    Subtle inner highlight for glass edge crispness (Notion dark mode uses this)
    ═══════════════════════════════════════════════════════════════════════════ */
 body:not([data-reddit-grid-cols='1']) shreddit-post::before,
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed,
+    custom-feed,
+    [data-testid='post-list'],
+    [data-testid='profile-feed'],
+    [data-testid='search-results'],
+    main
+  )
+  article::before,
+body:not([data-reddit-grid-cols='1']) shreddit-profile-comment::before,
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed,
+    faceplate-batch,
+    faceplate-tracker
+  )
+  > shreddit-comment::before,
 body:not([data-reddit-grid-cols='1']) .Post::before {
   content: '' !important;
   display: block !important;
@@ -132,6 +184,32 @@ body:not([data-reddit-grid-cols='1']) .Post::before {
 
 /* Disable the old edge glow ring */
 body:not([data-reddit-grid-cols='1']) shreddit-post::after,
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed,
+    custom-feed,
+    [data-testid='post-list'],
+    [data-testid='profile-feed'],
+    [data-testid='search-results'],
+    main
+  )
+  article::after,
+body:not([data-reddit-grid-cols='1']) shreddit-profile-comment::after,
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed,
+    faceplate-batch,
+    faceplate-tracker
+  )
+  > shreddit-comment::after,
 body:not([data-reddit-grid-cols='1']) .Post::after {
   display: none !important;
 }
@@ -173,7 +251,7 @@ body:not([data-reddit-grid-cols='1']) shreddit-post-header {
   /* Very subtle dividing line */
   border-bottom: 1px solid var(--rg-credit-border) !important;
   border-radius: var(--rg-radius-inner) var(--rg-radius-inner) 0 0 !important;
-  padding: 12px 14px 10px 14px !important;
+  padding: 12px 52px 10px 14px !important;
   position: relative !important;
   z-index: 1 !important;
 }
@@ -183,9 +261,9 @@ body:not([data-reddit-grid-cols='1']) shreddit-post-header {
    ═══════════════════════════════════════════════════════════════════════════ */
 body:not([data-reddit-grid-cols='1']) shreddit-post [slot='action-bar'],
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-post-action-bar {
-  background: var(--rg-action-bg) !important;
+  background: transparent !important;
   border-top: 1px solid var(--rg-action-border) !important;
-  border-radius: 0 0 var(--rg-radius-inner) var(--rg-radius-inner) !important;
+  border-radius: 0 !important;
   padding: 8px 14px 10px 14px !important;
 }
 
@@ -200,6 +278,32 @@ body shreddit-post.rg-filtered-out {
    MASONRY CARD FINISH — clearer surfaces, calmer hover and focus states
    ===================================================================== */
 body:not([data-reddit-grid-cols='1']) shreddit-post,
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed,
+    custom-feed,
+    [data-testid='post-list'],
+    [data-testid='profile-feed'],
+    [data-testid='search-results'],
+    main
+  )
+  article,
+body:not([data-reddit-grid-cols='1']) shreddit-profile-comment,
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed,
+    faceplate-batch,
+    faceplate-tracker
+  )
+  > shreddit-comment,
 body:not([data-reddit-grid-cols='1']) .Post {
   background: var(--rg-glass-base) !important;
   border-color: var(--rg-border) !important;
@@ -213,6 +317,32 @@ body:not([data-reddit-grid-cols='1']) .Post {
 
 @media (hover: hover) and (pointer: fine) {
   body:not([data-reddit-grid-cols='1']) shreddit-post:hover,
+  body:not([data-reddit-grid-cols='1'])
+    :is(
+      shreddit-feed,
+      shreddit-profile-feed,
+      profile-feed,
+      shreddit-user-feed,
+      shreddit-custom-feed,
+      custom-feed,
+      [data-testid='post-list'],
+      [data-testid='profile-feed'],
+      [data-testid='search-results'],
+      main
+    )
+    article:hover,
+  body:not([data-reddit-grid-cols='1']) shreddit-profile-comment:hover,
+  body:not([data-reddit-grid-cols='1'])
+    :is(
+      shreddit-feed,
+      shreddit-profile-feed,
+      profile-feed,
+      shreddit-user-feed,
+      shreddit-custom-feed,
+      faceplate-batch,
+      faceplate-tracker
+    )
+    > shreddit-comment:hover,
   body:not([data-reddit-grid-cols='1']) .Post:hover {
     background: var(--rg-card-hover-bg) !important;
     border-color: var(--rg-card-border-hover) !important;
@@ -221,6 +351,32 @@ body:not([data-reddit-grid-cols='1']) .Post {
 }
 
 body:not([data-reddit-grid-cols='1']) shreddit-post:focus-within,
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed,
+    custom-feed,
+    [data-testid='post-list'],
+    [data-testid='profile-feed'],
+    [data-testid='search-results'],
+    main
+  )
+  article:focus-within,
+body:not([data-reddit-grid-cols='1']) shreddit-profile-comment:focus-within,
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed,
+    faceplate-batch,
+    faceplate-tracker
+  )
+  > shreddit-comment:focus-within,
 body:not([data-reddit-grid-cols='1']) .Post:focus-within {
   border-color: rgba(var(--rg-accent-rgb), 0.42) !important;
   box-shadow:
@@ -245,6 +401,32 @@ body:not([data-reddit-grid-cols='1']) shreddit-post-title {
 
 @media (prefers-reduced-motion: reduce) {
   body:not([data-reddit-grid-cols='1']) shreddit-post,
+  body:not([data-reddit-grid-cols='1'])
+    :is(
+      shreddit-feed,
+      shreddit-profile-feed,
+      profile-feed,
+      shreddit-user-feed,
+      shreddit-custom-feed,
+      custom-feed,
+      [data-testid='post-list'],
+      [data-testid='profile-feed'],
+      [data-testid='search-results'],
+      main
+    )
+    article,
+  body:not([data-reddit-grid-cols='1']) shreddit-profile-comment,
+  body:not([data-reddit-grid-cols='1'])
+    :is(
+      shreddit-feed,
+      shreddit-profile-feed,
+      profile-feed,
+      shreddit-user-feed,
+      shreddit-custom-feed,
+      faceplate-batch,
+      faceplate-tracker
+    )
+    > shreddit-comment,
   body:not([data-reddit-grid-cols='1']) .Post {
     transition: none !important;
   }
