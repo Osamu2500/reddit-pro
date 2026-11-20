@@ -133,6 +133,25 @@ window.RedditPro.DOMObserver = (function () {
     // Observe the document root so Reddit replacing <main> does not orphan the observer.
     observer.observe(document.documentElement, { childList: true, subtree: true });
 
+    // Track sidebar expansion/collapse toggle buttons
+    document.addEventListener(
+      'click',
+      (e) => {
+        const target = /** @type {Element | null} */ (e.target);
+        if (
+          target &&
+          target.closest?.(
+            'button[aria-label*="Navigation" i], #left-sidebar-container button, reddit-sidebar-nav button'
+          )
+        ) {
+          setTimeout(() => {
+            window.RedditPro.Masonry?.observeSidebarContainer?.();
+          }, 60);
+        }
+      },
+      { passive: true }
+    );
+
     // Existing posts may already be present before the observer is attached.
     handleAddedNode(document.documentElement);
     scheduleNewSweep();

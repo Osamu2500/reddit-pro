@@ -26,6 +26,8 @@ window.RedditPro.Masonry = (function () {
   let activeObservedFeed = null;
   let lastFeedWidth = 0;
   let effectiveColumns = 0;
+  let sidebarObserver = null;
+  let activeObservedSidebar = null;
 
   const ROW_HEIGHT = 1;
   const HEIGHT_EPSILON = 0.5;
@@ -38,6 +40,17 @@ window.RedditPro.Masonry = (function () {
     'main > div:has(> shreddit-post)',
     'main > div:has(> article)',
   ];
+
+  const SIDEBAR_SELECTORS = [
+    '#left-sidebar-container',
+    '#left-sidebar',
+    'reddit-sidebar-nav',
+    '#flex-left-nav-container',
+    'flex-left-nav-container',
+    'left-nav',
+    'shreddit-sidebar',
+    'shreddit-sidebar-nav',
+  ].join(',');
 
   const POST_SELECTORS = ['shreddit-post', 'shreddit-ad-post', 'article', '.Post'].join(',');
 
@@ -103,7 +116,54 @@ window.RedditPro.Masonry = (function () {
     return cols;
   }
 
+  function observeSidebarContainer() {
+    const settings = window.RedditPro.Settings ? window.RedditPro.Settings.get() : {};
+    if (settings.hideSidebar) {
+      if (document.body) {
+        document.body.style.setProperty('--reddit-sidebar-width', '0px');
+      }
+      return;
+    }
+
+    const sidebar = document.querySelector(SIDEBAR_SELECTORS);
+    if (!sidebar) return;
+
+    if (sidebar !== activeObservedSidebar) {
+      if (sidebarObserver && activeObservedSidebar) {
+        sidebarObserver.unobserve(activeObservedSidebar);
+      }
+      activeObservedSidebar = sidebar;
+
+      if (!sidebarObserver) {
+        sidebarObserver = new ResizeObserver((entries) => {
+          for (const entry of entries) {
+            const currentSettings = window.RedditPro.Settings
+              ? window.RedditPro.Settings.get()
+              : {};
+            if (currentSettings.hideSidebar) {
+              document.body?.style.setProperty('--reddit-sidebar-width', '0px');
+              continue;
+            }
+            const width =
+              entry.borderBoxSize?.[0]?.inlineSize ??
+              entry.target.getBoundingClientRect().width;
+            if (width > 0 && document.body) {
+              document.body.style.setProperty('--reddit-sidebar-width', `${Math.round(width)}px`);
+            }
+          }
+        });
+      }
+      sidebarObserver.observe(sidebar);
+    }
+
+    const rect = sidebar.getBoundingClientRect();
+    if (rect.width > 0 && document.body) {
+      document.body.style.setProperty('--reddit-sidebar-width', `${Math.round(rect.width)}px`);
+    }
+  }
+
   function observeFeedContainer() {
+    observeSidebarContainer();
     const container = getActiveFeedContainer();
     if (!container) return;
 
@@ -377,6 +437,10 @@ window.RedditPro.Masonry = (function () {
       feedObserver.unobserve(activeObservedFeed);
       activeObservedFeed = null;
     }
+    if (sidebarObserver && activeObservedSidebar) {
+      sidebarObserver.unobserve(activeObservedSidebar);
+      activeObservedSidebar = null;
+    }
     resizeQueue.clear();
     resizePending = false;
   }
@@ -464,6 +528,7 @@ window.RedditPro.Masonry = (function () {
     recalculateCard,
     calculateColumns,
     observeFeedContainer,
+    observeSidebarContainer,
     updateColumnsForContainer,
     getEffectiveColumns: () => effectiveColumns,
   };

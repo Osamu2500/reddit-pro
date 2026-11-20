@@ -33,6 +33,11 @@ window.RedditPro.CSSVars = (function () {
     body.setAttribute('data-reddit-grid-compact', String(settings.compactCards));
     body.setAttribute('data-reddit-grid-hide-promoted', String(settings.hidePromoted));
     body.setAttribute('data-reddit-grid-hide-sidebar', String(settings.hideSidebar));
+    if (settings.hideSidebar) {
+      body.style.setProperty('--reddit-sidebar-width', '0px');
+    } else {
+      window.RedditPro.Masonry?.observeSidebarContainer?.();
+    }
 
     if (
       settings.theme === 'dark' ||

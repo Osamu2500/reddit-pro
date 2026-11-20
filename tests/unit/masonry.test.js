@@ -283,5 +283,53 @@ describe('Masonry layout engine & responsive columns', () => {
       expect(info).toHaveProperty('calculatedColumnCount');
       window.__RP_DEBUG = false;
     });
+
+    it('observes sidebar and updates --reddit-sidebar-width dynamically', () => {
+      const sidebar = document.createElement('div');
+      sidebar.id = 'left-sidebar-container';
+      sidebar.getBoundingClientRect = () => ({
+        width: 56,
+        height: 800,
+        top: 0,
+        right: 56,
+        bottom: 800,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+      document.body.append(sidebar);
+
+      window.RedditPro.Settings.get = () => ({
+        columns: '4',
+        hideSidebar: false,
+      });
+
+      window.RedditPro.Masonry.observeSidebarContainer();
+      expect(document.body.style.getPropertyValue('--reddit-sidebar-width')).toBe('56px');
+
+      // Expand sidebar
+      sidebar.getBoundingClientRect = () => ({
+        width: 272,
+        height: 800,
+        top: 0,
+        right: 272,
+        bottom: 800,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+      window.RedditPro.Masonry.observeSidebarContainer();
+      expect(document.body.style.getPropertyValue('--reddit-sidebar-width')).toBe('272px');
+
+      // Hide sidebar setting
+      window.RedditPro.Settings.get = () => ({
+        columns: '4',
+        hideSidebar: true,
+      });
+      window.RedditPro.Masonry.observeSidebarContainer();
+      expect(document.body.style.getPropertyValue('--reddit-sidebar-width')).toBe('0px');
+    });
   });
 });
