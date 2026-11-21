@@ -345,7 +345,7 @@ describe('Masonry layout engine & responsive columns', () => {
     });
 
     it('processes only new unmeasured posts in a batch leaving stable posts untouched', () => {
-      const { grid, tracker: stableTracker, card: stableCard } = makeGrid();
+      const { grid, tracker: stableTracker } = makeGrid();
       stableTracker.setAttribute('data-rg-stable', '1');
       stableTracker.setAttribute('data-rg-span', '50');
       stableTracker.style.setProperty('grid-row-end', 'span 50', 'important');
@@ -412,12 +412,21 @@ describe('Masonry layout engine & responsive columns', () => {
     });
 
     it('verifies CSS rules enforce header z-index clearance above cards and content', () => {
-      const layoutCss = fs.readFileSync(path.resolve(process.cwd(), 'content/styles/layout.css'), 'utf8');
-      const cardsCss = fs.readFileSync(path.resolve(process.cwd(), 'content/styles/cards.css'), 'utf8');
+      const layoutCss = fs.readFileSync(
+        path.resolve(process.cwd(), 'content/styles/layout.css'),
+        'utf8'
+      );
+      const cardsCss = fs.readFileSync(
+        path.resolve(process.cwd(), 'content/styles/cards.css'),
+        'utf8'
+      );
 
       // Topbar clearance rule
       expect(layoutCss).toMatch(/reddit-header-large[\s\S]*?z-index:\s*100\s*!important/);
       expect(layoutCss).toMatch(/shreddit-app > header[\s\S]*?z-index:\s*100\s*!important/);
+      expect(layoutCss).toMatch(/reddit-header-large[\s\S]*?grid-column:\s*1\s*\/\s*-1\s*!important/);
+      expect(layoutCss).toMatch(/shreddit-app\s*\{[\s\S]*?padding-top:\s*0\s*!important/);
+      expect(layoutCss).toMatch(/faceplate-partial\s*\{[\s\S]*?display:\s*contents\s*!important/);
 
       // Card stacking isolation rule
       expect(cardsCss).toMatch(/shreddit-post[\s\S]*?isolation:\s*isolate\s*!important/);

@@ -160,6 +160,11 @@ body:not([data-reddit-grid-cols='1'])
     #header,
     #sr-header-area
   ):not(shreddit-post *):not(.Post *) {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  max-width: 100vw !important;
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
   z-index: 100 !important;
 }
 
@@ -170,6 +175,8 @@ body:not([data-reddit-grid-cols='1']) shreddit-app {
   max-width: 100vw !important;
   width: 100% !important;
   overflow-x: hidden !important;
+  padding-top: 0 !important;
+  margin-top: 0 !important;
 }
 
 body:not([data-reddit-grid-cols='1'])
@@ -195,7 +202,9 @@ body:not([data-reddit-grid-cols='1'])
   width: 100% !important;
   box-sizing: border-box !important;
   padding: 0 !important;
+  padding-top: 0 !important;
   margin: 0 !important;
+  margin-top: 0 !important;
   gap: 0 !important;
 }
 
@@ -336,6 +345,8 @@ body:not([data-reddit-grid-cols='1']) main {
   box-sizing: border-box !important;
   position: relative !important;
   z-index: 1 !important;
+  padding-top: 0 !important;
+  margin-top: 0 !important;
 }
 
 /* =====================================================================
@@ -368,6 +379,8 @@ body:not([data-reddit-grid-cols='1']):not(.rg-page-post):not(.rg-page-wiki):not(
   align-items: start !important;
   width: 100% !important;
   box-sizing: border-box !important;
+  padding-top: 0 !important;
+  margin-top: 0 !important;
 }
 
 /* Non-card headers, carousels, and discovery units must span all columns */
@@ -416,6 +429,7 @@ body:not([data-reddit-grid-cols='1']):not(.rg-page-post):not(.rg-page-wiki):not(
   grid-column: 1 / -1 !important;
   width: 100% !important;
   box-sizing: border-box !important;
+  margin-top: 0 !important;
 }
 
 /* Make injection wrappers transparent to the layout so grids seamlessly stitch together */
@@ -429,27 +443,16 @@ body:not([data-reddit-grid-cols='1'])
     [data-testid='post-list'],
     [data-testid='profile-feed']
   )
-  > faceplate-batch,
-body:not([data-reddit-grid-cols='1'])
-  :is(
-    shreddit-feed,
-    shreddit-profile-feed,
-    profile-feed,
-    shreddit-user-feed,
-    shreddit-custom-feed,
-    [data-testid='post-list'],
-    [data-testid='profile-feed']
-  )
-  > shreddit-async-loader,
+  > :is(faceplate-batch, shreddit-async-loader, faceplate-partial),
 body:not([data-reddit-grid-cols='1']) faceplate-batch,
 body:not([data-reddit-grid-cols='1']) faceplate-batch > div,
-body:not([data-reddit-grid-cols='1']) faceplate-batch > shreddit-async-loader,
-body:not([data-reddit-grid-cols='1']) shreddit-async-loader {
+body:not([data-reddit-grid-cols='1']) faceplate-batch > :is(shreddit-async-loader, faceplate-partial),
+body:not([data-reddit-grid-cols='1']) shreddit-async-loader,
+body:not([data-reddit-grid-cols='1']) faceplate-partial {
   display: contents !important;
 }
 
 /* Ensure the active loader sentinel at the end of the feed has layout presence so intersection triggers */
-body:not([data-reddit-grid-cols='1']) faceplate-partial,
 body:not([data-reddit-grid-cols='1'])
   :is(
     shreddit-feed,
@@ -461,8 +464,8 @@ body:not([data-reddit-grid-cols='1'])
     [data-testid='profile-feed'],
     [data-testid='search-results']
   )
-  > shreddit-async-loader:last-child,
-body:not([data-reddit-grid-cols='1']) faceplate-batch > shreddit-async-loader:last-child {
+  > :is(shreddit-async-loader, faceplate-partial):last-child,
+body:not([data-reddit-grid-cols='1']) faceplate-batch > :is(shreddit-async-loader, faceplate-partial):last-child {
   grid-column: 1 / -1 !important;
   width: 100% !important;
   min-height: 8px !important;
@@ -569,7 +572,15 @@ body:not([data-reddit-grid-cols='1']) shreddit-post hr {
   display: none !important;
 }
 
-/* Normalize any inline gap/padding Reddit injects via style attribute */
+/* Normalize any gap/padding Reddit injects on feed containers */
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed
+  ),
 body:not([data-reddit-grid-cols='1'])
   :is(
     shreddit-feed,
