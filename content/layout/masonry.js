@@ -388,7 +388,10 @@ window.RedditPro.Masonry = (function () {
         itemStyle.gridColumnEnd === 'span ' + columns ||
         item.style.gridColumn === '1 / -1' ||
         item.style.gridColumnEnd === '-1';
-      const spansAllColumns = !isCard && startsAtFirstColumn && endsAtLastColumn;
+      const spansAllColumns =
+        !isCard &&
+        (item.style.gridColumn === '1 / -1' ||
+          (startsAtFirstColumn && endsAtLastColumn));
 
       if (!isCard && !spansAllColumns) return;
 
