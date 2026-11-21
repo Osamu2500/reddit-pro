@@ -21,6 +21,7 @@ window.RedditPro.Masonry = (function () {
   // Track which media elements we've attached listeners to
   const observedMediaNodes = new WeakSet();
   let viewportSweepTimer = 0;
+  let placementPending = false;
 
   let feedObserver = null;
   let activeObservedFeed = null;
@@ -95,11 +96,27 @@ window.RedditPro.Masonry = (function () {
   }
 
   function getActiveFeedContainer() {
-    for (const selector of FEED_SELECTORS) {
-      const el = document.querySelector(selector);
-      if (el && el.isConnected) return el;
+    // Prefer the nearest real grid that contains posts over a stale or empty
+    // outer feed wrapper left behind during Reddit SPA navigation.
+    const firstPost = document.querySelector(POST_SELECTORS);
+    if (firstPost) {
+      const grid = getGridContainer(firstPost);
+      if (grid && grid.isConnected) return grid;
     }
-    return document.querySelector('main');
+
+    const candidates = Array.from(document.querySelectorAll(FEED_SELECTORS.join(',')));
+    const viable = candidates
+      .filter((candidate) => candidate.isConnected && candidate.querySelector(POST_SELECTORS))
+      .map((candidate) => ({
+        candidate,
+        width: candidate.getBoundingClientRect().width,
+        isGrid: getComputedStyle(candidate).display.includes('grid'),
+        postCount: candidate.querySelectorAll(POST_SELECTORS).length,
+      }))
+      .filter((item) => item.width > 0 && item.isGrid)
+      .sort((a, b) => a.postCount - b.postCount);
+
+    return viable[0]?.candidate || document.querySelector('main');
   }
 
   function updateColumnsForContainer(containerWidth) {
@@ -227,7 +244,7 @@ window.RedditPro.Masonry = (function () {
         !ancestor.classList.contains('grid-container')
       ) {
         const display = getComputedStyle(ancestor).display;
-        if (display.includes('grid')) return ancestor;
+        if (display.includes('grid') && ancestor.querySelector(POST_SELECTORS)) return ancestor;
       }
       ancestor = ancestor.parentElement;
     }
@@ -256,6 +273,7 @@ window.RedditPro.Masonry = (function () {
     gridItem.removeAttribute('data-rg-span');
     gridItem.removeAttribute('data-rg-stable');
     gridItem.removeAttribute('data-rg-loading');
+    gridItem.style.removeProperty('grid-column-start');
     heightCache.delete(card);
   }
 
@@ -315,6 +333,56 @@ window.RedditPro.Masonry = (function () {
       }
     }
     resizeQueue.clear();
+  }
+
+  /**
+   * Distributes cards into the currently shortest column while preserving
+   * their source order within each column. Grid row spans remain responsible
+   * for the exact vertical footprint; this pass chooses the column.
+   * @param {Element | null} [container]
+   * @returns {{columns: number, heights: number[]} | null}
+   */
+  function applyMasonryPlacement(container = getActiveFeedContainer()) {
+    const settings = window.RedditPro.Settings.get();
+    if (!container || settings.columns === '1' || !settings.masonry) return null;
+
+    const grid = getComputedStyle(container);
+    const columnTracks = grid.gridTemplateColumns.trim().split(/\\s+/).filter(Boolean);
+    const columns = effectiveColumns || columnTracks.length;
+    if (columns < 2) return null;
+
+    const cards = Array.from(container.querySelectorAll(POST_SELECTORS));
+    if (container.matches(POST_SELECTORS)) cards.unshift(container);
+    if (!cards.length) return { columns, heights: Array(columns).fill(0) };
+
+    const rowGap = parseFloat(grid.rowGap) || 0;
+    const heights = Array(columns).fill(0);
+
+    cards.forEach((card) => {
+      const gridItem = card.closest('faceplate-tracker') || card;
+      const measured = card.getBoundingClientRect().height;
+      const estimated = measured > 0 ? measured : getEstimatedHeight(card);
+      const cardHeight = Math.max(1, estimated || 180);
+
+      let shortestColumn = 0;
+      for (let index = 1; index < heights.length; index += 1) {
+        if (heights[index] < heights[shortestColumn]) shortestColumn = index;
+      }
+
+      gridItem.style.setProperty('grid-column-start', String(shortestColumn + 1), 'important');
+      heights[shortestColumn] += cardHeight + rowGap;
+    });
+
+    return { columns, heights };
+  }
+
+  function scheduleMasonryPlacement() {
+    if (placementPending) return;
+    placementPending = true;
+    requestAnimationFrame(() => {
+      placementPending = false;
+      applyMasonryPlacement();
+    });
   }
 
   function getMediaElementsDeep(root, acc = []) {
@@ -523,6 +591,7 @@ window.RedditPro.Masonry = (function () {
     });
 
     processGridHeaders(false);
+    scheduleMasonryPlacement();
   }
 
   const GRID_CONTAINERS = [
@@ -589,6 +658,7 @@ window.RedditPro.Masonry = (function () {
       processCard(el, true);
     });
     processGridHeaders(true);
+    scheduleMasonryPlacement();
   }
 
   function disconnectAll() {
@@ -603,6 +673,7 @@ window.RedditPro.Masonry = (function () {
     }
     resizeQueue.clear();
     resizePending = false;
+    placementPending = false;
   }
 
   window.addEventListener(
@@ -632,6 +703,7 @@ window.RedditPro.Masonry = (function () {
     gridItem.removeAttribute('data-rg-loading');
     heightCache.delete(el);
     processCard(el, true);
+    scheduleMasonryPlacement();
   }
 
   // Controlled diagnostics for layout verification without production noise
@@ -693,5 +765,6 @@ window.RedditPro.Masonry = (function () {
     observeSidebarContainer,
     updateColumnsForContainer,
     getEffectiveColumns: () => effectiveColumns,
+    applyMasonryPlacement,
   };
 })();

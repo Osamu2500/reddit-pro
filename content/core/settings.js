@@ -36,10 +36,10 @@ window.RedditPro.Settings = (function () {
     hideScrollbar: true,
     enableFilters: true,
     theme: 'system',
-    minCardWidth: 280,
+    minCardWidth: 260,
     maxColumns: 10,
-    columnGap: 12,
-    rowGap: 12,
+    columnGap: 16,
+    rowGap: 16,
   };
 
   let userSettings = { ...DEFAULT_SETTINGS };

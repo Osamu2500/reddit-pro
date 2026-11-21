@@ -201,6 +201,49 @@ describe('Masonry layout engine & responsive columns', () => {
     });
   });
 
+  describe('Shortest-column placement', () => {
+    it('assigns each card to the currently shortest column', () => {
+      const grid = document.createElement('shreddit-feed');
+      grid.style.display = 'grid';
+      grid.style.gridTemplateColumns = '160px 160px';
+      grid.style.rowGap = '10px';
+
+      const heights = [100, 200, 50, 80];
+      const trackers = heights.map((height) => {
+        const tracker = document.createElement('faceplate-tracker');
+        const card = document.createElement('shreddit-post');
+        card.getBoundingClientRect = () => ({
+          width: 160, height, top: 0, right: 160, bottom: height,
+          left: 0, x: 0, y: 0, toJSON: () => ({}),
+        });
+        tracker.append(card);
+        grid.append(tracker);
+        return tracker;
+      });
+      document.body.append(grid);
+
+      const result = window.RedditPro.Masonry.applyMasonryPlacement(grid);
+
+      expect(result.columns).toBe(2);
+      expect(trackers.map((item) => item.style.gridColumnStart)).toEqual(['1', '2', '1', '2']);
+    });
+
+    it('does not assign columns when masonry is disabled', () => {
+      const grid = document.createElement('shreddit-feed');
+      grid.style.display = 'grid';
+      grid.style.gridTemplateColumns = '160px 160px';
+      const tracker = document.createElement('faceplate-tracker');
+      const card = document.createElement('shreddit-post');
+      tracker.append(card);
+      grid.append(tracker);
+      document.body.append(grid);
+
+      window.RedditPro.Settings.get = () => ({ columns: '3', masonry: false });
+      expect(window.RedditPro.Masonry.applyMasonryPlacement(grid)).toBeNull();
+      expect(tracker.style.gridColumnStart).toBe('');
+    });
+  });
+
   describe('Container ResizeObserver & sidebar expansion/collapse', () => {
     it('updates effective columns and body attributes when container is observed', () => {
       const feed = document.createElement('shreddit-feed');

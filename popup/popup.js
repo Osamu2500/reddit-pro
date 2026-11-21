@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     columns: '3', autoFit: false, masonry: true, compactCards: false,
     hidePromoted: true, hideSidebar: false, autoPlayAudio: true,
     hideScrollbar: true, enableFilters: true, theme: 'system',
-    minCardWidth: 280, maxColumns: 10, columnGap: 12, rowGap: 12,
+    minCardWidth: 260, maxColumns: 10, columnGap: 16, rowGap: 16,
   };
   /** @param {string} id @returns {HTMLElement | null} */
   const byId = (id) => document.getElementById(id);
