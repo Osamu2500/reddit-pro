@@ -104,19 +104,23 @@ window.RedditPro.Masonry = (function () {
       if (grid && grid.isConnected) return grid;
     }
 
-    const candidates = Array.from(document.querySelectorAll(FEED_SELECTORS.join(',')));
-    const viable = candidates
-      .filter((candidate) => candidate.isConnected && candidate.querySelector(POST_SELECTORS))
+    const candidates = Array.from(document.querySelectorAll(FEED_SELECTORS.join(',')))
+      .filter((candidate) => candidate.isConnected)
       .map((candidate) => ({
         candidate,
         width: candidate.getBoundingClientRect().width,
         isGrid: getComputedStyle(candidate).display.includes('grid'),
         postCount: candidate.querySelectorAll(POST_SELECTORS).length,
-      }))
-      .filter((item) => item.width > 0 && item.isGrid)
-      .sort((a, b) => a.postCount - b.postCount);
+      }));
 
-    return viable[0]?.candidate || document.querySelector('main');
+    const viable = candidates
+      .filter((item) => item.width > 0 && item.isGrid && item.postCount > 0)
+      .sort((a, b) => a.postCount - b.postCount);
+    if (viable.length) return viable[0].candidate;
+
+    // During initial page load the feed can exist before its first post arrives.
+    // Keep observing that visible feed instead of falling back to the whole <main>.
+    return candidates.find((item) => item.width > 0)?.candidate || document.querySelector('main');
   }
 
   function updateColumnsForContainer(containerWidth) {
@@ -347,7 +351,8 @@ window.RedditPro.Masonry = (function () {
     if (!container || settings.columns === '1' || !settings.masonry) return null;
 
     const grid = getComputedStyle(container);
-    const columnTracks = grid.gridTemplateColumns.trim().split(/\\s+/).filter(Boolean);
+    const computedTracks = grid.gridTemplateColumns || container.style.gridTemplateColumns || '';
+    const columnTracks = computedTracks.trim().split(/\\s+/).filter(Boolean);
     const columns = effectiveColumns || columnTracks.length;
     if (columns < 2) return null;
 
