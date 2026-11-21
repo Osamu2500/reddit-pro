@@ -257,7 +257,11 @@ describe('Masonry layout engine & responsive columns', () => {
       });
       secondTracker.append(secondCard);
 
-      grid.append(firstTracker, header, secondTracker);
+      const batch = document.createElement('faceplate-batch');
+      batch.style.display = 'contents';
+      batch.append(firstTracker);
+
+      grid.append(batch, header, secondTracker);
       document.body.append(grid);
 
       const result = window.RedditPro.Masonry.applyMasonryPlacement(grid);
