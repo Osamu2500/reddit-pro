@@ -8,91 +8,118 @@
 /* Card reveal — minimal fade and slight slide, no blur or scale bounce */
 @keyframes rg-reveal {
   from {
-    opacity:   0;
+    opacity: 0;
     transform: translateY(4px);
   }
   to {
-    opacity:   1;
+    opacity: 1;
     transform: translateY(0);
   }
 }
 
 /* Three-dots button — minimal fade in, no bounce */
 @keyframes rg-btn-pop {
-  from { opacity: 0; }
-  to   { opacity: 0.5; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.5;
+  }
 }
 
 /* Action bar pill — simple fade, no stagger bounce */
 @keyframes rg-pill-pop {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    BASE CARD TRANSITION SET
    ═══════════════════════════════════════════════════════════════════════════ */
-body:not([data-reddit-grid-cols="1"]) shreddit-post,
-body:not([data-reddit-grid-cols="1"]) .Post {
+body:not([data-reddit-grid-cols='1']) shreddit-post,
+body:not([data-reddit-grid-cols='1']) .Post {
   transition:
-    border-color     0.2s ease,
-    box-shadow       0.2s ease,
-    transform        0.2s ease,
-    background       0.2s ease,
-    opacity          0.2s ease !important;
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease,
+    background 0.2s ease,
+    opacity 0.2s ease !important;
   will-change: transform, opacity !important;
 }
 
 /* ENTRANCE */
-body:not([data-reddit-grid-cols="1"]) shreddit-post:not([data-rg-loading]),
-body:not([data-reddit-grid-cols="1"]) .Post:not([data-rg-loading]) {
+body:not([data-reddit-grid-cols='1']) shreddit-post:not([data-rg-loading]),
+body:not([data-reddit-grid-cols='1']) .Post:not([data-rg-loading]) {
   animation: rg-reveal 0.3s ease both !important;
 }
 
-body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable],
-body:not([data-reddit-grid-cols="1"]) .Post[data-rg-stable] {
+body:not([data-reddit-grid-cols='1']) shreddit-post[data-rg-stable],
+body:not([data-reddit-grid-cols='1']) .Post[data-rg-stable] {
   animation: none !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    CARD HOVER — subtle lift and drop shadow (Notion style)
    ═══════════════════════════════════════════════════════════════════════════ */
-body:not([data-reddit-grid-cols="1"]) shreddit-post:hover,
-body:not([data-reddit-grid-cols="1"]) .Post:hover {
-  box-shadow:          var(--rg-shadow-hover) !important;
-  transform:           translateY(-2px) !important; /* Slight lift */
-  z-index:             4 !important;
-  pointer-events:      auto !important;
+body:not([data-reddit-grid-cols='1']) shreddit-post:hover,
+body:not([data-reddit-grid-cols='1']) .Post:hover {
+  box-shadow: var(--rg-shadow-hover) !important;
+  transform: translateY(-2px) !important; /* Slight lift */
+  z-index: 4 !important;
+  pointer-events: auto !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    BUTTON ENTRANCES
    ═══════════════════════════════════════════════════════════════════════════ */
-body:not([data-reddit-grid-cols="1"]) shreddit-post:not([data-rg-loading]) shreddit-overflow-menu button,
-body:not([data-reddit-grid-cols="1"]) shreddit-post:not([data-rg-loading]) button[aria-label*="more" i],
-body:not([data-reddit-grid-cols="1"]) shreddit-post:not([data-rg-loading]) button[aria-haspopup="menu"] {
+body:not([data-reddit-grid-cols='1'])
+  shreddit-post:not([data-rg-loading])
+  shreddit-overflow-menu
+  button,
+body:not([data-reddit-grid-cols='1'])
+  shreddit-post:not([data-rg-loading])
+  button[aria-label*='more' i],
+body:not([data-reddit-grid-cols='1'])
+  shreddit-post:not([data-rg-loading])
+  button[aria-haspopup='menu'] {
   animation: rg-btn-pop 0.3s ease 0.1s both !important;
 }
 
-body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable] shreddit-overflow-menu button,
-body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable] button[aria-label*="more" i],
-body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable] button[aria-haspopup="menu"] {
-  animation: none    !important;
-  opacity:   0.5    !important;
+body:not([data-reddit-grid-cols='1']) shreddit-post[data-rg-stable] shreddit-overflow-menu button,
+body:not([data-reddit-grid-cols='1']) shreddit-post[data-rg-stable] button[aria-label*='more' i],
+body:not([data-reddit-grid-cols='1']) shreddit-post[data-rg-stable] button[aria-haspopup='menu'] {
+  animation: none !important;
+  opacity: 0.5 !important;
 }
 
 /* Pill fading */
-body:not([data-reddit-grid-cols="1"]) shreddit-post:not([data-rg-loading]) shreddit-vote-buttons,
-body:not([data-reddit-grid-cols="1"]) shreddit-post:not([data-rg-loading]) [data-post-click-location="vote"],
-body:not([data-reddit-grid-cols="1"]) shreddit-post:not([data-rg-loading]) [data-post-click-location="comments"],
-body:not([data-reddit-grid-cols="1"]) shreddit-post:not([data-rg-loading]) [data-post-click-location="share"] {
+body:not([data-reddit-grid-cols='1']) shreddit-post:not([data-rg-loading]) shreddit-vote-buttons,
+body:not([data-reddit-grid-cols='1'])
+  shreddit-post:not([data-rg-loading])
+  [data-post-click-location='vote'],
+body:not([data-reddit-grid-cols='1'])
+  shreddit-post:not([data-rg-loading])
+  [data-post-click-location='comments'],
+body:not([data-reddit-grid-cols='1'])
+  shreddit-post:not([data-rg-loading])
+  [data-post-click-location='share'] {
   animation: rg-pill-pop 0.3s ease 0.1s both !important;
 }
 
-body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable] shreddit-vote-buttons,
-body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable] [data-post-click-location="vote"],
-body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable] [data-post-click-location="comments"],
-body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable] [data-post-click-location="share"] {
+body:not([data-reddit-grid-cols='1']) shreddit-post[data-rg-stable] shreddit-vote-buttons,
+body:not([data-reddit-grid-cols='1'])
+  shreddit-post[data-rg-stable]
+  [data-post-click-location='vote'],
+body:not([data-reddit-grid-cols='1'])
+  shreddit-post[data-rg-stable]
+  [data-post-click-location='comments'],
+body:not([data-reddit-grid-cols='1'])
+  shreddit-post[data-rg-stable]
+  [data-post-click-location='share'] {
   animation: none !important;
 }
 
@@ -100,12 +127,12 @@ body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable] [data-post-c
    REDUCED MOTION
    ═══════════════════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
-  body:not([data-reddit-grid-cols="1"]) shreddit-post,
-  body:not([data-reddit-grid-cols="1"]) .Post,
-  body:not([data-reddit-grid-cols="1"]) shreddit-post:not([data-rg-loading]),
-  body:not([data-reddit-grid-cols="1"]) .Post:not([data-rg-loading]) {
-    animation:  none !important;
+  body:not([data-reddit-grid-cols='1']) shreddit-post,
+  body:not([data-reddit-grid-cols='1']) .Post,
+  body:not([data-reddit-grid-cols='1']) shreddit-post:not([data-rg-loading]),
+  body:not([data-reddit-grid-cols='1']) .Post:not([data-rg-loading]) {
+    animation: none !important;
     transition: opacity 0.1s ease !important;
-    transform:  none !important;
+    transform: none !important;
   }
 }

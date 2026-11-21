@@ -159,7 +159,7 @@ window.RedditPro.AudioObserver = (function () {
     window.RedditPro.Settings.subscribe(
       /** @param {{ autoPlayAudio: boolean }} settings */
       (settings) => {
-      if (!settings.autoPlayAudio) muteAll();
+        if (!settings.autoPlayAudio) muteAll();
         else scheduleUpdate();
       }
     );

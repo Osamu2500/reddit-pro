@@ -41,17 +41,17 @@ window.RedditPro.Filters = (function () {
           console.warn('RedditPro: Could not load filters', chrome.runtime.lastError);
           return;
         }
-        activeFilters = normalizeFilters(
-          /** @type {Partial<FilterState>} */ (result[STORAGE_KEY])
-        );
+        activeFilters = normalizeFilters(/** @type {Partial<FilterState>} */ (result[STORAGE_KEY]));
         applyToAll();
       });
     }
 
-    window.RedditPro.Settings.subscribe(/** @param {{ enableFilters: boolean }} settings */ (settings) => {
-      if (!settings.enableFilters) restoreFilteredCards();
-      else applyToAll();
-    });
+    window.RedditPro.Settings.subscribe(
+      /** @param {{ enableFilters: boolean }} settings */ (settings) => {
+        if (!settings.enableFilters) restoreFilteredCards();
+        else applyToAll();
+      }
+    );
   }
 
   function getFilters() {

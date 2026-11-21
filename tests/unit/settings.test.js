@@ -18,7 +18,9 @@ describe('Settings Module', () => {
       },
       storage: {
         sync: {
-          get: vi.fn((defaults, callback) => callback({ ...defaults, columns: '4', masonry: false })),
+          get: vi.fn((defaults, callback) =>
+            callback({ ...defaults, columns: '4', masonry: false })
+          ),
           set: vi.fn((_data, callback) => {
             if (callback) callback();
           }),

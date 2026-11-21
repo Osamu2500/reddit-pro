@@ -20,7 +20,9 @@ body.rg-modal-open {
   align-items: flex-start;
   opacity: 1;
   visibility: visible;
-  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s;
+  transition:
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0.3s;
 }
 
 #rg-post-modal.rg-modal-hidden {
@@ -73,22 +75,26 @@ body.rg-modal-open {
   position: absolute;
   top: 16px;
   right: 16px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--rg-radius-btn, 8px) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
   color: white;
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
   z-index: 10;
-  transition: background 0.2s, transform 0.2s;
+  transition:
+    background 0.2s,
+    border-color 0.2s,
+    transform 0.2s !important;
 }
 
 .rg-modal-close:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
   transform: scale(1.05);
 }
 
@@ -126,7 +132,9 @@ body.rg-modal-open {
 }
 
 @keyframes rg-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Modal Body Grid Layout */

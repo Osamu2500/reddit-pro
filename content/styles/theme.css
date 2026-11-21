@@ -38,6 +38,19 @@
   --rg-radius-pill: 8px; /* Legacy alias */
   --rg-radius-btn: 8px; /* Squircle button corner radius */
 
+  /* Override Reddit's internal design tokens so web components render as squircles */
+  --button-border-radius: var(--rg-radius-btn, 8px) !important;
+  --rpl-radius-button: var(--rg-radius-btn, 8px) !important;
+  --rpl-radius-pill: var(--rg-radius-btn, 8px) !important;
+  --rpl-radius-full: var(--rg-radius-btn, 8px) !important;
+  --radius-full: var(--rg-radius-btn, 8px) !important;
+  --radius-pill: var(--rg-radius-btn, 8px) !important;
+  --rem-size-button-radius: var(--rg-radius-btn, 8px) !important;
+  --vote-border-radius: var(--rg-radius-btn, 8px) !important;
+  --join-button-radius: var(--rg-radius-btn, 8px) !important;
+  --shreddit-button-border-radius: var(--rg-radius-btn, 8px) !important;
+  --button-radius: var(--rg-radius-btn, 8px) !important;
+
   /* ── Flat Shadow System ── */
   /* Replaced 7-layer clay with a single ambient minimal shadow */
   --rg-shadow: 0 4px 12px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
@@ -70,9 +83,12 @@
 /* ─────────────────────────────────────────────
    DARK MODE TOKEN OVERRIDES
    ───────────────────────────────────────────── */
-body.rg-theme-dark {
-  --rg-glass-base: rgba(27, 29, 33, 0.96);
-  --rg-card-hover-bg: rgba(32, 34, 39, 0.98);
+body.rg-theme-dark,
+:is(html, body)[class*='theme-dark'],
+:is(html, body)[class*='dark'],
+:is(html, body):has([class*='theme-dark']) {
+  --rg-glass-base: #18191c;
+  --rg-card-hover-bg: #1e2024;
   --rg-card-border-hover: rgba(255, 255, 255, 0.16);
 
   --rg-border: rgba(255, 255, 255, 0.08);
@@ -86,10 +102,38 @@ body.rg-theme-dark {
   --rg-btn-border: rgba(255, 255, 255, 0.08);
   --rg-btn-border-hover: rgba(255, 255, 255, 0.18);
 
-  --rg-credit-border: rgba(255, 255, 255, 0.06);
-  --rg-action-border: rgba(255, 255, 255, 0.06);
-  --rg-text: rgba(255, 255, 255, 0.92);
-  --rg-text-muted: rgba(255, 255, 255, 0.45);
+  --rg-credit-bg: transparent;
+  --rg-credit-border: transparent;
+  --rg-action-bg: transparent;
+  --rg-action-border: transparent;
+  --rg-text: #f0f2f5;
+  --rg-text-muted: #9aa0a6;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --rg-glass-base: #18191c;
+    --rg-card-hover-bg: #1e2024;
+    --rg-card-border-hover: rgba(255, 255, 255, 0.16);
+
+    --rg-border: rgba(255, 255, 255, 0.08);
+    --rg-border-inner: rgba(255, 255, 255, 0.03);
+
+    --rg-shadow: 0 4px 12px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.1);
+    --rg-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.15);
+
+    --rg-btn-bg: rgba(255, 255, 255, 0.06);
+    --rg-btn-bg-hover: rgba(255, 255, 255, 0.12);
+    --rg-btn-border: rgba(255, 255, 255, 0.08);
+    --rg-btn-border-hover: rgba(255, 255, 255, 0.18);
+
+    --rg-credit-bg: transparent;
+    --rg-credit-border: transparent;
+    --rg-action-bg: transparent;
+    --rg-action-border: transparent;
+    --rg-text: #f0f2f5;
+    --rg-text-muted: #9aa0a6;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -243,13 +287,12 @@ body:not([data-reddit-grid-cols='1']) shreddit-post > section {
 
 /* ═══════════════════════════════════════════════════════════════════════════
    CREDIT BAR — header strip 
-   Flat, minimal layout. 
+   Flat, minimal layout. Seamless with card.
    ═══════════════════════════════════════════════════════════════════════════ */
 body:not([data-reddit-grid-cols='1']) shreddit-post [slot='credit-bar'],
 body:not([data-reddit-grid-cols='1']) shreddit-post-header {
-  background: var(--rg-credit-bg) !important;
-  /* Very subtle dividing line */
-  border-bottom: 1px solid var(--rg-credit-border) !important;
+  background: transparent !important;
+  border-bottom: none !important;
   border-radius: var(--rg-radius-inner) var(--rg-radius-inner) 0 0 !important;
   padding: 12px 52px 10px 14px !important;
   position: relative !important;
@@ -258,11 +301,12 @@ body:not([data-reddit-grid-cols='1']) shreddit-post-header {
 
 /* ═══════════════════════════════════════════════════════════════════════════
    ACTION BAR — bottom strip
+   Seamless with card.
    ═══════════════════════════════════════════════════════════════════════════ */
 body:not([data-reddit-grid-cols='1']) shreddit-post [slot='action-bar'],
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-post-action-bar {
   background: transparent !important;
-  border-top: 1px solid var(--rg-action-border) !important;
+  border-top: none !important;
   border-radius: 0 !important;
   padding: 8px 14px 10px 14px !important;
 }
@@ -384,10 +428,11 @@ body:not([data-reddit-grid-cols='1']) .Post:focus-within {
     var(--rg-shadow) !important;
 }
 
-body:not([data-reddit-grid-cols='1']) shreddit-post [slot='post-media-container'],
-body:not([data-reddit-grid-cols='1']) shreddit-post gallery-carousel,
-body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-player,
-body:not([data-reddit-grid-cols='1']) shreddit-post .shreddit-player-wrapper {
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article) [slot='post-media-container'],
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article) gallery-carousel,
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article) shreddit-player,
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article) shreddit-player-2,
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article) .shreddit-player-wrapper {
   border-radius: 10px !important;
   overflow: hidden !important;
 }

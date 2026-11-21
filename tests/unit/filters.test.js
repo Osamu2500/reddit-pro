@@ -2,10 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 
-const code = fs.readFileSync(
-  path.resolve(process.cwd(), 'content/features/filters.js'),
-  'utf8'
-);
+const code = fs.readFileSync(path.resolve(process.cwd(), 'content/features/filters.js'), 'utf8');
 
 describe('Filters Module', () => {
   let settings;
@@ -27,11 +24,15 @@ describe('Filters Module', () => {
       runtime: { lastError: null },
       storage: {
         local: {
-          get: vi.fn((_defaults, callback) => callback({ redditProFilters: {
-            keywords: [],
-            flairs: [],
-            mediaType: 'all',
-          } })),
+          get: vi.fn((_defaults, callback) =>
+            callback({
+              redditProFilters: {
+                keywords: [],
+                flairs: [],
+                mediaType: 'all',
+              },
+            })
+          ),
           set: vi.fn((_value, callback) => callback?.()),
         },
       },
@@ -70,15 +71,17 @@ describe('Filters Module', () => {
       mediaType: 'video',
     });
 
-    expect(chrome.storage.local.set).toHaveBeenCalledWith({
-      redditProFilters: {
-        keywords: ['keyboard'],
-        flairs: [],
-        mediaType: 'video',
+    expect(chrome.storage.local.set).toHaveBeenCalledWith(
+      {
+        redditProFilters: {
+          keywords: ['keyboard'],
+          flairs: [],
+          mediaType: 'video',
+        },
       },
-    }, expect.any(Function));
+      expect.any(Function)
+    );
   });
-
 
   it('restores an existing inline display value and its priority', () => {
     const card = document.createElement('shreddit-post');
@@ -94,5 +97,4 @@ describe('Filters Module', () => {
     expect(card.style.getPropertyPriority('display')).toBe('important');
     expect(card.classList.contains('rg-filtered-out')).toBe(false);
   });
-
 });

@@ -5,7 +5,7 @@
 
 window.RedditPro = window.RedditPro || {};
 
-window.RedditPro.Virtualizer = (function() {
+window.RedditPro.Virtualizer = (function () {
   function init() {}
   function start() {}
   function disconnect() {}

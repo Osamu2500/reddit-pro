@@ -5,7 +5,7 @@
 
 window.RedditPro = window.RedditPro || {};
 
-window.RedditPro.ErrorBoundary = (function() {
+window.RedditPro.ErrorBoundary = (function () {
   /**
    * Wraps a function in a try-catch block for safe execution.
    * @template T
@@ -14,7 +14,7 @@ window.RedditPro.ErrorBoundary = (function() {
    * @returns {(...args: any[]) => T | undefined}
    */
   function wrap(context, fn) {
-    return function(...args) {
+    return function (...args) {
       try {
         return fn(...args);
       } catch (err) {

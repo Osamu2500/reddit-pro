@@ -4,7 +4,7 @@
 */
 
 /* 1. Denser Comment Trees */
-shreddit-comment-tree, 
+shreddit-comment-tree,
 comment-tree,
 shreddit-comment {
   --comment-padding-y: 8px !important; /* Reddit default is huge */
@@ -17,82 +17,191 @@ shreddit-comment::part(comment-body) {
 
 /* 2. Color-coded Indentation Lines */
 /* Level 1 */
-shreddit-comment[depth="1"]::part(thread-line) {
+shreddit-comment[depth='1']::part(thread-line) {
   border-left-color: #ff4500 !important; /* Reddit Orange */
   opacity: 0.5;
 }
-shreddit-comment[depth="1"]:hover::part(thread-line) {
+shreddit-comment[depth='1']:hover::part(thread-line) {
   opacity: 1;
   border-left-width: 2px !important;
 }
 
 /* Level 2 */
-shreddit-comment[depth="2"]::part(thread-line) {
+shreddit-comment[depth='2']::part(thread-line) {
   border-left-color: #ffb000 !important; /* Gold */
   opacity: 0.4;
 }
-shreddit-comment[depth="2"]:hover::part(thread-line) {
+shreddit-comment[depth='2']:hover::part(thread-line) {
   opacity: 1;
   border-left-width: 2px !important;
 }
 
 /* Level 3 */
-shreddit-comment[depth="3"]::part(thread-line) {
+shreddit-comment[depth='3']::part(thread-line) {
   border-left-color: #00d26a !important; /* Green */
   opacity: 0.3;
 }
-shreddit-comment[depth="3"]:hover::part(thread-line) {
+shreddit-comment[depth='3']:hover::part(thread-line) {
   opacity: 1;
   border-left-width: 2px !important;
 }
 
 /* Level 4 */
-shreddit-comment[depth="4"]::part(thread-line) {
+shreddit-comment[depth='4']::part(thread-line) {
   border-left-color: #00a8ff !important; /* Blue */
   opacity: 0.2;
 }
-shreddit-comment[depth="4"]:hover::part(thread-line) {
+shreddit-comment[depth='4']:hover::part(thread-line) {
   opacity: 1;
   border-left-width: 2px !important;
 }
 
 /* Level 5+ */
-shreddit-comment[depth="5"]::part(thread-line),
-shreddit-comment[depth="6"]::part(thread-line),
-shreddit-comment[depth="7"]::part(thread-line) {
+shreddit-comment[depth='5']::part(thread-line),
+shreddit-comment[depth='6']::part(thread-line),
+shreddit-comment[depth='7']::part(thread-line) {
   border-left-color: #9d00ff !important; /* Purple */
   opacity: 0.2;
 }
-shreddit-comment[depth="5"]:hover::part(thread-line),
-shreddit-comment[depth="6"]:hover::part(thread-line),
-shreddit-comment[depth="7"]:hover::part(thread-line) {
+shreddit-comment[depth='5']:hover::part(thread-line),
+shreddit-comment[depth='6']:hover::part(thread-line),
+shreddit-comment[depth='7']:hover::part(thread-line) {
   opacity: 1;
   border-left-width: 2px !important;
 }
 
 /* 3. Hide annoying avatars in deep threads to save horizontal space */
-shreddit-comment[depth="3"] faceplate-img,
-shreddit-comment[depth="4"] faceplate-img,
-shreddit-comment[depth="5"] faceplate-img,
-shreddit-comment[depth="6"] faceplate-img,
-shreddit-comment[depth="7"] faceplate-img {
+shreddit-comment[depth='3'] faceplate-img,
+shreddit-comment[depth='4'] faceplate-img,
+shreddit-comment[depth='5'] faceplate-img,
+shreddit-comment[depth='6'] faceplate-img,
+shreddit-comment[depth='7'] faceplate-img {
   width: 16px !important;
   height: 16px !important;
 }
 
 /* Auto-collapse Automoderator / Stickied comments */
-shreddit-comment[author="AutoModerator"]::part(comment-body),
-shreddit-comment[author="AutoModerator"]::part(action-bar),
-shreddit-comment[stickied="true"]::part(comment-body),
-shreddit-comment[stickied="true"]::part(action-bar) {
+shreddit-comment[author='AutoModerator']::part(comment-body),
+shreddit-comment[author='AutoModerator']::part(action-bar),
+shreddit-comment[stickied='true']::part(comment-body),
+shreddit-comment[stickied='true']::part(action-bar) {
   display: none !important;
 }
-shreddit-comment[author="AutoModerator"]::before,
-shreddit-comment[stickied="true"]::before {
-  content: "Pinned comment collapsed by Reddit Pro";
+shreddit-comment[author='AutoModerator']::before,
+shreddit-comment[stickied='true']::before {
+  content: 'Pinned comment collapsed by Reddit Pro';
   display: block;
   font-size: 11px;
   color: var(--color-neutral-content-weak, #888);
   font-style: italic;
   padding: 4px 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMMENT TREE SQUIRCLE INTERACTIVE CONTROLS
+   ═══════════════════════════════════════════════════════════════════════════ */
+shreddit-comment shreddit-vote-buttons,
+shreddit-comment vote-buttons,
+comment-tree shreddit-vote-buttons,
+comment-tree vote-buttons {
+  display: inline-flex !important;
+  align-items: center !important;
+  height: 28px !important;
+  border-radius: var(--rg-radius-btn, 8px) !important;
+  background: var(--rg-btn-bg, rgba(128, 128, 128, 0.08)) !important;
+  border: 1px solid var(--rg-btn-border, rgba(128, 128, 128, 0.15)) !important;
+  overflow: hidden !important;
+  padding: 0 2px !important;
+  box-sizing: border-box !important;
+}
+
+shreddit-comment shreddit-vote-buttons button,
+shreddit-comment vote-buttons button,
+comment-tree shreddit-vote-buttons button,
+comment-tree vote-buttons button,
+shreddit-comment button[aria-label*='upvote' i],
+shreddit-comment button[aria-label*='downvote' i] {
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: calc(var(--rg-radius-btn, 8px) - 2px) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: none !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease,
+    transform 0.1s ease !important;
+}
+
+shreddit-comment shreddit-vote-buttons button:hover,
+shreddit-comment vote-buttons button:hover,
+comment-tree shreddit-vote-buttons button:hover,
+comment-tree vote-buttons button:hover,
+shreddit-comment button[aria-label*='upvote' i]:hover,
+shreddit-comment button[aria-label*='downvote' i]:hover {
+  background: rgba(128, 128, 128, 0.15) !important;
+}
+
+/* Comment Action Buttons (Reply, Share, Award, Overflow) */
+shreddit-comment button[aria-label*='reply' i],
+shreddit-comment button[aria-label*='share' i],
+shreddit-comment button[aria-label*='award' i],
+shreddit-comment shreddit-overflow-menu button,
+shreddit-comment button[aria-label*='more' i],
+shreddit-comment button[aria-haspopup='menu'] {
+  border-radius: var(--rg-radius-btn, 8px) !important;
+  height: 28px !important;
+  padding: 0 8px !important;
+  background: var(--rg-btn-bg, rgba(128, 128, 128, 0.08)) !important;
+  border: 1px solid var(--rg-btn-border, rgba(128, 128, 128, 0.15)) !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  font-size: 11px !important;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.1s ease !important;
+}
+
+shreddit-comment button[aria-label*='reply' i]:hover,
+shreddit-comment button[aria-label*='share' i]:hover,
+shreddit-comment button[aria-label*='award' i]:hover,
+shreddit-comment shreddit-overflow-menu button:hover,
+shreddit-comment button[aria-label*='more' i]:hover,
+shreddit-comment button[aria-haspopup='menu']:hover {
+  background: var(--rg-btn-bg-hover, rgba(128, 128, 128, 0.16)) !important;
+  border-color: var(--rg-btn-border-hover, rgba(128, 128, 128, 0.25)) !important;
+}
+
+/* Upvoted & Downvoted States for Comment Vote Controls */
+shreddit-comment
+  :is(shreddit-vote-buttons, vote-buttons):has(
+    button[aria-label*='upvote' i][aria-pressed='true']
+  ) {
+  background: rgba(var(--rg-accent-rgb, 255, 69, 0), 0.12) !important;
+  border-color: rgba(var(--rg-accent-rgb, 255, 69, 0), 0.4) !important;
+}
+
+shreddit-comment button[aria-label*='upvote' i][aria-pressed='true'] svg {
+  color: var(--rg-accent, #ff4500) !important;
+  fill: var(--rg-accent, #ff4500) !important;
+}
+
+shreddit-comment
+  :is(shreddit-vote-buttons, vote-buttons):has(
+    button[aria-label*='downvote' i][aria-pressed='true']
+  ) {
+  background: rgba(var(--rg-downvote-rgb, 113, 147, 255), 0.12) !important;
+  border-color: rgba(var(--rg-downvote-rgb, 113, 147, 255), 0.4) !important;
+}
+
+shreddit-comment button[aria-label*='downvote' i][aria-pressed='true'] svg {
+  color: var(--rg-downvote, #7193ff) !important;
+  fill: var(--rg-downvote, #7193ff) !important;
 }

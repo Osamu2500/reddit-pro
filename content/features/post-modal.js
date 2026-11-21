@@ -64,13 +64,8 @@ window.RedditPro.PostModal = (function () {
 
   /** @param {MouseEvent} event */
   function handlePostClick(event) {
-    if (
-      event.button !== 0 ||
-      event.ctrlKey ||
-      event.metaKey ||
-      event.shiftKey ||
-      event.altKey
-    ) return;
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)
+      return;
 
     if (!(event.target instanceof Element)) return;
     const link = /** @type {HTMLAnchorElement | null} */ (
@@ -88,7 +83,8 @@ window.RedditPro.PostModal = (function () {
     if (
       targetUrl.origin !== location.origin ||
       !/\/comments\/[a-z0-9]+\//i.test(targetUrl.pathname)
-    ) return;
+    )
+      return;
 
     event.preventDefault();
     event.stopPropagation();
@@ -130,7 +126,8 @@ window.RedditPro.PostModal = (function () {
     loader.style.display = 'flex';
     modalContainer.classList.remove('rg-modal-hidden');
     document.body.classList.add('rg-modal-open');
-    returnFocusElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    returnFocusElement =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
     close.focus();
 
     try {

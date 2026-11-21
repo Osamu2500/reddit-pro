@@ -178,7 +178,7 @@ body:not([data-reddit-grid-cols='1']) shreddit-post-header button:not([aria-hasp
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   THREE-DOTS OVERFLOW BUTTON — Absolute Positioning
+   THREE-DOTS OVERFLOW BUTTON — Clean, Uncontained Icon (No Container / Box)
    ═══════════════════════════════════════════════════════════════════════════ */
 
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-overflow-menu,
@@ -188,12 +188,20 @@ body:not([data-reddit-grid-cols='1'])
   shreddit-post
   [slot='credit-bar']
   button[aria-haspopup='menu'],
-body:not([data-reddit-grid-cols='1']) shreddit-post-header button[aria-haspopup='menu'] {
+body:not([data-reddit-grid-cols='1']) shreddit-post-header button[aria-haspopup='menu'],
+shreddit-post shreddit-overflow-menu,
+shreddit-post [data-post-click-location='overflow-menu'],
+shreddit-post [slot='overflow'] {
   position: absolute !important;
   top: 10px !important;
   right: 12px !important;
   margin: 0 !important;
   z-index: 100 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-overflow-menu button,
@@ -205,9 +213,11 @@ body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='more' i]
 body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-haspopup='menu'],
 body:not([data-reddit-grid-cols='1']) shreddit-post button.overflow-button,
 shreddit-post shreddit-overflow-menu button,
+shreddit-post [data-post-click-location='overflow-menu'] button,
 shreddit-post button[aria-label*='more' i],
 shreddit-post button[aria-haspopup='menu'],
-shreddit-post button.overflow-button {
+shreddit-post button.overflow-button,
+shreddit-overflow-menu :is(button, [role='button'], div, span) {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -215,43 +225,58 @@ shreddit-post button.overflow-button {
   min-width: 32px !important;
   height: 32px !important;
   padding: 0 !important;
-  border-radius: var(--rg-radius-btn, 8px) !important;
+  border-radius: 0 !important;
 
   background: transparent !important;
   background-color: transparent !important;
-  border: 1px solid transparent !important;
+  border: none !important;
   box-shadow: none !important;
+  outline: none !important;
 
   transition:
-    background 0.15s ease,
-    border-color 0.15s ease !important;
+    opacity 0.15s ease,
+    color 0.15s ease !important;
   cursor: pointer !important;
-  opacity: 0.8 !important;
+  opacity: 0.75 !important;
+  color: var(--rg-text-muted) !important;
   pointer-events: auto !important;
 }
 
-/* Hover: subtle gray fill (Notion style) */
+/* Three dots hover & active: NO container / background box, only icon brightening */
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-overflow-menu button:hover,
 body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='more' i]:hover,
-body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-haspopup='menu']:hover {
-  background: var(--rg-btn-bg-hover) !important;
-  border-color: var(--rg-btn-border-hover) !important;
-  opacity: 1 !important;
-  transform: none !important; /* No popping up */
+body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-haspopup='menu']:hover,
+shreddit-post shreddit-overflow-menu button:hover,
+shreddit-post [data-post-click-location='overflow-menu'] button:hover,
+shreddit-post button[aria-label*='more' i]:hover,
+shreddit-post button[aria-haspopup='menu']:hover,
+shreddit-overflow-menu :is(button, [role='button'], div, span):hover {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
   box-shadow: none !important;
+  outline: none !important;
+  opacity: 1 !important;
+  color: var(--rg-text) !important;
+  transform: none !important;
 }
 
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-overflow-menu button:active,
 body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='more' i]:active,
-body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-haspopup='menu']:active {
-  transform: scale(0.96) !important;
-  background: rgba(0, 0, 0, 0.1) !important;
-}
-
-body.rg-theme-dark shreddit-post shreddit-overflow-menu button:active,
-body.rg-theme-dark shreddit-post button[aria-label*='more' i]:active,
-body.rg-theme-dark shreddit-post button[aria-haspopup='menu']:active {
-  background: rgba(255, 255, 255, 0.1) !important;
+body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-haspopup='menu']:active,
+shreddit-post shreddit-overflow-menu button:active,
+shreddit-post [data-post-click-location='overflow-menu'] button:active,
+shreddit-post button[aria-label*='more' i]:active,
+shreddit-post button[aria-haspopup='menu']:active,
+shreddit-overflow-menu :is(button, [role='button'], div, span):active {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  transform: scale(0.94) !important;
+  opacity: 1 !important;
+  color: var(--rg-text) !important;
 }
 
 body:not([data-reddit-grid-cols='1']) shreddit-post:hover shreddit-overflow-menu button,
@@ -276,65 +301,62 @@ body > shreddit-overflow-menu {
   position: fixed !important;
 }
 
-/* Bypass Reddit's artificial aspect ratio caps for standard feed media (Single Images/Video) */
-body:not([data-reddit-grid-cols='1']) shreddit-aspect-ratio:not(:has(gallery-carousel)),
-body:not([data-reddit-grid-cols='1']) div[id$='-aspect-ratio']:not(:has(gallery-carousel)),
+/* ═══════════════════════════════════════════════════════════════════════════
+   MEDIA LAYOUT — FULL NATURAL RATIO & UNCONSTRAINED SIZING (IMAGES & VIDEOS)
+   Ensures single images, gallery carousels, and videos render in full ratio
+   and size without getting cut off, cropped, or letterboxed.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1. Neutralize Reddit's max-height CSS variables on post cards */
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article) {
+  --max-height: none !important;
+  --gallery-carousel-item-height: auto !important;
+}
+
+/* 2. Unconstrain all media containers: allow natural content expansion */
 body:not([data-reddit-grid-cols='1'])
-  shreddit-post:not(:has(gallery-carousel))
-  [slot='post-media-container'] {
-  padding-bottom: 0 !important;
+  :is(shreddit-post, article)
+  :is(
+    [slot='post-media-container'],
+    shreddit-aspect-ratio,
+    div[id$='-aspect-ratio'],
+    div[id$='-aspect-ratio'] > div,
+    faceplate-img,
+    gallery-carousel,
+    gallery-carousel ul,
+    gallery-carousel li,
+    gallery-carousel figure,
+    gallery-carousel div,
+    shreddit-media-lightbox,
+    shreddit-player,
+    shreddit-player-2,
+    .shreddit-player-wrapper,
+    shreddit-async-loader:has(shreddit-player, shreddit-player-2, gallery-carousel)
+  ) {
   height: auto !important;
-  min-height: 0 !important;
   max-height: none !important;
+  min-height: 0 !important;
+  padding-bottom: 0 !important;
   aspect-ratio: auto !important;
 }
 
-/* PRE-ALLOCATE SPACE: Enforce Reddit's aspect ratio to prevent grid jumping before and during media loads */
+/* 3. Loading placeholder ONLY: pre-allocate initial aspect ratio to avoid layout shift before media arrives */
 body:not([data-reddit-grid-cols='1'])
-  shreddit-post[style*='--card-aspect-ratio']
-  shreddit-aspect-ratio:not(:has(gallery-carousel)),
-body:not([data-reddit-grid-cols='1'])
-  shreddit-post[style*='--card-aspect-ratio']
-  div[id$='-aspect-ratio']:not(:has(gallery-carousel)),
-body:not([data-reddit-grid-cols='1'])
-  shreddit-post[style*='--card-aspect-ratio']
-  [slot='post-media-container']:not(:has(gallery-carousel)) {
+  shreddit-post[data-rg-loading][style*='--card-aspect-ratio']
+  :is(shreddit-aspect-ratio, div[id$='-aspect-ratio'], [slot='post-media-container']) {
   aspect-ratio: var(--card-aspect-ratio, auto) !important;
 }
 
+/* 4. Full natural sizing for images, videos, and players (Never cut off or cropped) */
 body:not([data-reddit-grid-cols='1'])
-  shreddit-post[data-rg-loading]
-  shreddit-aspect-ratio:not(:has(gallery-carousel)),
-body:not([data-reddit-grid-cols='1'])
-  shreddit-post[data-rg-loading]
-  div[id$='-aspect-ratio']:not(:has(gallery-carousel)),
-body:not([data-reddit-grid-cols='1'])
-  shreddit-post[data-rg-loading]
-  [slot='post-media-container']:not(:has(gallery-carousel)) {
-  aspect-ratio: var(--card-aspect-ratio, auto) !important;
-}
-
-body:not([data-reddit-grid-cols='1']) div[id$='-aspect-ratio']:not(:has(gallery-carousel)) > div {
-  position: relative !important;
-  height: auto !important;
-}
-
-body:not([data-reddit-grid-cols='1']) faceplate-img:not(:has(gallery-carousel)) {
-  height: auto !important;
-  aspect-ratio: auto !important;
-  display: block !important;
-}
-
-/* Force standard media to dictate its own height naturally */
-body:not([data-reddit-grid-cols='1'])
-  shreddit-post:not(:has(gallery-carousel))
-  img:not(.post-background-image-filter),
-body:not([data-reddit-grid-cols='1']) shreddit-post:not(:has(gallery-carousel)) video,
-body:not([data-reddit-grid-cols='1']) shreddit-post:not(:has(gallery-carousel)) iframe,
-body:not([data-reddit-grid-cols='1']) shreddit-post:not(:has(gallery-carousel)) shreddit-player,
-body:not([data-reddit-grid-cols='1'])
-  shreddit-post:not(:has(gallery-carousel))
-  .shreddit-player-wrapper {
+  :is(shreddit-post, article)
+  :is(
+    img:not(.post-background-image-filter),
+    video,
+    shreddit-player,
+    shreddit-player-2,
+    .shreddit-player-wrapper
+  ) {
   max-width: 100% !important;
   width: 100% !important;
   height: auto !important;
@@ -345,33 +367,64 @@ body:not([data-reddit-grid-cols='1'])
   background: transparent !important;
 }
 
-/* Ensure blurred background images stay absolutely positioned behind the main image */
-body:not([data-reddit-grid-cols='1']) shreddit-post img.post-background-image-filter {
-  position: absolute !important;
-  height: 100% !important;
-  object-fit: cover !important;
-}
-
-/* Let inner video elements scale naturally to their original ratio */
-body:not([data-reddit-grid-cols='1']) shreddit-player::part(video),
-body:not([data-reddit-grid-cols='1']) shreddit-player video {
+/* 5. Video Player & Inner Video Elements (Shadow DOM & Native elements) */
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-player, shreddit-player-2)::part(video),
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-player, shreddit-player-2)::part(media-container),
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-player, shreddit-player-2) video,
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-player, shreddit-player-2)
+  :is([slot='media'], figure, div[class*='media'], div[class*='preview']) {
   width: 100% !important;
-  height: auto !important;
-}
-
-/* Let gallery carousels shrink-wrap their natural image heights instead of using Reddit's fixed height variables */
-body:not([data-reddit-grid-cols='1']) gallery-carousel,
-body:not([data-reddit-grid-cols='1']) gallery-carousel ul,
-body:not([data-reddit-grid-cols='1']) gallery-carousel li {
+  max-width: 100% !important;
   height: auto !important;
   max-height: none !important;
+  object-fit: contain !important;
+  display: block !important;
 }
 
-/* Ensure the main image in the gallery behaves like a standard relative image */
-body:not([data-reddit-grid-cols='1']) gallery-carousel img:not(.post-background-image-filter) {
-  position: relative !important;
+/* 6. Embedded Video Iframes (YouTube, RedGIFs, Streamable) */
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article) iframe {
+  width: 100% !important;
+  max-width: 100% !important;
+  aspect-ratio: 16 / 9 !important;
   height: auto !important;
+  max-height: none !important;
+  border: none !important;
+  border-radius: var(--rg-radius-inner, 8px) !important;
+  display: block !important;
+}
+
+/* 7. Gallery Carousel Natural Scaling & Slide Alignment */
+body:not([data-reddit-grid-cols='1']) gallery-carousel {
+  position: relative !important;
+  width: 100% !important;
+  display: block !important;
+}
+
+body:not([data-reddit-grid-cols='1'])
+  gallery-carousel
+  img:not(.post-background-image-filter) {
+  position: relative !important;
+  width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
   object-fit: contain !important;
+  display: block !important;
+}
+
+/* 8. Blurred background ambient images (remain absolute to cover behind main media) */
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-post, article)
+  img.post-background-image-filter {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  pointer-events: none !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -442,20 +495,73 @@ body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-post-context {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   TITLE SLOT
+   TITLE SLOT — CLEAN, UNCONTAINED NATURAL TYPOGRAPHY
+   Strictly no containers, no background boxes, no borders, unboxed typography
    ═══════════════════════════════════════════════════════════════════════════ */
 body:not([data-reddit-grid-cols='1']) shreddit-post [slot='title'],
 body:not([data-reddit-grid-cols='1']) shreddit-post [slot='post-title'],
-body:not([data-reddit-grid-cols='1']) shreddit-post-title {
+body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-post-title,
+:is(shreddit-post, article) :is([slot='title'], [slot='post-title'], shreddit-post-title),
+:is(shreddit-post, article) [data-post-click-location='post-title'],
+:is(shreddit-post, article) [data-post-click-location='title'],
+:is(shreddit-post, article) [data-post-click-location='title-wrapper'],
+:is(shreddit-post, article) faceplate-tracker:has(> :is([slot='title'], [slot='post-title'], a[id*='post-title'])) {
   display: block !important;
   max-width: 100% !important;
   box-sizing: border-box !important;
   padding: 10px 14px 4px 14px !important;
   word-break: break-word !important;
-  overflow: hidden !important;
+  overflow: visible !important;
   font-size: clamp(0.85rem, 1.5vw, 1.05rem) !important;
   line-height: 1.35 !important;
-  font-weight: 600 !important; /* Bold, minimal typography */
+  font-weight: 600 !important;
+  color: var(--rg-text) !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+/* Ensure title links and all inner text elements NEVER have a container, background, or button box */
+body:not([data-reddit-grid-cols='1']) shreddit-post :is([slot='title'], [slot='post-title'], shreddit-post-title) a,
+shreddit-post :is([slot='title'], [slot='post-title'], shreddit-post-title) a,
+:is(shreddit-post, article) :is([slot='title'], [slot='post-title'], shreddit-post-title, [data-post-click-location='title']) :is(a, h1, h2, h3, p, span, div),
+:is(shreddit-post, article) a[id*='post-title'],
+:is(shreddit-post, article) a[data-testid='post-title'] {
+  display: inline !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  color: var(--rg-text) !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  white-space: normal !important;
+  text-decoration: none !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  line-height: inherit !important;
+  cursor: pointer !important;
+}
+
+body:not([data-reddit-grid-cols='1']) shreddit-post :is([slot='title'], [slot='post-title'], shreddit-post-title) a:hover,
+shreddit-post :is([slot='title'], [slot='post-title'], shreddit-post-title) a:hover,
+:is(shreddit-post, article) :is([slot='title'], [slot='post-title'], shreddit-post-title, [data-post-click-location='title']) :is(a, h1, h2, h3, p, span, div):hover,
+:is(shreddit-post, article) a[id*='post-title']:hover,
+:is(shreddit-post, article) a[data-testid='post-title']:hover {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  color: var(--rg-text) !important;
+  text-decoration: underline !important;
 }
 
 /* Flairs inside title can cause weird text wrapping gaps if forced inline */
@@ -466,22 +572,197 @@ body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-post-flair {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   TEXT BODY SLOT
+   TEXT BODY & DESCRIPTION — ENHANCED READABILITY & TYPOGRAPHY
+   Strictly no containers, no background boxes, no borders, unboxed natural text
    ═══════════════════════════════════════════════════════════════════════════ */
-body:not([data-reddit-grid-cols='1']) shreddit-post [slot='text-body'],
-body:not([data-reddit-grid-cols='1']) shreddit-post [slot='post-body'],
-body:not([data-reddit-grid-cols='1']) shreddit-post-body {
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-post, article)
+  :is([slot='text-body'], [slot='post-body'], shreddit-post-body),
+:is(shreddit-post, article)
+  :is([slot='text-body'], [slot='post-body'], shreddit-post-body),
+:is(shreddit-post, article)
+  :is([slot='text-body'], [slot='post-body'], shreddit-post-body) :is(div, p, span, article, section) {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-post, article)
+  :is([slot='text-body'], [slot='post-body'], shreddit-post-body),
+:is(shreddit-post, article)
+  :is([slot='text-body'], [slot='post-body'], shreddit-post-body) {
   max-width: 100% !important;
   box-sizing: border-box !important;
-  padding: 4px 14px 10px 14px !important;
+  padding: 6px 14px 10px 14px !important;
   margin: 0 !important;
   overflow: hidden !important;
   word-break: break-word !important;
+  overflow-wrap: anywhere !important;
   display: -webkit-box !important;
-  -webkit-line-clamp: 4 !important;
   -webkit-box-orient: vertical !important;
+  color: var(--rg-text) !important;
+  font-size: 0.875rem !important;
+  line-height: 1.55 !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
+
+/* Pure text posts (no media): generous clamp so text posts can be read naturally */
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-post, article):not(:has([slot='post-media-container']))
+  :is([slot='text-body'], [slot='post-body'], shreddit-post-body) {
+  -webkit-line-clamp: 10 !important;
+}
+
+/* Media posts with text/description: clean 5-line display without blurry gradient masks */
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-post, article):has([slot='post-media-container'])
+  :is([slot='text-body'], [slot='post-body'], shreddit-post-body) {
+  -webkit-line-clamp: 5 !important;
+}
+
+/* Post Captions (e.g. image captions, gallery descriptions) */
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-post, article)
+  :is([slot='caption'], faceplate-caption, figcaption) {
+  display: block !important;
+  padding: 4px 14px 8px 14px !important;
+  margin: 0 !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.45 !important;
   color: var(--rg-text-muted) !important;
-  font-size: 0.9rem !important;
+  background: transparent !important;
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
+}
+
+/* Expanded state if toggled */
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-post, article)
+  :is([slot='text-body'], [slot='post-body'], shreddit-post-body).rg-text-expanded,
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-post, article).rg-post-expanded
+  :is([slot='text-body'], [slot='post-body'], shreddit-post-body) {
+  -webkit-line-clamp: unset !important;
+  display: block !important;
+  max-height: none !important;
+}
+
+/* Inner rich text typography — Preserve hierarchy, links, code, and lists */
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-post, article)
+  :is([slot='text-body'], [slot='post-body'], shreddit-post-body)
+  p {
+  margin: 0 0 6px 0 !important;
+  line-height: 1.55 !important;
+  color: inherit !important;
+}
+
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-post, article)
+  :is([slot='text-body'], [slot='post-body'], shreddit-post-body)
+  p:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* Links inside description: visible accent color & interactive */
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-post, article)
+  :is([slot='text-body'], [slot='post-body'], shreddit-post-body)
+  a {
+  color: var(--rg-accent) !important;
+  text-decoration: none !important;
+  font-weight: 500 !important;
+  pointer-events: auto !important;
+}
+
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-post, article)
+  :is([slot='text-body'], [slot='post-body'], shreddit-post-body)
+  a:hover {
+  text-decoration: underline !important;
+}
+
+/* Strong / Bold hierarchy */
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-post, article)
+  :is([slot='text-body'], [slot='post-body'], shreddit-post-body)
+  :is(strong, b) {
+  font-weight: 600 !important;
+  color: var(--rg-text) !important;
+}
+
+/* Inline code */
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-post, article)
+  :is([slot='text-body'], [slot='post-body'], shreddit-post-body)
+  code {
+  background: rgba(128, 128, 128, 0.15) !important;
+  border-radius: 4px !important;
+  padding: 1px 5px !important;
+  font-size: 0.82em !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  color: var(--rg-text) !important;
+}
+
+/* Block preformatted code */
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-post, article)
+  :is([slot='text-body'], [slot='post-body'], shreddit-post-body)
+  pre {
+  background: rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid var(--rg-border) !important;
+  border-radius: 6px !important;
+  padding: 8px 10px !important;
+  margin: 6px 0 !important;
+  overflow-x: auto !important;
+}
+
+/* Quotes */
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-post, article)
+  :is([slot='text-body'], [slot='post-body'], shreddit-post-body)
+  blockquote {
+  border-left: 3px solid var(--rg-accent) !important;
+  padding-left: 10px !important;
+  margin: 6px 0 !important;
+  color: var(--rg-text-muted) !important;
+  font-style: italic !important;
+}
+
+/* Lists */
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-post, article)
+  :is([slot='text-body'], [slot='post-body'], shreddit-post-body)
+  :is(ul, ol) {
+  margin: 4px 0 6px 18px !important;
+  padding: 0 !important;
+}
+
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-post, article)
+  :is([slot='text-body'], [slot='post-body'], shreddit-post-body)
+  li {
+  margin-bottom: 2px !important;
+}
+
+/* See more / Read more interactive button styling */
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-post, article)
+  :is([slot='text-body'], [slot='post-body'], shreddit-post-body)
+  :is(button, [role='button'], .see-more) {
+  color: var(--rg-accent) !important;
+  background: transparent !important;
+  border: none !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  padding: 2px 4px !important;
+  display: inline-block !important;
+  pointer-events: auto !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -765,7 +1046,14 @@ body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='c
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-testid='comments-button'],
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-comment-button,
 body:not([data-reddit-grid-cols='1']) shreddit-post a[data-click-id='comments'],
-body:not([data-reddit-grid-cols='1']) shreddit-post a[href*='/comments/'],
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    shreddit-post-action-bar,
+    rpl-action-bar,
+    [slot='action-bar'],
+    [data-post-click-location='action-bar']
+  )
+  a[href*='/comments/'],
 body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='comment' i],
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='share'],
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-post-share-button,
@@ -785,7 +1073,13 @@ shreddit-post [data-post-click-location='comments'],
 shreddit-post [data-testid='comments-button'],
 shreddit-post shreddit-comment-button,
 shreddit-post a[data-click-id='comments'],
-shreddit-post a[href*='/comments/'],
+:is(
+    shreddit-post-action-bar,
+    rpl-action-bar,
+    [slot='action-bar'],
+    [data-post-click-location='action-bar']
+  )
+  a[href*='/comments/'],
 shreddit-post button[aria-label*='comment' i],
 shreddit-post [data-post-click-location='share'],
 shreddit-post shreddit-post-share-button,
@@ -820,7 +1114,7 @@ shreddit-crosspost-button button {
 
   font-size: 12px !important;
   font-weight: 500 !important;
-  color: var(--rg-text-muted) !important;
+  color: var(--rg-text) !important;
   text-decoration: none !important;
   white-space: nowrap !important;
   cursor: pointer !important;
@@ -848,7 +1142,14 @@ body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='c
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-testid='comments-button']:hover,
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-comment-button:hover,
 body:not([data-reddit-grid-cols='1']) shreddit-post a[data-click-id='comments']:hover,
-body:not([data-reddit-grid-cols='1']) shreddit-post a[href*='/comments/']:hover,
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    shreddit-post-action-bar,
+    rpl-action-bar,
+    [slot='action-bar'],
+    [data-post-click-location='action-bar']
+  )
+  a[href*='/comments/']:hover,
 body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='comment' i]:hover,
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='share']:hover,
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-post-share-button:hover,
@@ -868,7 +1169,13 @@ shreddit-post [data-post-click-location='comments']:hover,
 shreddit-post [data-testid='comments-button']:hover,
 shreddit-post shreddit-comment-button:hover,
 shreddit-post a[data-click-id='comments']:hover,
-shreddit-post a[href*='/comments/']:hover,
+:is(
+    shreddit-post-action-bar,
+    rpl-action-bar,
+    [slot='action-bar'],
+    [data-post-click-location='action-bar']
+  )
+  a[href*='/comments/']:hover,
 shreddit-post button[aria-label*='comment' i]:hover,
 shreddit-post [data-post-click-location='share']:hover,
 shreddit-post shreddit-post-share-button:hover,
@@ -1064,25 +1371,49 @@ body:not([data-reddit-grid-cols='1']) shreddit-post faceplate-tracker [data-test
   box-shadow: none !important;
 }
 
-/* Squircle shape & clean styling on all join buttons */
+/* Remove orange border, box-shadow and tinted background from all join wrappers */
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-testid='join-button'],
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-testid='credit-bar-join-button'],
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-testid*='join' i],
 body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='join' i],
-body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-join-button,
 shreddit-post [data-testid='join-button'],
 shreddit-post [data-testid='credit-bar-join-button'],
 shreddit-post [data-testid*='join' i],
 shreddit-post button[aria-label*='join' i],
-shreddit-post shreddit-join-button,
+shreddit-post shreddit-join-button {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Squircle shape & unified button styling on all join buttons */
 shreddit-join-button,
 rpl-join-button,
 shreddit-join-button :is(button, a, [role='button'], div, span, [class*='rounded-full']),
 rpl-join-button :is(button, a, [role='button'], div, span, [class*='rounded-full']) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 28px !important;
+  max-height: 28px !important;
+  padding: 0 10px !important;
   border-radius: var(--rg-radius-btn, 8px) !important;
-  border: none !important;
-  outline: none !important;
+  background: var(--rg-btn-bg) !important;
+  background-color: var(--rg-btn-bg) !important;
+  border: 1px solid var(--rg-btn-border) !important;
+  color: var(--rg-text) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
   box-shadow: none !important;
+  outline: none !important;
+  cursor: pointer !important;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease !important;
 }
 
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-testid='join-button']:hover,
@@ -1093,13 +1424,17 @@ shreddit-post [data-testid='join-button']:hover,
 shreddit-post [data-testid='credit-bar-join-button']:hover,
 shreddit-post [data-testid*='join' i]:hover,
 shreddit-post button[aria-label*='join' i]:hover,
-shreddit-post shreddit-join-button:hover {
-  border: none !important;
-  outline: none !important;
+shreddit-post shreddit-join-button:hover,
+shreddit-join-button:hover,
+rpl-join-button:hover,
+shreddit-join-button :is(button, a, [role='button']):hover,
+rpl-join-button :is(button, a, [role='button']):hover {
+  background: var(--rg-btn-bg-hover) !important;
+  background-color: var(--rg-btn-bg-hover) !important;
+  border-color: var(--rg-btn-border-hover) !important;
+  color: var(--rg-text) !important;
   box-shadow: none !important;
-  background: transparent !important;
-  opacity: 0.9 !important;
-  transform: none !important;
+  opacity: 1 !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1204,11 +1539,12 @@ body:not([data-reddit-grid-cols='1']) shreddit-blurred-container::part(blur-cont
   inset: 0 !important;
 }
 
-/* Add smooth optical fade to truncated text bodies */
-body:not([data-reddit-grid-cols='1']) shreddit-post [slot='text-body'],
-body:not([data-reddit-grid-cols='1']) shreddit-post [slot='post-body'] {
-  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%) !important;
-  mask-image: linear-gradient(to bottom, black 60%, transparent 100%) !important;
+/* Clean text bodies without blurry optical fade masks */
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-post, article)
+  :is([slot='text-body'], [slot='post-body'], shreddit-post-body, [slot='caption']) {
+  -webkit-mask-image: none !important;
+  mask-image: none !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1251,33 +1587,267 @@ body:not([data-reddit-grid-cols='1']) shreddit-post [slot='post-body'] {
    UNIVERSAL INTERACTIVE BUTTON & PILL SQUIRCLE / ROUNDED SQUARE SHAPE
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* 1. Neutralize Reddit's Tailwind rounded-full on all interactive buttons, links and wrappers */
-:is(
-    shreddit-post,
-    shreddit-comment,
-    #rg-post-modal,
+/* 1. All action bar buttons, vote segments, comments, shares, crossposts, and their wrappers */
+:is(shreddit-post, article, shreddit-comment, #rg-post-modal)
+  :is(
+    [slot='action-bar'],
     shreddit-post-action-bar,
     rpl-action-bar,
-    [slot='action-bar'],
-    [slot='credit-bar'],
-    shreddit-post-header
+    [data-post-click-location='action-bar']
   )
-  :is(.rounded-full, [class*='rounded-full'], [class*='rounded-[9999px]']):not(
-    faceplate-img
-  ):not(faceplate-img *):not(shreddit-avatar):not(shreddit-avatar *):not(img):not(svg):not(path) {
+  :is(
+    button,
+    a,
+    [role='button'],
+    shreddit-vote-buttons,
+    vote-buttons,
+    rpl-vote-buttons,
+    shreddit-comment-button,
+    shreddit-post-share-button,
+    shreddit-share-button,
+    shreddit-crosspost-button,
+    faceplate-tracker,
+    [class*='rounded'],
+    .rounded-full,
+    div,
+    span
+  ) {
   border-radius: var(--rg-radius-btn, 8px) !important;
 }
 
-/* 2. Catch-all for any button or role="button" inside posts, comments, action bars, and modals */
-:is(
-    shreddit-post,
-    shreddit-comment,
-    #rg-post-modal,
-    shreddit-post-action-bar,
-    rpl-action-bar
+/* 2. All join buttons, wrappers, and child buttons/links */
+:is(shreddit-post, article, #rg-post-modal)
+  :is(
+    shreddit-join-button,
+    rpl-join-button,
+    [data-testid*='join' i],
+    [data-testid='credit-bar-join-button'],
+    button[aria-label*='join' i]
+  ),
+:is(shreddit-post, article, #rg-post-modal)
+  :is(
+    shreddit-join-button,
+    rpl-join-button,
+    [data-testid*='join' i],
+    [data-testid='credit-bar-join-button'],
+    button[aria-label*='join' i]
   )
+  :is(button, a, [role='button'], [class*='rounded'], .rounded-full, div, span) {
+  border-radius: var(--rg-radius-btn, 8px) !important;
+}
+
+/* 3. Direct vote buttons, comment buttons, share buttons, and wrappers anywhere in cards */
+:is(shreddit-post, article, shreddit-comment)
+  :is(
+    shreddit-vote-buttons,
+    vote-buttons,
+    rpl-vote-buttons,
+    [data-post-click-location='vote'],
+    shreddit-comment-button,
+    [data-testid='comments-button'],
+    [data-post-click-location='comments'],
+    shreddit-post-share-button,
+    shreddit-share-button,
+    [data-post-click-location='share'],
+    shreddit-crosspost-button,
+    [data-post-click-location='crosspost']
+  ),
+:is(shreddit-post, article, shreddit-comment)
+  :is(
+    shreddit-vote-buttons,
+    vote-buttons,
+    rpl-vote-buttons,
+    [data-post-click-location='vote'],
+    shreddit-comment-button,
+    [data-testid='comments-button'],
+    [data-post-click-location='comments'],
+    shreddit-post-share-button,
+    shreddit-share-button,
+    [data-post-click-location='share'],
+    shreddit-crosspost-button,
+    [data-post-click-location='crosspost']
+  )
+  :is(div, span, button, a, [role='button'], [class*='rounded'], .rounded-full) {
+  border-radius: var(--rg-radius-btn, 8px) !important;
+}
+
+/* 4. Neutralize Reddit's Tailwind rounded-full on any interactive control in cards */
+:is(shreddit-post, shreddit-comment, #rg-post-modal)
+  :is(.rounded-full, [class*='rounded-full'], [class*='rounded-[9999px]']):not(
+    faceplate-img,
+    faceplate-img *,
+    shreddit-avatar,
+    shreddit-avatar *,
+    img,
+    svg,
+    path
+  ),
+:is(shreddit-post, shreddit-comment, #rg-post-modal)
   :is(button, a.button, [role='button']):not([data-rg-circle]) {
   border-radius: var(--rg-radius-btn, 8px) !important;
+}
+
+/* 5. Strictly enforce uncontained styling for three-dots menu and title/body text */
+:is(shreddit-post, article) shreddit-overflow-menu,
+:is(shreddit-post, article) shreddit-overflow-menu *,
+:is(shreddit-post, article) button[aria-label*='more' i],
+:is(shreddit-post, article) button[aria-haspopup='menu'],
+:is(shreddit-post, article) [data-post-click-location='overflow-menu'],
+:is(shreddit-post, article) [data-post-click-location='overflow-menu'] * {
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+:is(shreddit-post, article) :is([slot='title'], [slot='post-title'], shreddit-post-title, [data-post-click-location='title']),
+:is(shreddit-post, article) :is([slot='title'], [slot='post-title'], shreddit-post-title, [data-post-click-location='title']) *,
+:is(shreddit-post, article) a[id*='post-title'],
+:is(shreddit-post, article) [data-post-click-location='post-title'],
+:is(shreddit-post, article) :is([slot='text-body'], [slot='post-body'], shreddit-post-body),
+:is(shreddit-post, article) :is([slot='text-body'], [slot='post-body'], shreddit-post-body) * {
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UNIFIED CARD SURFACES, COMPONENT BACKGROUNDS & TEXT HARMONY
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1. All cards share the identical surface background, border, and primary text */
+body:not([data-reddit-grid-cols='1']) shreddit-post,
+body:not([data-reddit-grid-cols='1']) article.Post,
+body:not([data-reddit-grid-cols='1']) shreddit-profile-comment {
+  background: var(--rg-glass-base) !important;
+  background-color: var(--rg-glass-base) !important;
+  border: var(--rg-bw) solid var(--rg-border) !important;
+  color: var(--rg-text) !important;
+}
+
+body:not([data-reddit-grid-cols='1']) shreddit-post:hover,
+body:not([data-reddit-grid-cols='1']) article.Post:hover,
+body:not([data-reddit-grid-cols='1']) shreddit-profile-comment:hover {
+  background: var(--rg-card-hover-bg) !important;
+  background-color: var(--rg-card-hover-bg) !important;
+  border-color: var(--rg-card-border-hover) !important;
+}
+
+/* 2. Seamlessly blend all internal sections into the card surface (no dark boxes, no gray boxes) */
+body:not([data-reddit-grid-cols='1']) shreddit-post :is(
+  div, section, article, header, footer,
+  [slot='credit-bar'], [slot='action-bar'], [slot='title'], [slot='post-title'],
+  [slot='text-body'], [slot='post-body'], [slot='post-media-container'],
+  shreddit-post-header, shreddit-post-action-bar, rpl-action-bar, shreddit-post-title,
+  shreddit-post-body, .media-lightbox-img, [id$='-aspect-ratio']
+):not(
+  shreddit-vote-buttons, vote-buttons, rpl-vote-buttons,
+  [data-post-click-location='vote'], [data-post-click-location='comments'],
+  [data-testid='comments-button'], shreddit-comment-button,
+  [data-post-click-location='share'], shreddit-post-share-button,
+  shreddit-share-button,
+  shreddit-join-button, rpl-join-button, [data-testid*='join' i],
+  [data-testid='post-flair'], .flair, faceplate-pill,
+  [data-testid='post-spoiler-tag'], .nsfw-tag,
+  img, video, canvas
+) {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+/* 3. Neutralize Reddit's background utility classes inside cards */
+body:not([data-reddit-grid-cols='1']) shreddit-post :is(
+  .bg-black,
+  .bg-neutral-background,
+  .bg-neutral-background-weak,
+  .bg-neutral-background-selected,
+  .bg-secondary
+):not(img):not(video) {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* 4. Unified text color hierarchy across all card components */
+body:not([data-reddit-grid-cols='1']) shreddit-post :is(
+  [slot='title'], [slot='post-title'], shreddit-post-title,
+  [slot='credit-bar'] a[href^='/r/'], [slot='credit-bar'] a[href^='/user/'],
+  shreddit-post-header a[href^='/r/'], shreddit-post-header a[href^='/user/'],
+  faceplate-number, [slot='title'] a, [slot='post-title'] a, shreddit-post-title a
+) {
+  color: var(--rg-text) !important;
+}
+
+body:not([data-reddit-grid-cols='1']) shreddit-post :is(
+  [slot='credit-bar'] time, [slot='credit-bar'] span:not(:has(a)),
+  shreddit-post-header time, shreddit-post-header span:not(:has(a)),
+  [slot='text-body'], [slot='post-body'], shreddit-post-body,
+  [slot='context'], shreddit-post-context
+) {
+  color: var(--rg-text-muted) !important;
+}
+
+/* 5. Ensure all interactive buttons share identical surface & text styling */
+body:not([data-reddit-grid-cols='1']) shreddit-post :is(
+  shreddit-vote-buttons,
+  vote-buttons,
+  rpl-vote-buttons,
+  [data-post-click-location='vote'],
+  [data-post-click-location='comments'],
+  [data-testid='comments-button'],
+  shreddit-comment-button,
+  [data-post-click-location='share'],
+  shreddit-post-share-button,
+  shreddit-share-button,
+  button[aria-label*='crosspost' i],
+  button[aria-label*='repost' i],
+  button[aria-label*='remix' i],
+  shreddit-crosspost-button,
+  [data-post-click-location='crosspost'],
+  shreddit-join-button,
+  rpl-join-button,
+  [data-testid*='join' i],
+  button[aria-label*='join' i]
+) {
+  background: var(--rg-btn-bg) !important;
+  background-color: var(--rg-btn-bg) !important;
+  border: 1px solid var(--rg-btn-border) !important;
+  color: var(--rg-text) !important;
+  border-radius: var(--rg-radius-btn, 8px) !important;
+  box-shadow: none !important;
+}
+
+body:not([data-reddit-grid-cols='1']) shreddit-post :is(
+  shreddit-vote-buttons,
+  vote-buttons,
+  rpl-vote-buttons,
+  [data-post-click-location='vote'],
+  [data-post-click-location='comments'],
+  [data-testid='comments-button'],
+  shreddit-comment-button,
+  [data-post-click-location='share'],
+  shreddit-post-share-button,
+  shreddit-share-button,
+  button[aria-label*='crosspost' i],
+  button[aria-label*='repost' i],
+  button[aria-label*='remix' i],
+  shreddit-crosspost-button,
+  [data-post-click-location='crosspost'],
+  shreddit-join-button,
+  rpl-join-button,
+  [data-testid*='join' i],
+  button[aria-label*='join' i]
+):hover {
+  background: var(--rg-btn-bg-hover) !important;
+  background-color: var(--rg-btn-bg-hover) !important;
+  border-color: var(--rg-btn-border-hover) !important;
+  color: var(--rg-text) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
