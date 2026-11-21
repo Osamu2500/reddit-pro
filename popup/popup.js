@@ -65,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (label) label.textContent = settings.autoFit ? 'Auto-fit preview' : count + ' columns';
   }
 
+  /** @type {Record<string, Record<string, string | number | boolean>>} */
   const presets = {
     balanced: { columns: '3', autoFit: false, minCardWidth: 260, maxColumns: 10, columnGap: 16, rowGap: 16 },
     comfortable: { columns: '2', autoFit: false, minCardWidth: 320, maxColumns: 10, columnGap: 20, rowGap: 20 },
@@ -211,8 +212,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('[data-preset]').forEach((button) => {
     button.addEventListener('click', () => {
-      const preset = presets[button.getAttribute('data-preset')];
-      if (!preset) return;
+      const presetName = button.getAttribute('data-preset');
+      if (!presetName || !Object.prototype.hasOwnProperty.call(presets, presetName)) return;
+      const preset = presets[presetName];
       Object.entries(preset).forEach(([key, value]) => {
         const control = controls[key];
         if (control) control.value = String(value);
