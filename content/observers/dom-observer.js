@@ -482,7 +482,6 @@ window.RedditPro.DOMObserver = (function () {
     sweepTimer = setTimeout(() => {
       requestAnimationFrame(() => {
         window.RedditPro.Masonry.sweepNew();
-        if (document.body) applySquircleDeep(document.body);
       });
     }, 80);
   }
