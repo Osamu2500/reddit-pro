@@ -426,7 +426,8 @@ describe('Masonry layout engine & responsive columns', () => {
       expect(layoutCss).toMatch(/shreddit-app > header[\s\S]*?z-index:\s*100\s*!important/);
       expect(layoutCss).toMatch(/reddit-header-large[\s\S]*?grid-column:\s*1\s*\/\s*-1\s*!important/);
       expect(layoutCss).toMatch(/shreddit-app\s*\{[\s\S]*?padding-top:\s*0\s*!important/);
-      expect(layoutCss).toMatch(/faceplate-partial\s*\{[\s\S]*?display:\s*contents\s*!important/);
+      expect(layoutCss).toMatch(/faceplate-partial[\s\S]*?\{[\s\S]*?display:\s*contents\s*!important/);
+      expect(layoutCss).not.toMatch(/faceplate-partial[^{]*\{[^}]*min-height/);
 
       // Card stacking isolation rule
       expect(cardsCss).toMatch(/shreddit-post[\s\S]*?isolation:\s*isolate\s*!important/);

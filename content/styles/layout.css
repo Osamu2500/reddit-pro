@@ -443,16 +443,22 @@ body:not([data-reddit-grid-cols='1'])
     [data-testid='post-list'],
     [data-testid='profile-feed']
   )
-  > :is(faceplate-batch, shreddit-async-loader, faceplate-partial),
+  > :is(faceplate-batch, shreddit-async-loader, faceplate-partial, faceplate-tail),
 body:not([data-reddit-grid-cols='1']) faceplate-batch,
 body:not([data-reddit-grid-cols='1']) faceplate-batch > div,
-body:not([data-reddit-grid-cols='1']) faceplate-batch > :is(shreddit-async-loader, faceplate-partial),
+body:not([data-reddit-grid-cols='1']) faceplate-batch > :is(shreddit-async-loader, faceplate-partial, faceplate-tail),
 body:not([data-reddit-grid-cols='1']) shreddit-async-loader,
-body:not([data-reddit-grid-cols='1']) faceplate-partial {
+body:not([data-reddit-grid-cols='1']) faceplate-partial,
+body:not([data-reddit-grid-cols='1']) faceplate-tail {
   display: contents !important;
 }
 
-/* Ensure the active loader sentinel at the end of the feed has layout presence so intersection triggers */
+body:not([data-reddit-grid-cols='1']) faceplate-partial:empty,
+body:not([data-reddit-grid-cols='1']) faceplate-tail:empty {
+  display: none !important;
+}
+
+/* Ensure only the active feed pagination sentinel at the very bottom of the feed has layout presence */
 body:not([data-reddit-grid-cols='1'])
   :is(
     shreddit-feed,
@@ -464,8 +470,7 @@ body:not([data-reddit-grid-cols='1'])
     [data-testid='profile-feed'],
     [data-testid='search-results']
   )
-  > :is(shreddit-async-loader, faceplate-partial):last-child,
-body:not([data-reddit-grid-cols='1']) faceplate-batch > :is(shreddit-async-loader, faceplate-partial):last-child {
+  > shreddit-async-loader:last-child {
   grid-column: 1 / -1 !important;
   width: 100% !important;
   min-height: 8px !important;

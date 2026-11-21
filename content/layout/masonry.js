@@ -18,8 +18,8 @@ window.RedditPro.Masonry = (function () {
   let resizePending = false;
   const resizeQueue = new Map(); // Emptied every frame
   const heightCache = new WeakMap();
-  // Track which posts we've attached image listeners to
-  const imgListeners = new WeakSet();
+  // Track which media elements we've attached listeners to
+  const observedMediaNodes = new WeakSet();
   let viewportSweepTimer = 0;
 
   let feedObserver = null;
@@ -36,7 +36,12 @@ window.RedditPro.Masonry = (function () {
     'shreddit-feed',
     'shreddit-profile-feed',
     'profile-feed',
+    'shreddit-user-feed',
+    'shreddit-custom-feed',
+    'custom-feed',
     '[data-testid="post-list"]',
+    '[data-testid="profile-feed"]',
+    '[data-testid="search-results"]',
     'main > div:has(> shreddit-post)',
     'main > div:has(> article)',
   ];
@@ -52,7 +57,14 @@ window.RedditPro.Masonry = (function () {
     'shreddit-sidebar-nav',
   ].join(',');
 
-  const POST_SELECTORS = ['shreddit-post', 'shreddit-ad-post', 'article', '.Post'].join(',');
+  const POST_SELECTORS = [
+    'shreddit-post',
+    'shreddit-ad-post',
+    'article',
+    '.Post',
+    'shreddit-profile-comment',
+    ':is(shreddit-feed, shreddit-profile-feed, profile-feed, shreddit-user-feed, shreddit-custom-feed, faceplate-batch, faceplate-tracker) > shreddit-comment',
+  ].join(',');
 
   /**
    * Calculates the number of responsive columns that fit within the container.
@@ -145,8 +157,7 @@ window.RedditPro.Masonry = (function () {
               continue;
             }
             const width =
-              entry.borderBoxSize?.[0]?.inlineSize ??
-              entry.target.getBoundingClientRect().width;
+              entry.borderBoxSize?.[0]?.inlineSize ?? entry.target.getBoundingClientRect().width;
             if (width > 0 && document.body) {
               document.body.style.setProperty('--reddit-sidebar-width', `${Math.round(width)}px`);
             }
@@ -205,7 +216,7 @@ window.RedditPro.Masonry = (function () {
   function getGridContainer(element) {
     if (!element) return null;
     const feed = element.closest(
-      'shreddit-feed, shreddit-profile-feed, profile-feed, [data-testid="post-list"]'
+      'shreddit-feed, shreddit-profile-feed, profile-feed, shreddit-user-feed, shreddit-custom-feed, custom-feed, [data-testid="post-list"], [data-testid="profile-feed"], [data-testid="search-results"]'
     );
     if (feed && getComputedStyle(feed).display.includes('grid')) return feed;
 
@@ -320,17 +331,34 @@ window.RedditPro.Masonry = (function () {
    * @param {Element} el
    */
   function attachImageListeners(el) {
-    if (imgListeners.has(el)) return;
-    imgListeners.add(el);
-
     const media = getMediaElementsDeep(el);
     media.forEach((node) => {
+      if (observedMediaNodes.has(node)) return;
+      observedMediaNodes.add(node);
+
       const tag = node.tagName.toLowerCase();
-      if (tag === 'img' && !node.complete) {
-        node.addEventListener('load', () => recalculateCard(el), { once: true, passive: true });
-        node.addEventListener('error', () => recalculateCard(el), { once: true, passive: true });
-      } else if (tag === 'video' && node.readyState < 3) {
+      if (tag === 'img') {
+        if (!node.complete) {
+          node.addEventListener('load', () => recalculateCard(el), { once: true, passive: true });
+          node.addEventListener('error', () => recalculateCard(el), { once: true, passive: true });
+        } else if (node.naturalHeight > 0) {
+          // If already complete with dimensions, ensure card isn't stuck with an early dummy measurement
+          const currentHeight = heightCache.get(el) || 0;
+          if (currentHeight <= 140) {
+            requestAnimationFrame(() => recalculateCard(el));
+          }
+        }
+      } else if (tag === 'video') {
+        // Video metadata provides videoWidth & videoHeight dimensions
+        node.addEventListener('loadedmetadata', () => recalculateCard(el), {
+          once: true,
+          passive: true,
+        });
         node.addEventListener('loadeddata', () => recalculateCard(el), {
+          once: true,
+          passive: true,
+        });
+        node.addEventListener('canplay', () => recalculateCard(el), {
           once: true,
           passive: true,
         });
@@ -342,6 +370,43 @@ window.RedditPro.Masonry = (function () {
     if (!el || typeof el.getBoundingClientRect !== 'function') return 0;
     const rect = el.getBoundingClientRect();
     if (rect.height > 120) return rect.height;
+
+    // Check for natural dimensions on media elements
+    const imgEl = el.querySelector?.('img');
+    if (imgEl && imgEl.naturalWidth > 0 && imgEl.naturalHeight > 0) {
+      const naturalRatio = imgEl.naturalWidth / imgEl.naturalHeight;
+      if (naturalRatio > 0.1 && naturalRatio < 10) {
+        const grid = getGridContainer(el);
+        const gridWidth =
+          grid && grid.getBoundingClientRect
+            ? grid.getBoundingClientRect().width
+            : typeof window !== 'undefined'
+              ? window.innerWidth
+              : 1200;
+        const cols = effectiveColumns || 3;
+        const colGap = getGridRowGap(el) || 12;
+        const cardWidth = Math.max(180, (gridWidth - (cols - 1) * colGap) / cols);
+        return Math.round(cardWidth / naturalRatio + 124);
+      }
+    }
+
+    const videoEl = el.querySelector?.('video');
+    if (videoEl && videoEl.videoWidth > 0 && videoEl.videoHeight > 0) {
+      const videoRatio = videoEl.videoWidth / videoEl.videoHeight;
+      if (videoRatio > 0.1 && videoRatio < 10) {
+        const grid = getGridContainer(el);
+        const gridWidth =
+          grid && grid.getBoundingClientRect
+            ? grid.getBoundingClientRect().width
+            : typeof window !== 'undefined'
+              ? window.innerWidth
+              : 1200;
+        const cols = effectiveColumns || 3;
+        const colGap = getGridRowGap(el) || 12;
+        const cardWidth = Math.max(180, (gridWidth - (cols - 1) * colGap) / cols);
+        return Math.round(cardWidth / videoRatio + 124);
+      }
+    }
 
     // Check for aspect ratio on the card or media child
     const ratioVal =
@@ -477,7 +542,12 @@ window.RedditPro.Masonry = (function () {
     'shreddit-feed',
     'shreddit-profile-feed',
     'profile-feed',
+    'shreddit-user-feed',
+    'shreddit-custom-feed',
+    'custom-feed',
     '[data-testid="post-list"]',
+    '[data-testid="profile-feed"]',
+    '[data-testid="search-results"]',
     'main > div:has(> shreddit-post)',
     'main > div:has(> article)',
   ].join(',');
@@ -490,7 +560,7 @@ window.RedditPro.Masonry = (function () {
         if (
           child.matches(POST_SELECTORS) ||
           child.matches(
-            'faceplate-tracker, faceplate-batch, shreddit-async-loader, shreddit-subreddit-discovery-unit, hr, style, script, template'
+            'faceplate-tracker, faceplate-batch, shreddit-async-loader, faceplate-partial, faceplate-tail, shreddit-subreddit-discovery-unit, hr, style, script, template'
           )
         )
           return;
@@ -572,8 +642,9 @@ window.RedditPro.Masonry = (function () {
   function recalculateCard(el) {
     const gridItem = el.closest('faceplate-tracker') || el;
     gridItem.removeAttribute('data-rg-stable');
+    gridItem.removeAttribute('data-rg-loading');
     heightCache.delete(el);
-    processCard(el);
+    processCard(el, true);
   }
 
   // Controlled diagnostics for layout verification without production noise
