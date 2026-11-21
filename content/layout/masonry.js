@@ -352,7 +352,7 @@ window.RedditPro.Masonry = (function () {
 
     const grid = getComputedStyle(container);
     const computedTracks = grid.gridTemplateColumns || container.style.gridTemplateColumns || '';
-    const columnTracks = computedTracks.trim().split(/\\s+/).filter(Boolean);
+    const columnTracks = computedTracks.trim().split(/\s+/).filter(Boolean);
     const columns = effectiveColumns || columnTracks.length;
     if (columns < 2) return null;
 
