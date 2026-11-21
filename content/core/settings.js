@@ -22,6 +22,7 @@ window.RedditPro = window.RedditPro || {};
  * @property {number} [maxColumns]
  * @property {number} [columnGap]
  * @property {number} [rowGap]
+ * @property {number} [cardRadius]
  */
 
 window.RedditPro.Settings = (function () {
@@ -40,6 +41,7 @@ window.RedditPro.Settings = (function () {
     maxColumns: 10,
     columnGap: 16,
     rowGap: 16,
+    cardRadius: 14,
   };
 
   let userSettings = { ...DEFAULT_SETTINGS };
@@ -82,6 +84,10 @@ window.RedditPro.Settings = (function () {
         typeof merged.rowGap === 'number' && merged.rowGap >= 0
           ? merged.rowGap
           : DEFAULT_SETTINGS.rowGap,
+      cardRadius:
+        typeof merged.cardRadius === 'number' && merged.cardRadius >= 8 && merged.cardRadius <= 24
+          ? merged.cardRadius
+          : DEFAULT_SETTINGS.cardRadius,
     };
   }
 

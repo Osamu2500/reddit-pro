@@ -53,6 +53,9 @@ window.RedditPro.CSSVars = (function () {
     body.style.setProperty('--reddit-col-gap', colGap);
     body.style.setProperty('--reddit-row-gap', rowGap);
     body.style.setProperty('--reddit-batch-gap', rowGap);
+    const cardRadius = Math.min(24, Math.max(8, Number(settings.cardRadius) || 14));
+    body.style.setProperty('--rg-radius', cardRadius + 'px');
+    body.style.setProperty('--rg-radius-inner', Math.max(6, cardRadius - 2) + 'px');
 
     manageScrollbar(settings.hideScrollbar);
 

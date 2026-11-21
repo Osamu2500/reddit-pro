@@ -47,15 +47,25 @@
 
     <section class="page" data-panel="layout" hidden>
       <div class="panel-card">
+        <div class="panel-heading"><div><h2>Layout presets</h2><p>Start balanced, then fine-tune below</p></div></div>
+        <div class="preset-grid">
+          <button type="button" class="preset-button" data-preset="balanced"><strong>Balanced</strong><small>3 columns · 260px</small></button>
+          <button type="button" class="preset-button" data-preset="comfortable"><strong>Comfortable</strong><small>2 columns · wider cards</small></button>
+          <button type="button" class="preset-button" data-preset="dense"><strong>Dense</strong><small>4 columns · tighter gaps</small></button>
+          <button type="button" class="preset-button" data-preset="adaptive"><strong>Adaptive</strong><small>Fit to feed width</small></button>
+        </div>
+        <div class="preview-wrap"><div class="preview-heading"><strong>Layout preview</strong><span id="previewLabel">3 columns</span></div><div class="preview-grid" id="previewGrid" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+      </div>
+      <div class="panel-card">
         <div class="panel-heading"><div><h2>Grid dimensions</h2><p>Control how many posts fit across the feed</p></div></div>
         <div class="range-setting"><div class="range-heading"><label for="columnsSlider">Columns</label><output id="columnsValueDisplay">3</output></div><input type="range" id="columnsSlider" min="1" max="10" value="3"><div class="range-ends"><span>1 column</span><span>10 columns</span></div></div>
-        <div class="range-setting"><div class="range-heading"><label for="minCardWidth">Minimum card width</label><output id="minCardWidthValue">280 px</output></div><input type="range" id="minCardWidth" min="200" max="420" step="10" value="260"><div class="range-ends"><span>200 px</span><span>420 px</span></div></div>
+        <div class="range-setting"><div class="range-heading"><label for="minCardWidth">Minimum card width</label><output id="minCardWidthValue">260 px</output></div><input type="range" id="minCardWidth" min="200" max="420" step="10" value="260"><div class="range-ends"><span>200 px</span><span>420 px</span></div></div>
         <div class="range-setting"><div class="range-heading"><label for="maxColumns">Auto-fit column limit</label><output id="maxColumnsValue">10</output></div><input type="range" id="maxColumns" min="1" max="10" value="10"><div class="range-ends"><span>1</span><span>10</span></div></div>
       </div>
       <div class="panel-card">
         <div class="panel-heading"><div><h2>Spacing</h2><p>Set the distance between cards</p></div></div>
-        <div class="range-setting"><div class="range-heading"><label for="columnGap">Horizontal gap</label><output id="columnGapValue">12 px</output></div><input type="range" id="columnGap" min="4" max="32" step="2" value="16"></div>
-        <div class="range-setting"><div class="range-heading"><label for="rowGap">Vertical gap</label><output id="rowGapValue">12 px</output></div><input type="range" id="rowGap" min="4" max="32" step="2" value="12"></div>
+        <div class="range-setting"><div class="range-heading"><label for="columnGap">Horizontal gap</label><output id="columnGapValue">16 px</output></div><input type="range" id="columnGap" min="4" max="32" step="2" value="16"></div>
+        <div class="range-setting"><div class="range-heading"><label for="rowGap">Vertical gap</label><output id="rowGapValue">16 px</output></div><input type="range" id="rowGap" min="4" max="32" step="2" value="16"></div>
       </div>
     </section>
 
@@ -63,7 +73,7 @@
       <div class="panel-card">
         <div class="panel-heading"><div><h2>Appearance</h2><p>Choose how Reddit Pro blends with your browser</p></div></div>
         <div class="select-setting"><label for="theme">Color theme</label><select id="theme"><option value="system">Follow system</option><option value="dark">Dark</option><option value="light">Light</option></select></div>
-        <p class="helper-note">Card surfaces and typography follow the selected theme. More granular card styling can be added without changing your feed settings.</p>
+        <div class="range-setting"><div class="range-heading"><label for="cardRadius">Card corner radius</label><output id="cardRadiusValue">14 px</output></div><input type="range" id="cardRadius" min="8" max="24" step="2" value="14"><div class="range-ends"><span>Sharper</span><span>Rounder</span></div></div><p class="helper-note">Card and inner media corners update together.</p>
       </div>
     </section>
 

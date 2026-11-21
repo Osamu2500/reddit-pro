@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     columns: '3', autoFit: false, masonry: true, compactCards: false,
     hidePromoted: true, hideSidebar: false, autoPlayAudio: true,
     hideScrollbar: true, enableFilters: true, theme: 'system',
-    minCardWidth: 260, maxColumns: 10, columnGap: 16, rowGap: 16,
+    minCardWidth: 260, maxColumns: 10, columnGap: 16, rowGap: 16, cardRadius: 14,
   };
   /** @param {string} id @returns {HTMLElement | null} */
   const byId = (id) => document.getElementById(id);
@@ -28,12 +28,13 @@ document.addEventListener('DOMContentLoaded', () => {
     maxColumns: /** @type {HTMLInputElement | null} */ (byId('maxColumns')),
     columnGap: /** @type {HTMLInputElement | null} */ (byId('columnGap')),
     rowGap: /** @type {HTMLInputElement | null} */ (byId('rowGap')),
+    cardRadius: /** @type {HTMLInputElement | null} */ (byId('cardRadius')),
   };
   /** @type {Record<string, (value: string) => string>} */
   const rangeOutputs = {
     columns: (v) => v === '1' ? '1 column' : v + ' columns',
     minCardWidth: (v) => v + ' px', maxColumns: (v) => v,
-    columnGap: (v) => v + ' px', rowGap: (v) => v + ' px',
+    columnGap: (v) => v + ' px', rowGap: (v) => v + ' px', cardRadius: (v) => v + ' px',
   };
   /** @type {SettingsMap} */
   let current = { ...defaults };
@@ -51,6 +52,25 @@ document.addEventListener('DOMContentLoaded', () => {
       dot.style.background = state === 'error' ? '#f16c6c' : state === 'saving' ? '#e5b84b' : '#43c887';
     }
   }
+
+  /** @param {SettingsMap} settings */
+  function renderPreview(settings) {
+    const preview = byId('previewGrid');
+    if (!preview) return;
+    const count = settings.autoFit ? Math.min(4, Math.max(1, Number(settings.maxColumns) || 4)) : Math.min(4, Math.max(1, Number(settings.columns) || 3));
+    preview.style.setProperty('--preview-columns', String(count));
+    preview.style.setProperty('--preview-gap', Math.max(4, Number(settings.columnGap) || 16) + 'px');
+    preview.style.setProperty('--preview-radius', Math.max(6, Number(settings.cardRadius) - 2) + 'px');
+    const label = byId('previewLabel');
+    if (label) label.textContent = settings.autoFit ? 'Auto-fit preview' : count + ' columns';
+  }
+
+  const presets = {
+    balanced: { columns: '3', autoFit: false, minCardWidth: 260, maxColumns: 10, columnGap: 16, rowGap: 16 },
+    comfortable: { columns: '2', autoFit: false, minCardWidth: 320, maxColumns: 10, columnGap: 20, rowGap: 20 },
+    dense: { columns: '4', autoFit: false, minCardWidth: 220, maxColumns: 10, columnGap: 10, rowGap: 12 },
+    adaptive: { columns: '3', autoFit: true, minCardWidth: 260, maxColumns: 10, columnGap: 16, rowGap: 16 },
+  };
 
   /** @param {SettingsMap} settings */
   function render(settings) {
@@ -71,6 +91,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (summary) summary.textContent = settings.autoFit
       ? 'Auto-fit · up to ' + settings.maxColumns
       : (settings.columns === '1' ? '1 column' : settings.columns + ' columns');
+    const radiusOutput = byId('cardRadiusValue');
+    if (radiusOutput) radiusOutput.textContent = String(settings.cardRadius) + ' px';
+    renderPreview(settings);
     const mode = byId('summaryMode');
     if (mode) mode.textContent = (settings.autoFit ? 'Responsive layout' : 'Manual layout') +
       ' · Masonry ' + (settings.masonry ? 'on' : 'off');
@@ -90,9 +113,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     next.maxColumns = Math.min(10, Math.max(1, Number(next.maxColumns) || 10));
     next.columns = String(Math.min(10, Math.max(1, Number(next.columns) || 3)));
-    next.minCardWidth = Math.min(420, Math.max(200, Number(next.minCardWidth) || 280));
-    next.columnGap = Math.min(32, Math.max(4, Number(next.columnGap) || 12));
-    next.rowGap = Math.min(32, Math.max(4, Number(next.rowGap) || 12));
+    next.minCardWidth = Math.min(420, Math.max(200, Number(next.minCardWidth) || 260));
+    next.columnGap = Math.min(32, Math.max(4, Number(next.columnGap) || 16));
+    next.rowGap = Math.min(32, Math.max(4, Number(next.rowGap) || 16));
+    next.cardRadius = Math.min(24, Math.max(8, Number(next.cardRadius) || 14));
     return next;
   }
 
@@ -108,6 +132,8 @@ document.addEventListener('DOMContentLoaded', () => {
     body.setAttribute('data-reddit-grid-hide-sidebar', String(settings.hideSidebar));
     body.style.setProperty('--reddit-col-gap', String(settings.columnGap) + 'px');
     body.style.setProperty('--reddit-row-gap', String(settings.rowGap) + 'px');
+    body.style.setProperty('--rg-radius', String(settings.cardRadius) + 'px');
+    body.style.setProperty('--rg-radius-inner', String(Math.max(6, Number(settings.cardRadius) - 2)) + 'px');
   }
 
   /** @param {SettingsMap} settings @param {number} sequence */
@@ -180,6 +206,18 @@ document.addEventListener('DOMContentLoaded', () => {
         panel.classList.toggle('is-active', active);
         panel.hidden = !active;
       });
+    });
+  });
+
+  document.querySelectorAll('[data-preset]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const preset = presets[button.getAttribute('data-preset')];
+      if (!preset) return;
+      Object.entries(preset).forEach(([key, value]) => {
+        const control = controls[key];
+        if (control) control.value = String(value);
+      });
+      saveNow();
     });
   });
 
