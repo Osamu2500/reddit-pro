@@ -5,6 +5,8 @@
 window.RedditPro = window.RedditPro || {};
 
 window.RedditPro.AudioObserver = (function () {
+  const PLAYER_SELECTOR = 'shreddit-player, shreddit-player-2, .shreddit-player-wrapper';
+
   /** @type {Set<HTMLElement>} */
   const observed = new Set();
   /** @type {Set<HTMLElement>} */
@@ -116,7 +118,7 @@ window.RedditPro.AudioObserver = (function () {
 
   /** @param {Element} node */
   function observe(node) {
-    if (!(node instanceof HTMLElement) || node.tagName !== 'SHREDDIT-PLAYER') return;
+    if (!(node instanceof HTMLElement) || !node.matches(PLAYER_SELECTOR)) return;
     if (observed.has(node)) return;
     observed.add(node);
 
@@ -140,8 +142,8 @@ window.RedditPro.AudioObserver = (function () {
   /** @param {Element} root */
   function observeIn(root) {
     if (!root?.querySelectorAll) return;
-    if (root.matches?.('shreddit-player')) observe(root);
-    root.querySelectorAll('shreddit-player').forEach(observe);
+    if (root.matches?.(PLAYER_SELECTOR)) observe(root);
+    root.querySelectorAll(PLAYER_SELECTOR).forEach(observe);
   }
 
   function disconnectAll() {

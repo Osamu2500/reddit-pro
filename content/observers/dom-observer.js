@@ -484,6 +484,20 @@ window.RedditPro.DOMObserver = (function () {
     }
   }
 
+  function handleSidebarClick(e) {
+    const target = /** @type {Element | null} */ (e.target);
+    if (
+      target &&
+      target.closest?.(
+        'button[aria-label*="Navigation" i], #left-sidebar-container button, reddit-sidebar-nav button'
+      )
+    ) {
+      setTimeout(() => {
+        window.RedditPro.Masonry?.observeSidebarContainer?.();
+      }, 60);
+    }
+  }
+
   function start() {
     if (observer || !document.documentElement) return;
 
@@ -494,24 +508,8 @@ window.RedditPro.DOMObserver = (function () {
     // Observe the document root so Reddit replacing <main> does not orphan the observer.
     observer.observe(document.documentElement, { childList: true, subtree: true });
 
-    // Track sidebar expansion/collapse toggle buttons
-    document.addEventListener(
-      'click',
-      (e) => {
-        const target = /** @type {Element | null} */ (e.target);
-        if (
-          target &&
-          target.closest?.(
-            'button[aria-label*="Navigation" i], #left-sidebar-container button, reddit-sidebar-nav button'
-          )
-        ) {
-          setTimeout(() => {
-            window.RedditPro.Masonry?.observeSidebarContainer?.();
-          }, 60);
-        }
-      },
-      { passive: true }
-    );
+    // Track sidebar expansion/collapse toggle buttons without leaking listeners on route changes.
+    document.addEventListener('click', handleSidebarClick, { passive: true });
 
     // Existing posts may already be present before the observer is attached.
     handleAddedNode(document.documentElement);
@@ -535,6 +533,7 @@ window.RedditPro.DOMObserver = (function () {
     preloadObserver = null;
     lastObservedSentinel = null;
     window.removeEventListener('scroll', handleScrollPreload);
+    document.removeEventListener('click', handleSidebarClick);
     clearTimeout(scrollPreloadTimer);
     clearTimeout(sweepTimer);
     mutationBatch.clear();

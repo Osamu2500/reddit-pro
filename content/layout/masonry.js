@@ -82,8 +82,8 @@ window.RedditPro.Masonry = (function () {
     const minCardWidth =
       typeof s.minCardWidth === 'number' && s.minCardWidth >= 160 ? s.minCardWidth : 280;
     const maxColumns = s.autoFit
-      ? s.maxColumns || 8
-      : Math.min(s.maxColumns || 8, parseInt(s.columns, 10) || 3);
+      ? s.maxColumns || 10
+      : Math.min(s.maxColumns || 10, parseInt(s.columns, 10) || 3);
     const columnGap = typeof s.columnGap === 'number' && s.columnGap >= 0 ? s.columnGap : 12;
 
     if (!containerWidth || containerWidth <= 0) {
@@ -239,6 +239,11 @@ window.RedditPro.Masonry = (function () {
     return grid ? parseFloat(getComputedStyle(grid).rowGap) || 0 : 0;
   }
 
+  function getGridColumnGap(element) {
+    const grid = getGridContainer(element);
+    return grid ? parseFloat(getComputedStyle(grid).columnGap) || 0 : 0;
+  }
+
   function hasMultipleGridColumns(element) {
     const grid = getGridContainer(element);
     if (!grid) return true;
@@ -384,7 +389,7 @@ window.RedditPro.Masonry = (function () {
               ? window.innerWidth
               : 1200;
         const cols = effectiveColumns || 3;
-        const colGap = getGridRowGap(el) || 12;
+        const colGap = getGridColumnGap(el) || 12;
         const cardWidth = Math.max(180, (gridWidth - (cols - 1) * colGap) / cols);
         return Math.round(cardWidth / naturalRatio + 124);
       }
@@ -402,7 +407,7 @@ window.RedditPro.Masonry = (function () {
               ? window.innerWidth
               : 1200;
         const cols = effectiveColumns || 3;
-        const colGap = getGridRowGap(el) || 12;
+        const colGap = getGridColumnGap(el) || 12;
         const cardWidth = Math.max(180, (gridWidth - (cols - 1) * colGap) / cols);
         return Math.round(cardWidth / videoRatio + 124);
       }
@@ -437,7 +442,7 @@ window.RedditPro.Masonry = (function () {
           effectiveColumns ||
           parseInt(document.body?.style.getPropertyValue('--reddit-cols'), 10) ||
           3;
-        const colGap = getGridRowGap(el) || 12;
+        const colGap = getGridColumnGap(el) || 12;
         const cardWidth = Math.max(180, (gridWidth - (cols - 1) * colGap) / cols);
         const mediaHeight = cardWidth / ratio;
         // Non-media card content: credit bar (~44px) + title (~40px) + action bar (~40px) = ~124px
@@ -459,7 +464,8 @@ window.RedditPro.Masonry = (function () {
               ? window.innerWidth
               : 1200;
         const cols = effectiveColumns || 3;
-        const cardWidth = Math.max(180, gridWidth / cols);
+        const colGap = getGridColumnGap(el) || 12;
+        const cardWidth = Math.max(180, (gridWidth - (cols - 1) * colGap) / cols);
         return Math.round(cardWidth / ratio + 124);
       }
     }

@@ -144,15 +144,18 @@ describe('Masonry layout engine & responsive columns', () => {
       expect(cols).toBe(5);
     });
 
-    it('calculates 6, 7, and 8 columns when space allows', () => {
+    it('calculates up to 10 columns when sufficient space exists', () => {
       // 1800px: (1812 / 292) = 6.20 -> 6 cols
       expect(window.RedditPro.Masonry.calculateColumns(1800, { autoFit: true })).toBe(6);
 
       // 2100px: (2112 / 292) = 7.23 -> 7 cols
       expect(window.RedditPro.Masonry.calculateColumns(2100, { autoFit: true })).toBe(7);
 
-      // 2400px: (2412 / 292) = 8.26 -> 8 cols (capped at maxColumns 8)
+      // 2400px: (2412 / 292) = 8.26 -> 8 cols
       expect(window.RedditPro.Masonry.calculateColumns(2400, { autoFit: true })).toBe(8);
+
+      // 3000px: (3012 / 292) = 10.31 -> 10 cols (capped at maxColumns 10)
+      expect(window.RedditPro.Masonry.calculateColumns(3000, { autoFit: true })).toBe(10);
     });
 
     it('decreases column count when container becomes narrower', () => {

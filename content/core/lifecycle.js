@@ -269,7 +269,9 @@ window.RedditPro.Lifecycle = (function () {
   function halt() {
     // A route transition can leave a feed player visible while the feed observers
     // are being stopped. Mute immediately, even when already halted.
-    window.RedditPro.AudioObserver?.muteAll();
+    const audioObserver = window.RedditPro.AudioObserver;
+    if (typeof audioObserver?.disconnectAll === 'function') audioObserver.disconnectAll();
+    else audioObserver?.muteAll();
     if (!running) return;
     running = false;
     if (window.RedditPro.DOMObserver) window.RedditPro.DOMObserver.stop();

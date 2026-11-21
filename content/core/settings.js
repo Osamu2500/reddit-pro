@@ -37,7 +37,7 @@ window.RedditPro.Settings = (function () {
     enableFilters: true,
     theme: 'system',
     minCardWidth: 280,
-    maxColumns: 8,
+    maxColumns: 10,
     columnGap: 12,
     rowGap: 12,
   };
