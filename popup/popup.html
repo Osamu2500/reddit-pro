@@ -1,121 +1,83 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Reddit Pro</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <!-- Ambient background glows -->
-  <div class="ambient-glow glow-1"></div>
-  <div class="ambient-glow glow-2"></div>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">R</span>
+        <div><h1>Reddit Pro</h1><p>Customize your Reddit experience</p></div>
+      </div>
+      <span class="status-pill" id="extensionStatus"><span class="status-dot"></span> Ready</span>
+    </header>
 
-  <div class="container">
-    <div class="header">
-      <div class="logo-container">
-        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="url(#paint0_linear)"/>
-          <path d="M2 17L12 22L22 17" stroke="url(#paint0_linear)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M2 12L12 17L22 12" stroke="url(#paint0_linear)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <defs>
-            <linearGradient id="paint0_linear" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#FF4500"/>
-              <stop offset="1" stop-color="#FF8700"/>
-            </linearGradient>
-          </defs>
-        </svg>
-        <h1>Reddit <span>Pro</span></h1>
-      </div>
-    </div>
+    <nav class="tabs" aria-label="Settings sections">
+      <button class="tab is-active" type="button" data-page="overview" aria-selected="true">Overview</button>
+      <button class="tab" type="button" data-page="layout" aria-selected="false">Layout</button>
+      <button class="tab" type="button" data-page="appearance" aria-selected="false">Appearance</button>
+      <button class="tab" type="button" data-page="media" aria-selected="false">Media</button>
+    </nav>
 
-    <div class="section">
-      <div class="section-header">
-        <svg class="section-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 3H10V10H3V3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 3H21V10H14V3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 14H21V21H14V14Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 14H10V21H3V14Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <div class="section-title">Grid Layout</div>
-      </div>
-      <div class="slider-container">
-        <input type="range" id="columnsSlider" min="1" max="10" value="3" class="modern-slider">
-        <div class="slider-labels">
-          <span class="slider-min">1</span>
-          <span class="slider-val" id="columnsValueDisplay">3 Columns</span>
-          <span class="slider-max">10</span>
+    <section class="page is-active" data-panel="overview">
+      <div class="hero-card">
+        <div class="section-kicker">YOUR FEED</div>
+        <div class="hero-row"><div><strong id="summaryColumns">3 columns</strong><p id="summaryMode">Manual layout · Masonry on</p></div><span class="hero-icon" aria-hidden="true">▦</span></div>
+        <div class="quick-grid">
+          <label class="quick-toggle"><span><strong>Masonry layout</strong><small>Arrange posts by content height</small></span><input type="checkbox" id="masonry"><span class="switch-ui"></span></label>
+          <label class="quick-toggle"><span><strong>Auto-fit grid</strong><small>Choose columns from feed width</small></span><input type="checkbox" id="autoFit"><span class="switch-ui"></span></label>
         </div>
       </div>
-    </div>
+      <div class="panel-card">
+        <div class="panel-heading"><div><h2>Quick preferences</h2><p>Frequently used browsing controls</p></div></div>
+        <div class="setting-list">
+          <label class="setting-row"><span><strong>Hide promoted posts</strong><small>Remove sponsored posts from the feed</small></span><input type="checkbox" id="hidePromoted"><span class="switch-ui"></span></label>
+          <label class="setting-row"><span><strong>Smart audio</strong><small>Enable audio focus for visible videos</small></span><input type="checkbox" id="autoPlayAudio"><span class="switch-ui"></span></label>
+          <label class="setting-row"><span><strong>Hide left sidebar</strong><small>Give the feed more horizontal space</small></span><input type="checkbox" id="hideSidebar"><span class="switch-ui"></span></label>
+          <label class="setting-row"><span><strong>Compact cards</strong><small>Reduce text preview space</small></span><input type="checkbox" id="compactCards"><span class="switch-ui"></span></label>
+          <label class="setting-row"><span><strong>Hide scrollbar</strong><small>Keep scrolling enabled</small></span><input type="checkbox" id="hideScrollbar"><span class="switch-ui"></span></label>
+          <label class="setting-row"><span><strong>Enable filters</strong><small>Apply your saved feed filters</small></span><input type="checkbox" id="enableFilters"><span class="switch-ui"></span></label>
+        </div>
+      </div>
+    </section>
 
-    <div class="section">
-      <div class="section-header">
-        <svg class="section-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 20V10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M18 20V4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 20V16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <div class="section-title">Preferences</div>
+    <section class="page" data-panel="layout" hidden>
+      <div class="panel-card">
+        <div class="panel-heading"><div><h2>Grid dimensions</h2><p>Control how many posts fit across the feed</p></div></div>
+        <div class="range-setting"><div class="range-heading"><label for="columnsSlider">Columns</label><output id="columnsValueDisplay">3</output></div><input type="range" id="columnsSlider" min="1" max="10" value="3"><div class="range-ends"><span>1 column</span><span>10 columns</span></div></div>
+        <div class="range-setting"><div class="range-heading"><label for="minCardWidth">Minimum card width</label><output id="minCardWidthValue">280 px</output></div><input type="range" id="minCardWidth" min="200" max="420" step="10" value="280"><div class="range-ends"><span>200 px</span><span>420 px</span></div></div>
+        <div class="range-setting"><div class="range-heading"><label for="maxColumns">Auto-fit column limit</label><output id="maxColumnsValue">10</output></div><input type="range" id="maxColumns" min="1" max="10" value="10"><div class="range-ends"><span>1</span><span>10</span></div></div>
       </div>
-      <div class="toggle-group">
-        <div class="toggle-row">
-          <div class="toggle-info">
-            <span class="toggle-label">Auto Fit Grid</span>
-            <span class="toggle-desc">Scale columns on ultrawide monitors</span>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="autoFit">
-            <span class="slider"></span>
-          </label>
-        </div>
-        <div class="toggle-row">
-          <div class="toggle-info">
-            <span class="toggle-label">Hide Promoted</span>
-            <span class="toggle-desc">Remove all sponsored ads</span>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="hidePromoted" checked>
-            <span class="slider"></span>
-          </label>
-        </div>
-        <div class="toggle-row">
-          <div class="toggle-info">
-            <span class="toggle-label">Smart Audio</span>
-            <span class="toggle-desc">Auto-play audio for visible videos</span>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="autoPlayAudio">
-            <span class="slider"></span>
-          </label>
-        </div>
-        <div class="toggle-row">
-          <div class="toggle-info">
-            <span class="toggle-label">Hide Left Sidebar</span>
-            <span class="toggle-desc">Expand feed full width</span>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="hideSidebar">
-            <span class="slider"></span>
-          </label>
-        </div>
-        <div class="toggle-row">
-          <div class="toggle-info">
-            <span class="toggle-label">Compact Cards</span>
-            <span class="toggle-desc">Hide text bodies for tighter grid</span>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="compactCards">
-            <span class="slider"></span>
-          </label>
-        </div>
-        <div class="toggle-row">
-          <div class="toggle-info">
-            <span class="toggle-label">Hide Scrollbar</span>
-            <span class="toggle-desc">Cleaner aesthetic (scrolling works)</span>
-          </div>
-          <label class="switch">
-            <input type="checkbox" id="hideScrollbar" checked>
-            <span class="slider"></span>
-          </label>
-        </div>
+      <div class="panel-card">
+        <div class="panel-heading"><div><h2>Spacing</h2><p>Set the distance between cards</p></div></div>
+        <div class="range-setting"><div class="range-heading"><label for="columnGap">Horizontal gap</label><output id="columnGapValue">12 px</output></div><input type="range" id="columnGap" min="4" max="32" step="2" value="12"></div>
+        <div class="range-setting"><div class="range-heading"><label for="rowGap">Vertical gap</label><output id="rowGapValue">12 px</output></div><input type="range" id="rowGap" min="4" max="32" step="2" value="12"></div>
       </div>
-    </div>
-  </div>
+    </section>
 
+    <section class="page" data-panel="appearance" hidden>
+      <div class="panel-card">
+        <div class="panel-heading"><div><h2>Appearance</h2><p>Choose how Reddit Pro blends with your browser</p></div></div>
+        <div class="select-setting"><label for="theme">Color theme</label><select id="theme"><option value="system">Follow system</option><option value="dark">Dark</option><option value="light">Light</option></select></div>
+        <p class="helper-note">Card surfaces and typography follow the selected theme. More granular card styling can be added without changing your feed settings.</p>
+      </div>
+    </section>
+
+    <section class="page" data-panel="media" hidden>
+      <div class="panel-card">
+        <div class="panel-heading"><div><h2>Media behavior</h2><p>Current media rendering prioritizes original proportions</p></div></div>
+        <div class="info-row"><span class="info-icon">▣</span><span><strong>Natural aspect ratio</strong><small>Images and supported videos retain their source proportions.</small></span><span class="fixed-tag">Default</span></div>
+        <div class="info-row"><span class="info-icon">▷</span><span><strong>Smart audio</strong><small>Control audio focus using the quick preference on Overview.</small></span></div>
+        <p class="helper-note">Player-specific sizing is handled separately from ordinary image sizing to avoid breaking Reddit's native controls and embedded players.</p>
+      </div>
+    </section>
+
+    <footer class="footer"><span id="saveStatus" role="status" aria-live="polite">Settings are saved automatically</span><button type="button" id="resetSettings" class="text-button">Reset defaults</button></footer>
+  </main>
   <script src="popup.js"></script>
 </body>
 </html>

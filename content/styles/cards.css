@@ -385,12 +385,13 @@ body:not([data-reddit-grid-cols='1'])
   display: block !important;
 }
 
-/* 6. Embedded Video Iframes (YouTube, RedGIFs, Streamable) */
+/* 6. Embedded players
+   Do not force every iframe to 16:9: provider embeds may be portrait, square,
+   or carry their own intrinsic dimensions. Keep them inside the card without
+   overriding the provider's chosen height. */
 body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article) iframe {
   width: 100% !important;
   max-width: 100% !important;
-  aspect-ratio: 16 / 9 !important;
-  height: auto !important;
   max-height: none !important;
   border: none !important;
   border-radius: var(--rg-radius-inner, 8px) !important;

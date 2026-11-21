@@ -3,7 +3,7 @@
  * @description Masonry grid engine and responsive column controller for Reddit Pro.
  *
  * Key capabilities:
- *  - Responsive container-driven column calculation (1-8 columns)
+ *  - Responsive container-driven column calculation (1-10 columns)
  *  - Live feed container ResizeObserver for viewport & sidebar changes
  *  - Dynamic ROW_GAP read from computed CSS
  *  - Safe first-measurement state for newly inserted cards
@@ -371,6 +371,26 @@ window.RedditPro.Masonry = (function () {
     });
   }
 
+  /**
+   * Estimates the rendered card width before media has completed loading.
+   * Prefer the actual card box; use grid geometry only as a fallback.
+   * @param {Element} el
+   * @returns {number}
+   */
+  function getEstimatedCardWidth(el) {
+    const measuredWidth = el.getBoundingClientRect?.().width || 0;
+    if (measuredWidth > 0) return measuredWidth;
+
+    const grid = getGridContainer(el);
+    const gridWidth = grid?.getBoundingClientRect
+      ? grid.getBoundingClientRect().width
+      : window.innerWidth || 1200;
+    const columns = effectiveColumns ||
+      parseInt(document.body?.style.getPropertyValue('--reddit-cols'), 10) || 3;
+    const columnGap = getGridColumnGap(el);
+    return Math.max(1, (gridWidth - (columns - 1) * columnGap) / columns);
+  }
+
   function getEstimatedHeight(el) {
     if (!el || typeof el.getBoundingClientRect !== 'function') return 0;
     const rect = el.getBoundingClientRect();
@@ -381,16 +401,7 @@ window.RedditPro.Masonry = (function () {
     if (imgEl && imgEl.naturalWidth > 0 && imgEl.naturalHeight > 0) {
       const naturalRatio = imgEl.naturalWidth / imgEl.naturalHeight;
       if (naturalRatio > 0.1 && naturalRatio < 10) {
-        const grid = getGridContainer(el);
-        const gridWidth =
-          grid && grid.getBoundingClientRect
-            ? grid.getBoundingClientRect().width
-            : typeof window !== 'undefined'
-              ? window.innerWidth
-              : 1200;
-        const cols = effectiveColumns || 3;
-        const colGap = getGridColumnGap(el) || 12;
-        const cardWidth = Math.max(180, (gridWidth - (cols - 1) * colGap) / cols);
+        const cardWidth = getEstimatedCardWidth(el);
         return Math.round(cardWidth / naturalRatio + 124);
       }
     }
@@ -399,16 +410,7 @@ window.RedditPro.Masonry = (function () {
     if (videoEl && videoEl.videoWidth > 0 && videoEl.videoHeight > 0) {
       const videoRatio = videoEl.videoWidth / videoEl.videoHeight;
       if (videoRatio > 0.1 && videoRatio < 10) {
-        const grid = getGridContainer(el);
-        const gridWidth =
-          grid && grid.getBoundingClientRect
-            ? grid.getBoundingClientRect().width
-            : typeof window !== 'undefined'
-              ? window.innerWidth
-              : 1200;
-        const cols = effectiveColumns || 3;
-        const colGap = getGridColumnGap(el) || 12;
-        const cardWidth = Math.max(180, (gridWidth - (cols - 1) * colGap) / cols);
+        const cardWidth = getEstimatedCardWidth(el);
         return Math.round(cardWidth / videoRatio + 124);
       }
     }
@@ -431,19 +433,7 @@ window.RedditPro.Masonry = (function () {
         }
       }
       if (ratio && ratio > 0.2 && ratio < 5) {
-        const grid = getGridContainer(el);
-        const gridWidth =
-          grid && grid.getBoundingClientRect
-            ? grid.getBoundingClientRect().width
-            : typeof window !== 'undefined'
-              ? window.innerWidth
-              : 1200;
-        const cols =
-          effectiveColumns ||
-          parseInt(document.body?.style.getPropertyValue('--reddit-cols'), 10) ||
-          3;
-        const colGap = getGridColumnGap(el) || 12;
-        const cardWidth = Math.max(180, (gridWidth - (cols - 1) * colGap) / cols);
+        const cardWidth = getEstimatedCardWidth(el);
         const mediaHeight = cardWidth / ratio;
         // Non-media card content: credit bar (~44px) + title (~40px) + action bar (~40px) = ~124px
         return Math.round(mediaHeight + 124);
@@ -456,16 +446,7 @@ window.RedditPro.Masonry = (function () {
       const h = parseFloat(img.getAttribute('height'));
       if (w > 0 && h > 0) {
         const ratio = w / h;
-        const grid = getGridContainer(el);
-        const gridWidth =
-          grid && grid.getBoundingClientRect
-            ? grid.getBoundingClientRect().width
-            : typeof window !== 'undefined'
-              ? window.innerWidth
-              : 1200;
-        const cols = effectiveColumns || 3;
-        const colGap = getGridColumnGap(el) || 12;
-        const cardWidth = Math.max(180, (gridWidth - (cols - 1) * colGap) / cols);
+        const cardWidth = getEstimatedCardWidth(el);
         return Math.round(cardWidth / ratio + 124);
       }
     }

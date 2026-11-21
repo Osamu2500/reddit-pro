@@ -3,7 +3,7 @@
   Handles structural grid, container geometry, and feed layout.
 
   v3 Improvements:
-  - Container-driven responsive column system (1-8 columns)
+  - Container-driven responsive column system (1-10 columns)
   - Explicit column placement preventing feed overlap under left navigation
   - Left sidebar column isolation with uniform 12px horizontal margins
   - Full-width spanning for headers, carousels, and discovery units
