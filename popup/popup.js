@@ -217,7 +217,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const preset = presets[presetName];
       Object.entries(preset).forEach(([key, value]) => {
         const control = controls[key];
-        if (control) control.value = String(value);
+        if (!control) return;
+        if (control instanceof HTMLInputElement && control.type === 'checkbox') {
+          control.checked = value === true;
+        } else {
+          control.value = String(value);
+        }
       });
       saveNow();
     });
