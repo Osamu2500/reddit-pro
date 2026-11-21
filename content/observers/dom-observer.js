@@ -484,6 +484,7 @@ window.RedditPro.DOMObserver = (function () {
     }
   }
 
+  /** @param {MouseEvent} e */
   function handleSidebarClick(e) {
     const target = /** @type {Element | null} */ (e.target);
     if (

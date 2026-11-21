@@ -51,6 +51,19 @@ describe('Audio observer', () => {
     document.body.replaceChildren();
   });
 
+  it('observes current and legacy Reddit player wrappers', () => {
+    const modernPlayer = document.createElement('shreddit-player-2');
+    const legacyWrapper = document.createElement('div');
+    legacyWrapper.className = 'shreddit-player-wrapper';
+    document.body.append(modernPlayer, legacyWrapper);
+
+    window.RedditPro.AudioObserver.observe(modernPlayer);
+    window.RedditPro.AudioObserver.observe(legacyWrapper);
+
+    expect(intersectionObserver.observe).toHaveBeenCalledWith(modernPlayer);
+    expect(intersectionObserver.observe).toHaveBeenCalledWith(legacyWrapper);
+  });
+
   it('keeps intersection state current while audio focus is disabled', () => {
     const player = document.createElement('shreddit-player');
     const video = document.createElement('video');
