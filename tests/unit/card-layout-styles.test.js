@@ -20,3 +20,21 @@ describe('Feed card presentation and positioning styles', () => {
     expect(layoutCss).toContain('justify-items: stretch !important');
   });
 });
+
+
+describe('Post card content polish', () => {
+  it('improves title/body hierarchy without fading away post text', () => {
+    const cardsCss = fs.readFileSync(path.resolve(process.cwd(), 'content/styles/cards.css'), 'utf8');
+    expect(cardsCss).toContain('CARD CONTENT POLISH');
+    expect(cardsCss).toContain('font-weight: 650 !important');
+    expect(cardsCss).toContain('line-height: 1.55 !important');
+    expect(cardsCss).toContain('-webkit-mask-image: none !important');
+  });
+
+  it('keeps media inset and action controls usable at narrow widths', () => {
+    const cardsCss = fs.readFileSync(path.resolve(process.cwd(), 'content/styles/cards.css'), 'utf8');
+    expect(cardsCss).toContain('width: calc(100% - 20px) !important');
+    expect(cardsCss).toContain('min-height: 48px !important');
+    expect(cardsCss).toContain('outline-offset: 2px !important');
+  });
+});
