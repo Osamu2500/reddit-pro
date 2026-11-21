@@ -577,6 +577,7 @@ window.RedditPro.Masonry = (function () {
       observer.unobserve(el);
       clearGridItem(gridItem, el);
     }
+    scheduleMasonryPlacement();
   }
 
   function processBatch(batchNode) {

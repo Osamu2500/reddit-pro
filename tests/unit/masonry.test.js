@@ -228,6 +228,13 @@ describe('Masonry layout engine & responsive columns', () => {
       expect(trackers.map((item) => item.style.gridColumnStart)).toEqual(['1', '2', '1', '1']);
     });
 
+    it('assigns a newly processed card to a masonry column', () => {
+      const { tracker, card } = makeGrid();
+      window.RedditPro.Masonry.processCard(card);
+      runFrames();
+      expect(tracker.style.gridColumnStart).toBe('1');
+    });
+
     it('does not assign columns when masonry is disabled', () => {
       const grid = document.createElement('shreddit-feed');
       grid.style.display = 'grid';
