@@ -448,7 +448,7 @@ body:not([data-reddit-grid-cols='1']):not(.rg-page-post):not(.rg-page-wiki):not(
   margin-top: 0 !important;
 }
 
-/* Make injection wrappers transparent to the layout so grids seamlessly stitch together */
+/* Make batch post injection wrappers transparent to the layout so grids seamlessly stitch together */
 body:not([data-reddit-grid-cols='1'])
   :is(
     shreddit-feed,
@@ -459,22 +459,18 @@ body:not([data-reddit-grid-cols='1'])
     [data-testid='post-list'],
     [data-testid='profile-feed']
   )
-  > :is(faceplate-batch, shreddit-async-loader, faceplate-partial, faceplate-tail),
+  > faceplate-batch,
 body:not([data-reddit-grid-cols='1']) faceplate-batch,
 body:not([data-reddit-grid-cols='1']) faceplate-batch > div,
-body:not([data-reddit-grid-cols='1']) faceplate-batch > :is(shreddit-async-loader, faceplate-partial, faceplate-tail),
-body:not([data-reddit-grid-cols='1']) shreddit-async-loader,
-body:not([data-reddit-grid-cols='1']) faceplate-partial,
-body:not([data-reddit-grid-cols='1']) faceplate-tail {
+body:not([data-reddit-grid-cols='1']) faceplate-batch > :is(shreddit-async-loader, faceplate-partial, faceplate-tail):has(> :is(shreddit-post, faceplate-tracker, article, faceplate-batch)),
+body:not([data-reddit-grid-cols='1']) faceplate-partial:has(> :is(shreddit-post, faceplate-tracker, article, faceplate-batch)),
+body:not([data-reddit-grid-cols='1']) shreddit-async-loader:has(> :is(shreddit-post, faceplate-tracker, article, faceplate-batch)),
+body:not([data-reddit-grid-cols='1']) faceplate-tail:has(> :is(shreddit-post, faceplate-tracker, article, faceplate-batch)),
+body:not([data-reddit-grid-cols='1']) faceplate-partial {
   display: contents !important;
 }
 
-body:not([data-reddit-grid-cols='1']) faceplate-partial:empty,
-body:not([data-reddit-grid-cols='1']) faceplate-tail:empty {
-  display: none !important;
-}
-
-/* Ensure only the active feed pagination sentinel at the very bottom of the feed has layout presence */
+/* Ensure active pagination sentinels and loaders span all columns and have valid layout presence */
 body:not([data-reddit-grid-cols='1'])
   :is(
     shreddit-feed,
@@ -482,14 +478,71 @@ body:not([data-reddit-grid-cols='1'])
     profile-feed,
     shreddit-user-feed,
     shreddit-custom-feed,
+    custom-feed,
     [data-testid='post-list'],
     [data-testid='profile-feed'],
-    [data-testid='search-results']
+    [data-testid='search-results'],
+    faceplate-batch
   )
-  > shreddit-async-loader:last-child {
+  > :is(shreddit-async-loader, faceplate-partial, faceplate-tail):not(:has(> :is(shreddit-post, faceplate-tracker, article, faceplate-batch))),
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed,
+    custom-feed,
+    [data-testid='post-list'],
+    [data-testid='profile-feed'],
+    [data-testid='search-results'],
+    faceplate-batch
+  )
+  > :is(shreddit-async-loader, faceplate-partial, faceplate-tail):last-of-type {
   grid-column: 1 / -1 !important;
   width: 100% !important;
-  min-height: 8px !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* When waiting to load (empty), maintain a 1px layout box so IntersectionObserver detects it without visual gap */
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-async-loader, faceplate-partial, faceplate-tail):empty {
+  display: block !important;
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  height: 1px !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* When actively loading with placeholder/spinner, center the snoo spinner across the full feed */
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-async-loader, faceplate-partial, faceplate-tail):not(:empty):not(:has(> :is(shreddit-post, faceplate-tracker, article, faceplate-batch))) {
+  height: 48px !important;
+  padding: 24px 0 !important;
+  opacity: 1 !important;
+}
+
+body:not([data-reddit-grid-cols='1'])
+  :is(shreddit-async-loader, faceplate-partial, faceplate-tail)
+  :is(svg, faceplate-progress, [data-testid*='loading'], .loading-spinner, [slot*='loading']) {
+  margin: 0 auto !important;
   display: block !important;
 }
 
