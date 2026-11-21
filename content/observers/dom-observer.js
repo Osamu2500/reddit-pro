@@ -275,6 +275,7 @@ window.RedditPro.DOMObserver = (function () {
     }
 
     if (node.tagName === 'IFRAME') {
+      const iframe = /** @type {HTMLIFrameElement} */ (node);
       node.setAttribute('data-rg-processed', 'true');
       const width = Number(node.getAttribute('width'));
       const height = Number(node.getAttribute('height'));
@@ -283,11 +284,11 @@ window.RedditPro.DOMObserver = (function () {
         const ratio = width / height;
         if (Number.isFinite(ratio) && ratio > 0.1 && ratio < 10) {
           node.setAttribute('data-rg-embed-ratio', ratio.toFixed(4));
-          node.style.setProperty('aspect-ratio', width + ' / ' + height, 'important');
-          node.style.setProperty('height', 'auto', 'important');
+          iframe.style.setProperty('aspect-ratio', width + ' / ' + height, 'important');
+          iframe.style.setProperty('height', 'auto', 'important');
         }
       }
-      node.style.setProperty('max-width', '100%', 'important');
+      iframe.style.setProperty('max-width', '100%', 'important');
       node.addEventListener('load', () => {
         const card = node.closest(POST_SELECTOR);
         if (card) window.RedditPro.Masonry?.recalculateCard?.(card);
