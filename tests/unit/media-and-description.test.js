@@ -88,8 +88,9 @@ describe('Media Full Ratio/Sizing & Enhanced Post Description Formatting', () =>
     });
 
     it('keeps a readable three-line text preview in compact mode', () => {
-      expect(cardsCss).toMatch(/data-reddit-grid-compact='true'[\\s\\S]*?-webkit-line-clamp:\\s*3\\s*!important;/);
-      expect(cardsCss).not.toMatch(/data-reddit-grid-compact='true' shreddit-post \\[slot='text-body'\\][\\s\\S]*?display:\\s*none/);
+      expect(cardsCss).toContain("body[data-reddit-grid-compact='true'] shreddit-post [slot='text-body']");
+      expect(cardsCss).toContain('-webkit-line-clamp: 3 !important;');
+      expect(cardsCss).not.toContain("body[data-reddit-grid-compact='true'] shreddit-post [slot='text-body'],\nbody[data-reddit-grid-compact='true'] shreddit-post [slot='post-body'] {\n  display: none !important;");
     });
 
     it('provides generous line clamping for pure text posts and clean 5 lines for media posts', () => {
