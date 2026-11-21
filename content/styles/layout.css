@@ -168,6 +168,22 @@ body:not([data-reddit-grid-cols='1'])
   z-index: 100 !important;
 }
 
+/* In-flow spacer for custom element header wrappers so fixed header does not cover feed tabs */
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    reddit-header-large,
+    reddit-header-small,
+    reddit-header,
+    shreddit-app > reddit-header-large,
+    shreddit-app > reddit-header-small,
+    shreddit-app > [slot='header']
+  ) {
+  display: block !important;
+  height: var(--shreddit-header-height, 56px) !important;
+  min-height: var(--shreddit-header-height, 56px) !important;
+  box-sizing: border-box !important;
+}
+
 /* =====================================================================
    CONTAINER GEOMETRY & FULL-WIDTH LAYOUT
    ===================================================================== */
