@@ -356,26 +356,68 @@ window.RedditPro.Masonry = (function () {
     const columns = effectiveColumns || columnTracks.length;
     if (columns < 2) return null;
 
-    const cards = Array.from(container.querySelectorAll(POST_SELECTORS));
-    if (container.matches(POST_SELECTORS)) cards.unshift(container);
-    if (!cards.length) return { columns, heights: Array(columns).fill(0) };
-
     const rowGap = parseFloat(grid.rowGap) || 0;
     const heights = Array(columns).fill(0);
+    const items = [];
 
-    cards.forEach((card) => {
-      const gridItem = card.closest('faceplate-tracker') || card;
-      const measured = card.getBoundingClientRect().height;
-      const estimated = measured > 0 ? measured : getEstimatedHeight(card);
-      const cardHeight = Math.max(1, estimated || 180);
+    // Reddit wraps later feed batches in display:contents elements. Flatten
+    // those wrappers so headers and cards are measured in their visual DOM order.
+    function collectGridItems(parent) {
+      Array.from(parent.children).forEach((child) => {
+        if (getComputedStyle(child).display === 'contents') {
+          collectGridItems(child);
+        } else {
+          items.push(child);
+        }
+      });
+    }
 
+    collectGridItems(container);
+    if (container.matches(POST_SELECTORS)) items.unshift(container);
+
+    items.forEach((item) => {
+      const card = item.matches(POST_SELECTORS)
+        ? item
+        : item.querySelector?.(POST_SELECTORS);
+      const isCard = Boolean(card);
+      const itemStyle = getComputedStyle(item);
+      const startsAtFirstColumn =
+        itemStyle.gridColumnStart === '1' || item.style.gridColumnStart === '1';
+      const endsAtLastColumn =
+        itemStyle.gridColumnEnd === '-1' ||
+        itemStyle.gridColumnEnd === 'span ' + columns ||
+        item.style.gridColumn === '1 / -1' ||
+        item.style.gridColumnEnd === '-1';
+      const spansAllColumns = !isCard && startsAtFirstColumn && endsAtLastColumn;
+
+      if (!isCard && !spansAllColumns) return;
+
+      const measured = (card || item).getBoundingClientRect().height;
+      const estimated = measured > 0
+        ? measured
+        : isCard
+          ? getEstimatedHeight(card)
+          : item.getBoundingClientRect().height || item.scrollHeight;
+      const itemHeight = Math.max(1, estimated || (isCard ? 180 : 1));
+
+      if (spansAllColumns) {
+        // A full-width row sits below the tallest current column. Advance
+        // every column past it before placing the next card.
+        const nextHeight = Math.max(...heights) + itemHeight + rowGap;
+        heights.fill(nextHeight);
+        return;
+      }
+
+      const gridItem = item.matches('faceplate-tracker')
+        ? item
+        : card.closest('faceplate-tracker') || item;
       let shortestColumn = 0;
       for (let index = 1; index < heights.length; index += 1) {
         if (heights[index] < heights[shortestColumn]) shortestColumn = index;
       }
 
       gridItem.style.setProperty('grid-column-start', String(shortestColumn + 1), 'important');
-      heights[shortestColumn] += cardHeight + rowGap;
+      heights[shortestColumn] += itemHeight + rowGap;
     });
 
     return { columns, heights };
