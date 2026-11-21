@@ -228,6 +228,47 @@ describe('Masonry layout engine & responsive columns', () => {
       expect(trackers.map((item) => item.style.gridColumnStart)).toEqual(['1', '2', '1', '1']);
     });
 
+    it('accounts for full-width headers before placing following cards', () => {
+      const grid = document.createElement('shreddit-feed');
+      grid.style.display = 'grid';
+      grid.style.gridTemplateColumns = '160px 160px';
+      grid.style.rowGap = '10px';
+
+      const firstTracker = document.createElement('faceplate-tracker');
+      const firstCard = document.createElement('shreddit-post');
+      firstCard.getBoundingClientRect = () => ({
+        width: 160, height: 100, top: 0, right: 160, bottom: 100,
+        left: 0, x: 0, y: 0, toJSON: () => ({}),
+      });
+      firstTracker.append(firstCard);
+
+      const header = document.createElement('shreddit-profile-tabs');
+      header.style.gridColumn = '1 / -1';
+      header.getBoundingClientRect = () => ({
+        width: 330, height: 80, top: 0, right: 330, bottom: 80,
+        left: 0, x: 0, y: 0, toJSON: () => ({}),
+      });
+
+      const secondTracker = document.createElement('faceplate-tracker');
+      const secondCard = document.createElement('shreddit-post');
+      secondCard.getBoundingClientRect = () => ({
+        width: 160, height: 50, top: 0, right: 160, bottom: 50,
+        left: 0, x: 0, y: 0, toJSON: () => ({}),
+      });
+      secondTracker.append(secondCard);
+
+      grid.append(firstTracker, header, secondTracker);
+      document.body.append(grid);
+
+      const result = window.RedditPro.Masonry.applyMasonryPlacement(grid);
+
+      // The full-width header advances both columns equally. Without that
+      // row, the second card would incorrectly be assigned to column 2.
+      expect(firstTracker.style.gridColumnStart).toBe('1');
+      expect(secondTracker.style.gridColumnStart).toBe('1');
+      expect(result.heights).toEqual([260, 200]);
+    });
+
     it('assigns a newly processed card to a masonry column', () => {
       const { tracker, card } = makeGrid();
       window.RedditPro.Masonry.processCard(card);
