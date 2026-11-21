@@ -398,6 +398,11 @@ body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article) iframe {
   display: block !important;
 }
 
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article) iframe[data-rg-embed-ratio] {
+  height: auto !important;
+  aspect-ratio: auto !important;
+}
+
 /* 7. Gallery Carousel Natural Scaling & Slide Alignment */
 body:not([data-reddit-grid-cols='1']) gallery-carousel {
   position: relative !important;

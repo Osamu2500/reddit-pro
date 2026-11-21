@@ -274,6 +274,26 @@ window.RedditPro.DOMObserver = (function () {
       return;
     }
 
+    if (node.tagName === 'IFRAME') {
+      node.setAttribute('data-rg-processed', 'true');
+      const width = Number(node.getAttribute('width'));
+      const height = Number(node.getAttribute('height'));
+      // Preserve provider-defined dimensions unless numeric intrinsic dimensions exist.
+      if (Number.isFinite(width) && Number.isFinite(height) && width > 0 && height > 0) {
+        const ratio = width / height;
+        if (Number.isFinite(ratio) && ratio > 0.1 && ratio < 10) {
+          node.setAttribute('data-rg-embed-ratio', ratio.toFixed(4));
+          node.style.setProperty('aspect-ratio', width + ' / ' + height, 'important');
+          node.style.setProperty('height', 'auto', 'important');
+        }
+      }
+      node.style.setProperty('max-width', '100%', 'important');
+      node.addEventListener('load', () => {
+        const card = node.closest(POST_SELECTOR);
+        if (card) window.RedditPro.Masonry?.recalculateCard?.(card);
+      }, { once: true, passive: true });
+    }
+
     if (node.tagName === 'IMG') {
       node.setAttribute('data-rg-processed', 'true');
       const card = node.closest(POST_SELECTOR);
@@ -318,7 +338,7 @@ window.RedditPro.DOMObserver = (function () {
     handleElement(root);
     root
       .querySelectorAll?.(
-        `${POST_SELECTOR}, shreddit-comment, ${BATCH_SELECTOR}, ${PLAYER_SELECTOR}, img, video`
+        `${POST_SELECTOR}, shreddit-comment, ${BATCH_SELECTOR}, ${PLAYER_SELECTOR}, img, video, iframe`
       )
       .forEach(handleElement);
 

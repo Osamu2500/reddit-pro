@@ -125,6 +125,15 @@ describe('Media Full Ratio/Sizing & Enhanced Post Description Formatting', () =>
       expect(masonrySource).toContain('canplay');
     });
 
+    it('preserves explicit iframe dimensions without a universal 16:9 ratio', () => {
+      expect(domObserverSource).toContain("node.tagName === 'IFRAME'");
+      expect(domObserverSource).toContain("node.getAttribute('width')");
+      expect(domObserverSource).toContain("node.getAttribute('height')");
+      expect(domObserverSource).toContain('data-rg-embed-ratio');
+      expect(cardsCss).toContain('iframe[data-rg-embed-ratio]');
+      expect(cardsCss).not.toContain('aspect-ratio: 16 / 9 !important');
+    });
+
     it('detects shreddit-player-2 and video elements in DOMObserver', () => {
       expect(domObserverSource).toContain('shreddit-player-2');
       expect(domObserverSource).toContain("node.tagName === 'VIDEO'");

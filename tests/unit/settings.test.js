@@ -72,6 +72,14 @@ describe('Settings Module', () => {
     expect(window.RedditPro.Settings.get().columns).toBe('4');
   });
 
+  it('normalizes card radius within the supported range', async () => {
+    globalThis.chrome.storage.sync.get.mockImplementation((_defaults, callback) =>
+      callback({ ..._defaults, cardRadius: 40 })
+    );
+    const settings = await window.RedditPro.Settings.load();
+    expect(settings.cardRadius).toBe(14);
+  });
+
   it('falls back to a valid column count for corrupted stored settings', async () => {
     globalThis.chrome.storage.sync.get.mockImplementation((_defaults, callback) =>
       callback({ columns: '999' })
