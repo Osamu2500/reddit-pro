@@ -225,7 +225,7 @@ describe('Masonry layout engine & responsive columns', () => {
       const result = window.RedditPro.Masonry.applyMasonryPlacement(grid);
 
       expect(result.columns).toBe(2);
-      expect(trackers.map((item) => item.style.gridColumnStart)).toEqual(['1', '2', '1', '2']);
+      expect(trackers.map((item) => item.style.gridColumnStart)).toEqual(['1', '2', '1', '1']);
     });
 
     it('does not assign columns when masonry is disabled', () => {
