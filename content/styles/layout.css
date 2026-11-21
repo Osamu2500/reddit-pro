@@ -14,9 +14,9 @@
 :root {
   --reddit-cols: 3;
   --reddit-sidebar-width: 56px;
-  --reddit-col-gap: 12px; /* column gap between cards */
-  --reddit-row-gap: 12px; /* vertical gap between cards */
-  --reddit-batch-gap: 12px; /* vertical gap between batches */
+  --reddit-col-gap: 16px; /* column gap between cards */
+  --reddit-row-gap: 16px; /* vertical gap between cards */
+  --reddit-batch-gap: 16px; /* vertical gap between batches */
 }
 
 body[data-reddit-grid-hide-sidebar='true'] {
@@ -377,6 +377,8 @@ body:not([data-reddit-grid-cols='1']):not(.rg-page-post):not(.rg-page-wiki):not(
   column-gap: var(--reddit-col-gap, 12px) !important;
   row-gap: var(--reddit-row-gap, 12px) !important;
   align-items: start !important;
+  align-content: start !important;
+  justify-items: stretch !important;
   width: 100% !important;
   box-sizing: border-box !important;
   padding-top: 0 !important;
