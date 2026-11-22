@@ -2,6 +2,10 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 
+const routerSource = fs.readFileSync(
+  path.resolve(process.cwd(), 'content/core/router.js'),
+  'utf8'
+);
 const lifecycleSource = fs.readFileSync(
   path.resolve(process.cwd(), 'content/core/lifecycle.js'),
   'utf8'
@@ -57,6 +61,7 @@ describe('Pages, Routing & Feed UI support across Reddit', () => {
 
     eval(masonrySource);
     eval(domObserverSource);
+    eval(routerSource);
     eval(lifecycleSource);
   });
 

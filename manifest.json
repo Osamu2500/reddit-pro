@@ -43,6 +43,7 @@
         "content/features/post-modal.js",
         "content/observers/dom-observer.js",
         "content/observers/audio-observer.js",
+        "content/core/router.js",
         "content/core/lifecycle.js"
       ],
       "run_at": "document_start"
