@@ -433,59 +433,57 @@ body > shreddit-overflow-menu {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   5. POST MEDIA & GALLERY CAROUSELS
+   5. POST MEDIA & GALLERY CAROUSELS (Full Expansion & Clean Inset)
    ═══════════════════════════════════════════════════════════════════════════ */
-body:not([data-reddit-grid-cols='1']) shreddit-aspect-ratio:not(:has(gallery-carousel)),
-body:not([data-reddit-grid-cols='1']) div[id$='-aspect-ratio']:not(:has(gallery-carousel)),
-body:not([data-reddit-grid-cols='1'])
-  shreddit-post:not(:has(gallery-carousel))
-  [slot='post-media-container'] {
+/* Neutralize all Reddit aspect-ratio locking wrappers so media expands naturally */
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is(
+  shreddit-aspect-ratio,
+  div[id$='-aspect-ratio'],
+  [slot='post-media-container'],
+  faceplate-img:not([slot='credit-bar'] *):not(shreddit-post-header *),
+  figure,
+  picture
+) {
   padding-bottom: 0 !important;
   height: auto !important;
   min-height: 0 !important;
   max-height: none !important;
   aspect-ratio: auto !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
+/* Temporary aspect-ratio placeholder ONLY during first pre-load measurement */
 body:not([data-reddit-grid-cols='1'])
-  shreddit-post[style*='--card-aspect-ratio']
-  shreddit-aspect-ratio:not(:has(gallery-carousel)),
-body:not([data-reddit-grid-cols='1'])
-  shreddit-post[style*='--card-aspect-ratio']
-  div[id$='-aspect-ratio']:not(:has(gallery-carousel)),
-body:not([data-reddit-grid-cols='1'])
-  shreddit-post[style*='--card-aspect-ratio']
-  [slot='post-media-container']:not(:has(gallery-carousel)) {
+  shreddit-post[data-rg-loading]:not([data-rg-stable='1'])
+  :is(shreddit-aspect-ratio, div[id$='-aspect-ratio'], [slot='post-media-container']) {
   aspect-ratio: var(--card-aspect-ratio, auto) !important;
 }
 
-body:not([data-reddit-grid-cols='1'])
-  shreddit-post[data-rg-loading]
-  shreddit-aspect-ratio:not(:has(gallery-carousel)),
-body:not([data-reddit-grid-cols='1'])
-  shreddit-post[data-rg-loading]
-  div[id$='-aspect-ratio']:not(:has(gallery-carousel)),
-body:not([data-reddit-grid-cols='1'])
-  shreddit-post[data-rg-loading]
-  [slot='post-media-container']:not(:has(gallery-carousel)) {
-  aspect-ratio: var(--card-aspect-ratio, auto) !important;
-}
-
-body:not([data-reddit-grid-cols='1']) div[id$='-aspect-ratio']:not(:has(gallery-carousel)) > div {
+body:not([data-reddit-grid-cols='1']) div[id$='-aspect-ratio'] > div {
   position: relative !important;
   height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  width: 100% !important;
 }
 
-body:not([data-reddit-grid-cols='1']) faceplate-img:not(:has(gallery-carousel)) {
+body:not([data-reddit-grid-cols='1']) faceplate-img:not([slot='credit-bar'] *):not(shreddit-post-header *) {
   height: auto !important;
   aspect-ratio: auto !important;
   display: block !important;
+  width: 100% !important;
 }
 
-/* Force standard media to scale naturally */
+/* Fully expand standard post images, videos, and embeds across card width */
 body:not([data-reddit-grid-cols='1'])
-  shreddit-post:not(:has(gallery-carousel))
-  img:not(.post-background-image-filter),
+  shreddit-post
+  :is(
+    [slot='post-media-container'] img:not(.post-background-image-filter),
+    div[id$='-aspect-ratio'] img:not(.post-background-image-filter),
+    faceplate-img:not([slot='credit-bar'] *):not(shreddit-post-header *) img:not(.post-background-image-filter)
+  ),
 body:not([data-reddit-grid-cols='1']) shreddit-post:not(:has(gallery-carousel)) video,
 body:not([data-reddit-grid-cols='1']) shreddit-post:not(:has(gallery-carousel)) iframe,
 body:not([data-reddit-grid-cols='1']) shreddit-post:not(:has(gallery-carousel)) shreddit-player,
@@ -496,35 +494,59 @@ body:not([data-reddit-grid-cols='1'])
   width: 100% !important;
   height: auto !important;
   max-height: none !important;
+  min-height: 0 !important;
   display: block !important;
   position: relative !important;
   object-fit: cover !important;
   background: transparent !important;
+  border-radius: 12px !important;
 }
 
+/* Remove ugly blurry background filter that Reddit injects behind letterboxed images */
 body:not([data-reddit-grid-cols='1']) shreddit-post img.post-background-image-filter {
-  position: absolute !important;
-  height: 100% !important;
-  object-fit: cover !important;
+  display: none !important;
 }
 
 body:not([data-reddit-grid-cols='1']) shreddit-player::part(video),
 body:not([data-reddit-grid-cols='1']) shreddit-player video {
   width: 100% !important;
   height: auto !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  border-radius: 12px !important;
 }
 
-body:not([data-reddit-grid-cols='1']) gallery-carousel,
-body:not([data-reddit-grid-cols='1']) gallery-carousel ul,
-body:not([data-reddit-grid-cols='1']) gallery-carousel li {
+/* Gallery Carousels: full expansion for multi-image collections */
+body:not([data-reddit-grid-cols='1']) gallery-carousel {
+  width: 100% !important;
+  max-width: 100% !important;
   height: auto !important;
   max-height: none !important;
+  display: block !important;
+  position: relative !important;
+  overflow: hidden !important;
+  border-radius: 12px !important;
+}
+
+body:not([data-reddit-grid-cols='1']) gallery-carousel :is(ul, li, figure, picture) {
+  width: 100% !important;
+  max-width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  list-style: none !important;
 }
 
 body:not([data-reddit-grid-cols='1']) gallery-carousel img:not(.post-background-image-filter) {
   position: relative !important;
+  width: 100% !important;
+  max-width: 100% !important;
   height: auto !important;
+  max-height: none !important;
   object-fit: cover !important;
+  display: block !important;
+  border-radius: 12px !important;
 }
 
 gallery-carousel button,
@@ -1673,10 +1695,11 @@ body:not([data-reddit-grid-cols='1']) shreddit-post :is([slot='post-media-contai
   max-width: calc(100% - 20px) !important;
   border-radius: 12px !important;
   background: rgba(128, 128, 128, 0.06) !important;
+  overflow: hidden !important;
 }
 
 body:not([data-reddit-grid-cols='1']) shreddit-post :is([slot='post-media-container'], gallery-carousel) img {
-  border-radius: 10px !important;
+  border-radius: 12px !important;
 }
 
 body:not([data-reddit-grid-cols='1']) shreddit-post :is([data-testid='post-flair'], .flair, faceplate-pill) {

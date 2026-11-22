@@ -30,6 +30,33 @@ window.RedditPro.DOMObserver = (function () {
       postElement.style.setProperty('--card-aspect-ratio', aspectRatioNode.style.aspectRatio);
     }
 
+    // Resolve true intrinsic aspect ratio from loaded media to prevent letterboxing
+    const mediaImg = /** @type {HTMLImageElement | null} */ (
+      node.querySelector('[slot="post-media-container"] img:not(.post-background-image-filter)')
+    );
+    if (mediaImg) {
+      if (mediaImg.naturalWidth > 0 && mediaImg.naturalHeight > 0) {
+        postElement.style.setProperty(
+          '--card-aspect-ratio',
+          String(mediaImg.naturalWidth / mediaImg.naturalHeight)
+        );
+      } else {
+        mediaImg.addEventListener(
+          'load',
+          () => {
+            if (mediaImg.naturalWidth > 0 && mediaImg.naturalHeight > 0) {
+              postElement.style.setProperty(
+                '--card-aspect-ratio',
+                String(mediaImg.naturalWidth / mediaImg.naturalHeight)
+              );
+              window.RedditPro.Masonry?.recalculateCard(node);
+            }
+          },
+          { once: true, passive: true }
+        );
+      }
+    }
+
     if (!node.hasAttribute('data-rg-stable')) {
       window.RedditPro.Masonry.processCard(node);
     }
