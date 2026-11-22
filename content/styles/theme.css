@@ -544,6 +544,32 @@ body:not([data-reddit-grid-cols='1'])
   padding-right: 76px !important;
 }
 
+/* Elevate card z-index and breakout overflow when three-dots menu is open */
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post):is(
+  :has(shreddit-overflow-menu[open]),
+  :has(faceplate-dropdown-menu[open]),
+  :has([aria-expanded='true']),
+  :has([open]),
+  :has(:popover-open),
+  [data-rg-menu-open='true']
+) {
+  overflow: visible !important;
+  z-index: 99999 !important;
+  isolation: auto !important;
+}
+
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post):is(
+  :has(shreddit-overflow-menu[open]),
+  :has(faceplate-dropdown-menu[open]),
+  :has([aria-expanded='true']),
+  :has([open]),
+  :has(:popover-open),
+  [data-rg-menu-open='true']
+) :is([slot='credit-bar'], shreddit-post-header) {
+  overflow: visible !important;
+  z-index: 99999 !important;
+}
+
 body:not([data-reddit-grid-cols='1']) shreddit-post :is([slot='credit-bar'], shreddit-post-header) :is(div, span, section, header, nav):not(faceplate-img):not(faceplate-img *):not(shreddit-avatar):not(shreddit-avatar *):not(button):not(a.button) {
   border: none !important;
   border-bottom: none !important;

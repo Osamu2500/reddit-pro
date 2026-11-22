@@ -29,7 +29,12 @@ window.RedditPro.DOMObserver = (function () {
       --rpl-radius-full: 8px !important;
       --rpl-button-border-radius: 8px !important;
       border-radius: 8px !important;
+    }
+    :host(:is(button, shreddit-join-button, rpl-join-button, shreddit-vote-buttons, shreddit-comment-button)) {
       overflow: hidden !important;
+    }
+    :host(:is(shreddit-overflow-menu, faceplate-dropdown-menu, shreddit-post-overflow-menu)) {
+      overflow: visible !important;
     }
     button,
     [role="button"],
@@ -168,6 +173,24 @@ window.RedditPro.DOMObserver = (function () {
           el.style.setProperty('margin', '0px', 'important');
           el.style.setProperty('border', 'none', 'important');
         }
+      }
+
+      // Ensure three-dots menu and dropdowns are never clipped and are right-aligned
+      const isMenuContainer =
+        tag === 'shreddit-overflow-menu' ||
+        tag === 'faceplate-dropdown-menu' ||
+        tag === 'shreddit-post-overflow-menu' ||
+        testId.includes('overflow-menu') ||
+        noun === 'overflow-menu';
+
+      if (isMenuContainer) {
+        el.style.setProperty('overflow', 'visible', 'important');
+      }
+
+      if (tag === 'faceplate-dropdown-menu' || el.getAttribute('role') === 'menu') {
+        el.style.setProperty('right', '0px', 'important');
+        el.style.setProperty('left', 'auto', 'important');
+        el.style.setProperty('z-index', '100000', 'important');
       }
     }
 
@@ -515,6 +538,56 @@ window.RedditPro.DOMObserver = (function () {
         }
       },
       { passive: true }
+    );
+
+    // Track three-dots dropdown open/close to elevate host card and prevent edge clipping
+    document.addEventListener(
+      'click',
+      (e) => {
+        const target = /** @type {Element | null} */ (e.target);
+        if (!target) return;
+
+        const trigger = target.closest(
+          'shreddit-overflow-menu, [data-post-click-location="overflow-menu"], button[aria-haspopup="menu"]'
+        );
+
+        if (trigger) {
+          const post = trigger.closest('shreddit-post, article, .Post');
+          if (post) {
+            requestAnimationFrame(() => {
+              const isOpen =
+                trigger.hasAttribute('open') ||
+                trigger.querySelector('[open], [aria-expanded="true"]') !== null ||
+                trigger.getAttribute('aria-expanded') === 'true' ||
+                !post.hasAttribute('data-rg-menu-open');
+
+              document.querySelectorAll('[data-rg-menu-open="true"]').forEach((p) => {
+                if (p !== post) p.removeAttribute('data-rg-menu-open');
+              });
+
+              if (isOpen) {
+                post.setAttribute('data-rg-menu-open', 'true');
+                /** @type {HTMLElement} */ (post).style.setProperty('overflow', 'visible', 'important');
+                /** @type {HTMLElement} */ (post).style.setProperty('z-index', '99999', 'important');
+
+                const menu = post.querySelector('faceplate-dropdown-menu, [role="menu"], [slot="dropdown"]');
+                if (menu) {
+                  /** @type {HTMLElement} */ (menu).style.setProperty('right', '0px', 'important');
+                  /** @type {HTMLElement} */ (menu).style.setProperty('left', 'auto', 'important');
+                  /** @type {HTMLElement} */ (menu).style.setProperty('z-index', '100000', 'important');
+                }
+              } else {
+                post.removeAttribute('data-rg-menu-open');
+              }
+            });
+          }
+        } else if (!target.closest('faceplate-dropdown-menu, [role="menu"], [slot="dropdown"]')) {
+          document.querySelectorAll('[data-rg-menu-open="true"]').forEach((p) => {
+            p.removeAttribute('data-rg-menu-open');
+          });
+        }
+      },
+      true
     );
 
     // Existing posts may already be present before the observer is attached.

@@ -97,10 +97,41 @@ body:not([data-reddit-grid-cols='1']) shreddit-comment[data-rg-stable='1'] {
   will-change: auto !important;
 }
 
-/* Elevate card z-index when a dropdown menu inside it is open */
-body:not([data-reddit-grid-cols='1']) shreddit-post:has([open]),
-body:not([data-reddit-grid-cols='1']) shreddit-post:has(:popover-open) {
-  z-index: 8 !important;
+/* Elevate card z-index and breakout overflow when three-dots dropdown is open */
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post):is(
+  :has(shreddit-overflow-menu[open]),
+  :has(faceplate-dropdown-menu[open]),
+  :has([aria-expanded='true']),
+  :has([open]),
+  :has(:popover-open),
+  [data-rg-menu-open='true']
+) {
+  overflow: visible !important;
+  z-index: 99999 !important;
+  isolation: auto !important;
+}
+
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post):is(
+  :has(shreddit-overflow-menu[open]),
+  :has(faceplate-dropdown-menu[open]),
+  :has([aria-expanded='true']),
+  :has([open]),
+  :has(:popover-open),
+  [data-rg-menu-open='true']
+) :is([slot='credit-bar'], shreddit-post-header) {
+  overflow: visible !important;
+  z-index: 99999 !important;
+}
+
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) shreddit-overflow-menu:is(
+  [open],
+  :has([open]),
+  :has([aria-expanded='true'])
+) {
+  overflow: visible !important;
+  max-width: none !important;
+  max-height: none !important;
+  z-index: 100000 !important;
 }
 
 /* Strict Z-Index Hierarchy (Tiers 1-3) */
@@ -431,19 +462,50 @@ body:not([data-reddit-grid-cols='1']) shreddit-post :is(
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   4. DROPDOWN PORTALS
+   4. DROPDOWNS & OVERFLOW MENUS (Z-Index, Alignment & Edge-Clipping Fix)
    ═══════════════════════════════════════════════════════════════════════════ */
-faceplate-dropdown-menu[open],
-shreddit-overflow-menu[open],
-[data-radix-popper-content-wrapper],
-[data-floating-ui-portal],
+/* Ensure the dropdown menu renders inside the card, aligned to the right edge so it never pokes off-screen */
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is(
+  faceplate-dropdown-menu,
+  shreddit-overflow-menu [slot='dropdown'],
+  shreddit-overflow-menu faceplate-dropdown-menu,
+  [data-post-click-location='overflow-menu'] faceplate-dropdown-menu,
+  shreddit-overflow-menu [role='menu'],
+  faceplate-dropdown-menu [role='menu']
+) {
+  position: absolute !important;
+  top: 100% !important;
+  right: 0 !important;
+  left: auto !important;
+  margin-top: 4px !important;
+  min-width: 180px !important;
+  max-width: min(260px, calc(100vw - 32px)) !important;
+  width: max-content !important;
+  z-index: 100000 !important;
+  overflow: visible !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35) !important;
+  border-radius: var(--rg-radius-btn, 8px) !important;
+}
+
+/* Internal menu items inside the dropdown */
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) faceplate-dropdown-menu :is(li, button, a, div[role='menuitem']) {
+  white-space: nowrap !important;
+  overflow: visible !important;
+  max-width: none !important;
+}
+
+/* Floating portals / Radix Popper portals anchored to body */
+body > faceplate-dropdown-menu,
 body > .dropdown-portal,
 body > [role='menu'],
 body > [role='listbox'],
 body > [data-reddit-dropdown],
-body > shreddit-overflow-menu {
-  z-index: 9999 !important;
+body > shreddit-overflow-menu,
+[data-radix-popper-content-wrapper],
+[data-floating-ui-portal] {
+  z-index: 100000 !important;
   position: fixed !important;
+  max-width: min(280px, 90vw) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

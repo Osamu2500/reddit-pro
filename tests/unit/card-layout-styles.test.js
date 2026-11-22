@@ -84,4 +84,14 @@ describe('Post card content polish', () => {
       /shreddit-post:has\(shreddit-join-button[\s\S]*?:is\(\s*\[slot='title'\][\s\S]*?padding-right:\s*76px\s*!important/
     );
   });
+
+  it('elevates card z-index, sets overflow visible and aligns dropdown menu to prevent card edge clipping', () => {
+    const cardsCss = fs.readFileSync(path.resolve(process.cwd(), 'content/styles/cards.css'), 'utf8');
+    expect(cardsCss).toContain('data-rg-menu-open');
+    expect(cardsCss).toContain('z-index: 99999 !important');
+    expect(cardsCss).toMatch(
+      /:is\(\s*faceplate-dropdown-menu[\s\S]*?right:\s*0\s*!important;\s*left:\s*auto\s*!important/
+    );
+    expect(themeCss).toContain('z-index: 99999 !important');
+  });
 });
