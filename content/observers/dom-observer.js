@@ -72,53 +72,95 @@ window.RedditPro.DOMObserver = (function () {
   }
 
   /**
-   * Applies squircle / rounded-square shape to community avatars and all buttons inside a card,
-   * piercing open shadow roots (shreddit-join-button, shreddit-comment-button, etc.)
-   * and correctly positioning the join button directly below three dots.
-   * @param {Element} card
+   * Recursively traverses an element, its children, and any open ShadowRoots,
+   * injecting squircle styling directly into each shadow root and styling all buttons and avatars.
+   * @param {Node} rootNode
    */
-  function applySquircleAndButtonStyles(card) {
-    if (!card) return;
+  function deepPierceSquircle(rootNode) {
+    if (!rootNode) return;
 
-    // 1. Detect and configure Join Button placement below three dots
-    const joinEl = card.querySelector(
-      'shreddit-join-button, [data-testid="join-button"], [data-testid="credit-bar-join-button"], [data-testid*="join" i], button[aria-label*="join" i]'
-    );
-    if (joinEl) {
-      card.setAttribute('data-rg-has-join', 'true');
-      const host = joinEl.closest('faceplate-tracker') || joinEl;
-      host.setAttribute('data-rg-join-target', 'true');
+    // 1. If this node has an open shadowRoot, inject squircle style and recurse inside it
+    const elWithShadow = /** @type {any} */ (rootNode);
+    if (elWithShadow.shadowRoot) {
+      injectSquircleToShadow(elWithShadow.shadowRoot);
+      deepPierceSquircle(elWithShadow.shadowRoot);
     }
 
-    // 2. Pierce Shadow DOM for all Web Component buttons & action controls
-    const shadowHosts = card.querySelectorAll(
-      'shreddit-join-button, shreddit-comment-button, shreddit-post-share-button, shreddit-share-button, shreddit-vote-buttons, vote-buttons, rpl-vote-buttons, shreddit-overflow-menu, shreddit-crosspost-button, rpl-button, rpl-join-button, [slot="action-bar"] > *, [slot="credit-bar"] > *'
-    );
-    shadowHosts.forEach((host) => {
-      const htmlHost = /** @type {HTMLElement} */ (host);
-      htmlHost.style.setProperty('border-radius', '8px', 'important');
-      htmlHost.style.setProperty('overflow', 'hidden', 'important');
-      if (host.shadowRoot) {
-        injectSquircleToShadow(host.shadowRoot);
+    if (rootNode.nodeType === 1) {
+      const el = /** @type {HTMLElement} */ (rootNode);
+      const tag = el.tagName.toLowerCase();
+
+      // Check Join button and position it below three dots at top: 42px, right: 12px
+      const ariaLabel = el.getAttribute('aria-label')?.toLowerCase() || '';
+      const testId = el.getAttribute('data-testid')?.toLowerCase() || '';
+      const noun = el.getAttribute('noun')?.toLowerCase() || '';
+      const action = el.getAttribute('action')?.toLowerCase() || '';
+      const isJoin =
+        tag === 'shreddit-join-button' ||
+        tag === 'rpl-join-button' ||
+        testId.includes('join') ||
+        ariaLabel.includes('join') ||
+        noun === 'join' ||
+        action === 'join';
+
+      if (isJoin) {
+        const post = el.closest('shreddit-post, article, .Post');
+        if (post) post.setAttribute('data-rg-has-join', 'true');
+        const host = el.closest('faceplate-tracker') || el;
+        host.setAttribute('data-rg-join-target', 'true');
+        /** @type {HTMLElement} */ (host).style.setProperty('position', 'absolute', 'important');
+        /** @type {HTMLElement} */ (host).style.setProperty('top', '42px', 'important');
+        /** @type {HTMLElement} */ (host).style.setProperty('right', '12px', 'important');
+        /** @type {HTMLElement} */ (host).style.setProperty('z-index', '10', 'important');
+        el.style.setProperty('border-radius', '8px', 'important');
+        el.style.setProperty('overflow', 'hidden', 'important');
       }
-    });
 
-    // 3. Style all Light DOM buttons, vote controls, comments, shares
-    const lightButtons = card.querySelectorAll(
-      'button, a[role="button"], [class*="rounded-full"], [data-post-click-location="vote"], [data-post-click-location="comments"], [data-post-click-location="share"], [data-post-click-location="save"]'
-    );
-    lightButtons.forEach((btn) => {
-      /** @type {HTMLElement} */ (btn).style.setProperty('border-radius', '8px', 'important');
-    });
+      // Check all buttons, action controls, vote containers, and pill-shaped elements
+      const isBtn =
+        tag === 'button' ||
+        el.getAttribute('role') === 'button' ||
+        tag.includes('button') ||
+        tag.includes('vote') ||
+        el.hasAttribute('data-post-click-location') ||
+        el.className?.includes?.('rounded-full') ||
+        el.className?.includes?.('rounded-');
 
-    // 4. Style Community Avatars & Icons to 7px squircle
-    const avatars = card.querySelectorAll(
-      '[slot="credit-bar"] img, shreddit-post-header img, [data-testid="subreddit-icon"] img, [data-testid="user-avatar"] img, faceplate-img img, shreddit-avatar'
-    );
-    avatars.forEach((avatar) => {
-      /** @type {HTMLElement} */ (avatar).style.setProperty('border-radius', '7px', 'important');
-      /** @type {HTMLElement} */ (avatar).style.setProperty('overflow', 'hidden', 'important');
-    });
+      if (isBtn) {
+        el.style.setProperty('border-radius', '8px', 'important');
+        if (tag.includes('button') || tag.includes('vote')) {
+          el.style.setProperty('overflow', 'hidden', 'important');
+        }
+      }
+
+      // Check avatars and community icons
+      const isAvatar =
+        tag === 'img' &&
+        (el.closest('[slot="credit-bar"]') !== null ||
+          el.closest('shreddit-post-header') !== null ||
+          testId.includes('avatar') ||
+          testId.includes('icon') ||
+          el.getAttribute('src')?.includes('communityIcon') ||
+          el.getAttribute('src')?.includes('avatar') ||
+          el.className?.includes?.('avatar') ||
+          el.className?.includes?.('icon'));
+
+      if (isAvatar) {
+        el.style.setProperty('border-radius', '7px', 'important');
+        el.style.setProperty('overflow', 'hidden', 'important');
+      }
+    }
+
+    // Traverse child nodes
+    const children = rootNode.childNodes;
+    if (children) {
+      for (let i = 0; i < children.length; i++) {
+        const child = children[i];
+        if (child.nodeType === 1 || child.nodeType === 11) {
+          deepPierceSquircle(child);
+        }
+      }
+    }
   }
 
   /** @param {Element} node */
@@ -126,8 +168,8 @@ window.RedditPro.DOMObserver = (function () {
     const settings = window.RedditPro.Settings.get();
 
     // Ensure squircle styling and Join button positioning are enforced immediately
-    applySquircleAndButtonStyles(node);
-    node.addEventListener('mouseenter', () => applySquircleAndButtonStyles(node), { passive: true });
+    deepPierceSquircle(node);
+    node.addEventListener('mouseenter', () => deepPierceSquircle(node), { passive: true });
 
     const aspectRatioNode = /** @type {HTMLElement | null} */ (
       node.querySelector('[id$="-aspect-ratio"]')
@@ -392,6 +434,7 @@ window.RedditPro.DOMObserver = (function () {
       if (scrollHeight - currentScroll < 2200) {
         triggerNextFeedBatch();
       }
+      if (document.body) deepPierceSquircle(document.body);
     }, 120);
   }
 
@@ -401,6 +444,7 @@ window.RedditPro.DOMObserver = (function () {
       requestAnimationFrame(() => {
         window.RedditPro.Masonry?.sweepNew?.();
         observeFeedEnd();
+        if (document.body) deepPierceSquircle(document.body);
       });
     }, 80);
   }
@@ -412,6 +456,7 @@ window.RedditPro.DOMObserver = (function () {
     batch.forEach((node) => {
       if (node instanceof Element) handleAddedNode(node);
     });
+    if (document.body) deepPierceSquircle(document.body);
   }
 
   /** @param {Node[]} nodes */
@@ -454,6 +499,10 @@ window.RedditPro.DOMObserver = (function () {
 
     // Existing posts may already be present before the observer is attached.
     handleAddedNode(document.documentElement);
+    deepPierceSquircle(document.documentElement);
+    setTimeout(() => deepPierceSquircle(document.documentElement), 150);
+    setTimeout(() => deepPierceSquircle(document.documentElement), 600);
+    setTimeout(() => deepPierceSquircle(document.documentElement), 1500);
     observeFeedEnd();
     window.addEventListener('scroll', handleScrollPreload, { passive: true });
     scheduleNewSweep();
