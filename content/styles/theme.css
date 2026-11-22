@@ -246,8 +246,7 @@ body:not([data-reddit-grid-cols='1']) shreddit-post > section {
    ═══════════════════════════════════════════════════════════════════════════ */
 body:not([data-reddit-grid-cols='1']) shreddit-post [slot='credit-bar'],
 body:not([data-reddit-grid-cols='1']) shreddit-post-header,
-body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is([slot='credit-bar'], shreddit-post-header, header),
-body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is([slot='credit-bar'], shreddit-post-header, header) > * {
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is([slot='credit-bar'], shreddit-post-header, header) {
   background: var(--rg-credit-bg) !important;
   border: none !important;
   border-bottom: none !important;
@@ -258,7 +257,7 @@ body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is([sl
   z-index: 1 !important;
 }
 
-body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is([slot='credit-bar'], shreddit-post-header, header) > * {
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is([slot='credit-bar'], shreddit-post-header, header) > :not(shreddit-overflow-menu):not(shreddit-join-button):not(faceplate-tracker):not([slot='overflow']) {
   padding: 0 !important;
   border-radius: 0 !important;
   border: none !important;

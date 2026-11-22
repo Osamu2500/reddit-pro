@@ -158,17 +158,17 @@ body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is(
   [slot='credit-bar'],
   shreddit-post-header,
   header,
-  [slot='credit-bar'] > *,
-  shreddit-post-header > *,
-  header > *
+  [slot='credit-bar'] > :not(shreddit-overflow-menu):not(shreddit-join-button):not(faceplate-tracker):not([slot='overflow']),
+  shreddit-post-header > :not(shreddit-overflow-menu):not(shreddit-join-button):not(faceplate-tracker):not([slot='overflow']),
+  header > :not(shreddit-overflow-menu):not(shreddit-join-button):not(faceplate-tracker):not([slot='overflow'])
 ),
 :is(shreddit-post, article, .Post) :is(
   [slot='credit-bar'],
   shreddit-post-header,
   header,
-  [slot='credit-bar'] > *,
-  shreddit-post-header > *,
-  header > *
+  [slot='credit-bar'] > :not(shreddit-overflow-menu):not(shreddit-join-button):not(faceplate-tracker):not([slot='overflow']),
+  shreddit-post-header > :not(shreddit-overflow-menu):not(shreddit-join-button):not(faceplate-tracker):not([slot='overflow']),
+  header > :not(shreddit-overflow-menu):not(shreddit-join-button):not(faceplate-tracker):not([slot='overflow'])
 ) {
   border: none !important;
   border-width: 0 !important;
@@ -262,29 +262,36 @@ body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is(
   shreddit-overflow-menu,
   [data-post-click-location='overflow-menu'],
   [slot='overflow'],
-  [slot='credit-bar'] button[aria-haspopup='menu'],
-  shreddit-post-header button[aria-haspopup='menu'],
-  shreddit-post-overflow-menu,
-  button[aria-label*='more options' i],
-  button[aria-label*='more actions' i]
+  shreddit-post-overflow-menu
 ),
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is([slot='credit-bar'], shreddit-post-header) > button:is([aria-haspopup='menu'], [aria-label*='more' i]),
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) > button:is([aria-haspopup='menu'], [aria-label*='more' i]),
 :is(shreddit-post, article, .Post) :is(
   shreddit-overflow-menu,
   [data-post-click-location='overflow-menu'],
   [slot='overflow'],
-  [slot='credit-bar'] button[aria-haspopup='menu'],
-  shreddit-post-header button[aria-haspopup='menu'],
   shreddit-post-overflow-menu
 ) {
   position: absolute !important;
   top: 10px !important;
   right: 12px !important;
+  left: auto !important;
+  bottom: auto !important;
   margin: 0 !important;
+  width: 28px !important;
+  min-width: 28px !important;
+  max-width: 28px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  max-height: 28px !important;
   z-index: 10 !important;
   opacity: 0.75 !important;
   display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   visibility: visible !important;
   pointer-events: auto !important;
+  transform: none !important;
   transition: opacity 0.18s ease !important;
 }
 
@@ -292,8 +299,6 @@ body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post):hover :
   shreddit-overflow-menu,
   [data-post-click-location='overflow-menu'],
   [slot='overflow'],
-  [slot='credit-bar'] button[aria-haspopup='menu'],
-  shreddit-post-header button[aria-haspopup='menu'],
   shreddit-post-overflow-menu,
   button[aria-label*='more options' i],
   button[aria-label*='more actions' i]
@@ -302,8 +307,7 @@ body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post):hover :
   shreddit-overflow-menu,
   [data-post-click-location='overflow-menu'],
   [slot='overflow'],
-  [slot='credit-bar'] button[aria-haspopup='menu'],
-  shreddit-post-header button[aria-haspopup='menu']
+  shreddit-post-overflow-menu
 ) {
   opacity: 1 !important;
 }
@@ -313,31 +317,36 @@ body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post):has([op
   shreddit-overflow-menu,
   [data-post-click-location='overflow-menu'],
   [slot='overflow'],
-  [slot='credit-bar'] button[aria-haspopup='menu'],
-  shreddit-post-header button[aria-haspopup='menu'],
   shreddit-post-overflow-menu
 ) {
   opacity: 1 !important;
 }
 
-body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-overflow-menu button,
-body:not([data-reddit-grid-cols='1'])
-  shreddit-post
-  [data-post-click-location='overflow-menu']
-  button,
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) shreddit-overflow-menu button,
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) [data-post-click-location='overflow-menu'] button,
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) shreddit-post-overflow-menu button,
 body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='more' i],
 body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-haspopup='menu'],
 body:not([data-reddit-grid-cols='1']) shreddit-post button.overflow-button,
 shreddit-post shreddit-overflow-menu button,
+shreddit-post [data-post-click-location='overflow-menu'] button,
 shreddit-post button[aria-label*='more' i],
 shreddit-post button[aria-haspopup='menu'],
 shreddit-post button.overflow-button {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+  left: auto !important;
+  bottom: auto !important;
+  margin: 0 !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   width: 28px !important;
   min-width: 28px !important;
+  max-width: 28px !important;
   height: 28px !important;
+  min-height: 28px !important;
   max-height: 28px !important;
   padding: 0 !important;
   border-radius: var(--rg-radius-btn, 8px) !important;
@@ -349,6 +358,7 @@ shreddit-post button.overflow-button {
   cursor: pointer !important;
   pointer-events: auto !important;
   visibility: visible !important;
+  transform: none !important;
   transition:
     background 0.15s ease,
     border-color 0.15s ease,
@@ -356,6 +366,7 @@ shreddit-post button.overflow-button {
 }
 
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-overflow-menu button:hover,
+body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='overflow-menu'] button:hover,
 body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='more' i]:hover,
 body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-haspopup='menu']:hover {
   background: var(--rg-btn-bg-hover) !important;
@@ -367,6 +378,7 @@ body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-haspopup='menu']
 }
 
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-overflow-menu button:active,
+body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='overflow-menu'] button:active,
 body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='more' i]:active,
 body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-haspopup='menu']:active {
   transform: scale(0.94) !important;
@@ -374,6 +386,7 @@ body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-haspopup='menu']
 
 body:not([data-reddit-grid-cols='1']) shreddit-post :is(
   shreddit-overflow-menu,
+  [data-post-click-location='overflow-menu'],
   button[aria-label*='more' i],
   button[aria-haspopup='menu']
 ) svg {
@@ -1156,28 +1169,25 @@ body:not([data-reddit-grid-cols='1']) shreddit-post .spoiler-tag {
 }
 
 /* Modern credit bar Join button: aligned cleanly at top: 10px, right: 46px beside the three-dots button */
-body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is(
-  [slot='credit-bar'],
-  shreddit-post-header
-) :is(
-  shreddit-join-button,
-  [data-testid='join-button'],
-  [data-testid='credit-bar-join-button'],
-  [data-testid*='join' i]
-),
-body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is(
-  [slot='credit-bar'],
-  shreddit-post-header
-) faceplate-tracker:has(
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) faceplate-tracker:has(
   shreddit-join-button,
   [data-testid*='join' i],
   button[aria-label*='join' i]
 ),
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is(
+  [slot='credit-bar'],
+  shreddit-post-header
+) > :is(
+  shreddit-join-button,
+  [data-testid='join-button'],
+  [data-testid='credit-bar-join-button'],
+  [data-testid*='join' i]
+):not(faceplate-tracker *),
 body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) > :is(
   shreddit-join-button,
   [data-testid='join-button'],
   [data-testid='credit-bar-join-button']
-) {
+):not(faceplate-tracker *) {
   position: absolute !important;
   top: 10px !important;
   right: 46px !important;
@@ -1195,6 +1205,33 @@ body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) > :is(
   justify-content: center !important;
   height: 28px !important;
   pointer-events: auto !important;
+  transform: none !important;
+}
+
+/* Reset inner join elements so they do not compound absolute offsets */
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) faceplate-tracker:has(
+  shreddit-join-button,
+  [data-testid*='join' i],
+  button[aria-label*='join' i]
+) :is(
+  shreddit-join-button,
+  [data-testid*='join' i],
+  div,
+  span
+) {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+  left: auto !important;
+  bottom: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: none !important;
+  background: transparent !important;
+  transform: none !important;
 }
 
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-testid='join-button'],
@@ -1221,17 +1258,25 @@ body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) shreddi
 body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) [data-testid='credit-bar-join-button'] button,
 body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) [data-testid*='join' i] button,
 body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) button[aria-label*='join' i] {
+  position: static !important;
+  top: auto !important;
+  right: auto !important;
+  left: auto !important;
+  bottom: auto !important;
+  margin: 0 !important;
   height: 24px !important;
   min-height: 24px !important;
   max-height: 24px !important;
   padding: 0 10px !important;
   font-size: 11px !important;
   font-weight: 600 !important;
+  line-height: 24px !important;
   border-radius: 9999px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   box-sizing: border-box !important;
+  transform: none !important;
 }
 
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-testid='join-button']:hover,
@@ -1246,8 +1291,7 @@ shreddit-post shreddit-join-button:hover {
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
-  background: transparent !important;
-  opacity: 0.9 !important;
+  opacity: 0.88 !important;
   transform: none !important;
 }
 
