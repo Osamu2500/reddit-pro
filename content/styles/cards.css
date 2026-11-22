@@ -195,8 +195,8 @@ body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is(
   background-color: transparent !important;
 }
 
-/* Avatar — Clean Circular Shape (24px) */
-body:not([data-reddit-grid-cols='1']) shreddit-post :is(
+/* Avatar & Community Icon — Modern Squircle / Rounded Square Shape (24px) */
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is(
   [slot='credit-bar'] img,
   shreddit-post-header img,
   [slot='credit-bar'] faceplate-img,
@@ -208,20 +208,28 @@ body:not([data-reddit-grid-cols='1']) shreddit-post :is(
   [data-testid='user-avatar'],
   [data-testid='user-avatar'] img,
   .subreddit-icon,
-  .avatar-icon
+  .avatar-icon,
+  faceplate-img,
+  faceplate-img img,
+  shreddit-avatar,
+  shreddit-avatar svg
 ) {
-  border-radius: 50% !important;
+  border-radius: var(--rg-radius-avatar, 7px) !important;
   overflow: hidden !important;
   border: none !important;
   outline: none !important;
 }
 
-body:not([data-reddit-grid-cols='1']) shreddit-post [slot='credit-bar'] img,
-body:not([data-reddit-grid-cols='1']) shreddit-post-header img {
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is(
+  [slot='credit-bar'] img,
+  shreddit-post-header img,
+  [slot='credit-bar'] faceplate-img,
+  shreddit-post-header faceplate-img
+) {
   width: 24px !important;
   height: 24px !important;
   min-width: 24px !important;
-  border-radius: 50% !important;
+  border-radius: var(--rg-radius-avatar, 7px) !important;
   object-fit: cover !important;
   outline: none !important;
   border: none !important;
@@ -1135,10 +1143,10 @@ shreddit-crosspost-button button {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  height: 28px !important;
-  max-height: 28px !important;
-  padding: 0 8px !important;
-  gap: 5px !important;
+  height: 32px !important;
+  max-height: 32px !important;
+  padding: 0 10px !important;
+  gap: 6px !important;
   border-radius: var(--rg-radius-btn, 8px) !important;
   background: var(--rg-btn-bg) !important;
   border: 1px solid var(--rg-btn-border) !important;
@@ -1156,6 +1164,35 @@ shreddit-crosspost-button button {
     border-color 0.15s ease,
     color 0.15s ease,
     transform 0.1s ease !important;
+}
+
+/* Neutralize Reddit rounded-full classes inside action bar & enforce modern squircle styling */
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is(
+  [slot='action-bar'],
+  shreddit-post-action-bar,
+  rpl-action-bar
+) :is(
+  button,
+  a,
+  [role='button'],
+  div,
+  span,
+  faceplate-tracker,
+  shreddit-comment-button,
+  shreddit-post-share-button,
+  shreddit-crosspost-button,
+  shreddit-vote-buttons,
+  vote-buttons,
+  rpl-vote-buttons,
+  [data-post-click-location='vote'],
+  [data-post-click-location='comments'],
+  [data-post-click-location='share'],
+  [data-post-click-location='save'],
+  [data-post-click-location='award'],
+  [class*='rounded-full'],
+  [class*='rounded-']
+) {
+  border-radius: var(--rg-radius-btn, 8px) !important;
 }
 
 /* Push Save & Award to the right edge */
@@ -1213,7 +1250,7 @@ body:not([data-reddit-grid-cols='1']) shreddit-post :is(
 ) {
   font-size: 0.72rem !important;
   padding: 2px 7px !important;
-  border-radius: 4px !important;
+  border-radius: var(--rg-radius-sm, 6px) !important;
   border: none !important;
   background: var(--rg-btn-bg) !important;
   color: var(--rg-text-muted) !important;
@@ -1239,7 +1276,7 @@ body:not([data-reddit-grid-cols='1']) shreddit-post [data-flair-type='nsfw'],
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-testid='post-nsfw-tag'],
 body:not([data-reddit-grid-cols='1']) shreddit-post faceplate-pill[data-text*='NSFW' i],
 body:not([data-reddit-grid-cols='1']) shreddit-post .nsfw-tag {
-  border-radius: 4px !important;
+  border-radius: var(--rg-radius-sm, 6px) !important;
   padding: 2px 6px !important;
   font-size: 0.7rem !important;
   border: none !important;
@@ -1251,7 +1288,7 @@ body:not([data-reddit-grid-cols='1']) shreddit-post [data-testid='post-spoiler-t
 body:not([data-reddit-grid-cols='1']) shreddit-post faceplate-pill[title*='Spoiler' i],
 body:not([data-reddit-grid-cols='1']) shreddit-post faceplate-pill[data-text*='Spoiler' i],
 body:not([data-reddit-grid-cols='1']) shreddit-post .spoiler-tag {
-  border-radius: 4px !important;
+  border-radius: var(--rg-radius-sm, 6px) !important;
   padding: 2px 6px !important;
   font-size: 0.7rem !important;
   border: none !important;
@@ -1374,7 +1411,7 @@ shreddit-join-button,
 rpl-join-button,
 shreddit-join-button :is(button, a, [role='button'], div, span, [class*='rounded-full']),
 rpl-join-button :is(button, a, [role='button'], div, span, [class*='rounded-full']) {
-  border-radius: 9999px !important;
+  border-radius: var(--rg-radius-btn, 8px) !important;
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
@@ -1397,7 +1434,7 @@ body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) button[
   font-size: 11px !important;
   font-weight: 600 !important;
   line-height: 24px !important;
-  border-radius: 9999px !important;
+  border-radius: var(--rg-radius-btn, 8px) !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;

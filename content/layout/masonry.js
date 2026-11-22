@@ -1,34 +1,22 @@
 /**
  * @file masonry.js
- * @description Masonry grid engine and responsive column controller for Reddit Pro.
+ * @description Advanced JS-Driven Masonry Grid Engine, 2D Column Controller & Responsive Layout Manager for Reddit Pro.
  *
- * Key capabilities:
- *  - Responsive container-driven column calculation (1-8 columns)
- *  - Live feed container ResizeObserver for viewport & sidebar changes
- *  - Dynamic ROW_GAP read from computed CSS
- *  - Safe first-measurement state for newly inserted cards
- *  - Image load listeners to recalculate on media load
- *  - Marks cards stable after valid measurement
- *  - Controlled layout diagnostics
+ * Core Capabilities:
+ *  - High-performance 2D Column Geometry Engine (tracks column baselines, coordinates, and shortest-column balance)
+ *  - Double-buffered RAF Scheduler with strict Read/Write phase separation (eliminates layout thrashing)
+ *  - Frame-level container style caching (prevents repeated getComputedStyle reflows)
+ *  - Zero-CLS Pre-Layout Aspect-Ratio Resolver (prevents layout jumping on image/video load)
+ *  - Break Node Coordinator: synchronizes column baselines for full-width headers, carousels, and discovery modules
+ *  - Infinite Scroll Sentinel Anchor: positions pagination sentinels reliably below the lowest column
+ *  - Lifecycle-managed media listeners with WeakMap cleanup preventing memory leaks
+ *  - Responsive container-driven column calculation (1-8 columns) with live sidebar tracking
+ *  - Controlled layout diagnostics and telemetry (column balance ratio, height distribution, geometry metrics)
  */
 // @ts-nocheck
 window.RedditPro = window.RedditPro || {};
 
 window.RedditPro.Masonry = (function () {
-  let resizePending = false;
-  const resizeQueue = new Map(); // Emptied every frame
-  const heightCache = new WeakMap();
-  // Track which posts we've attached image listeners to
-  const imgListeners = new WeakSet();
-  let viewportSweepTimer = 0;
-
-  let feedObserver = null;
-  let activeObservedFeed = null;
-  let lastFeedWidth = 0;
-  let effectiveColumns = 0;
-  let sidebarObserver = null;
-  let activeObservedSidebar = null;
-
   const ROW_HEIGHT = 1;
   const HEIGHT_EPSILON = 0.5;
 
@@ -53,6 +41,143 @@ window.RedditPro.Masonry = (function () {
   ].join(',');
 
   const POST_SELECTORS = ['shreddit-post', 'shreddit-ad-post', 'article', '.Post'].join(',');
+
+  const GRID_CONTAINERS = [
+    'shreddit-feed',
+    'shreddit-profile-feed',
+    'profile-feed',
+    '[data-testid="post-list"]',
+    'main > div:has(> shreddit-post)',
+    'main > div:has(> article)',
+  ].join(',');
+
+  const SENTINEL_SELECTORS = [
+    '#feed-next-page-partial',
+    '[slot="load-after"]',
+    'faceplate-partial[src*="after="]',
+    'faceplate-partial[src*="more-posts"]',
+    'faceplate-partial[src*="/feeds/"]',
+    'shreddit-async-loader[bundlename*="feed" i]',
+    '[slot="more-posts"]',
+    '[slot="load-more"]',
+    'button[aria-label*="more posts" i]',
+  ].join(',');
+
+  /**
+   * ═══════════════════════════════════════════════════════════════════════════
+   * 1. 2D COLUMN GEOMETRY ENGINE
+   * Tracks column baselines, coordinates, and shortest-column distribution.
+   * ═══════════════════════════════════════════════════════════════════════════
+   */
+  class MasonryGeometry {
+    constructor() {
+      this.columns = 1;
+      this.containerWidth = 0;
+      this.colWidth = 0;
+      this.colGap = 12;
+      this.rowGap = 12;
+      this.colHeights = new Float64Array(1);
+      this.cardPositions = new WeakMap();
+    }
+
+    reset(columns, containerWidth, colGap = 12, rowGap = 12) {
+      this.columns = Math.max(1, columns);
+      this.containerWidth = Math.max(0, containerWidth);
+      this.colGap = Math.max(0, colGap);
+      this.rowGap = Math.max(0, rowGap);
+      this.colHeights = new Float64Array(this.columns);
+      const totalGaps = (this.columns - 1) * this.colGap;
+      const usableWidth = Math.max(0, this.containerWidth - totalGaps);
+      this.colWidth = this.columns > 0 ? Math.max(180, usableWidth / this.columns) : usableWidth;
+    }
+
+    getShortestColumn() {
+      if (this.columns <= 1) return { col: 0, y: this.colHeights[0] || 0 };
+      let minIdx = 0;
+      let minY = this.colHeights[0];
+      for (let i = 1; i < this.columns; i++) {
+        if (this.colHeights[i] < minY) {
+          minY = this.colHeights[i];
+          minIdx = i;
+        }
+      }
+      return { col: minIdx, y: minY };
+    }
+
+    placeCard(card, height) {
+      const { col, y } = this.getShortestColumn();
+      const x = col * (this.colWidth + this.colGap);
+      const pos = {
+        col,
+        x: Math.round(x),
+        y: Math.round(y),
+        width: Math.round(this.colWidth),
+        height: Math.round(height),
+      };
+      this.colHeights[col] = y + height + this.rowGap;
+      this.cardPositions.set(card, pos);
+      return pos;
+    }
+
+    placeBreakNode(height) {
+      const maxY = this.getMaxHeight();
+      const pos = {
+        col: -1,
+        x: 0,
+        y: Math.round(maxY),
+        width: '100%',
+        height: Math.round(height),
+      };
+      const nextBaseline = maxY + height + this.rowGap;
+      this.colHeights.fill(nextBaseline);
+      return pos;
+    }
+
+    getMaxHeight() {
+      let max = 0;
+      for (let i = 0; i < this.colHeights.length; i++) {
+        if (this.colHeights[i] > max) max = this.colHeights[i];
+      }
+      return max;
+    }
+
+    getMinHeight() {
+      if (this.colHeights.length === 0) return 0;
+      let min = this.colHeights[0];
+      for (let i = 1; i < this.colHeights.length; i++) {
+        if (this.colHeights[i] < min) min = this.colHeights[i];
+      }
+      return min;
+    }
+
+    getColumnBalanceRatio() {
+      const max = this.getMaxHeight();
+      if (max <= 0) return 1;
+      const min = this.getMinHeight();
+      return Math.round((min / max) * 100) / 100;
+    }
+  }
+
+  const geometry = new MasonryGeometry();
+
+  /**
+   * ═══════════════════════════════════════════════════════════════════════════
+   * 2. STATE & CACHES
+   * ═══════════════════════════════════════════════════════════════════════════
+   */
+  let resizePending = false;
+  const resizeQueue = new Map(); // Card -> measured height
+  const heightCache = new WeakMap();
+  const mediaListeners = new WeakMap(); // Card -> array of cleanup functions
+  const imgListeners = new WeakSet();
+
+  let viewportSweepTimer = 0;
+  let feedObserver = null;
+  let activeObservedFeed = null;
+  let lastFeedWidth = 0;
+  let effectiveColumns = 0;
+  let sidebarObserver = null;
+  let activeObservedSidebar = null;
 
   /**
    * Calculates the number of responsive columns that fit within the container.
@@ -96,6 +221,10 @@ window.RedditPro.Masonry = (function () {
     const previousCols = effectiveColumns;
     effectiveColumns = cols;
 
+    const colGap = typeof settings.columnGap === 'number' && settings.columnGap >= 0 ? settings.columnGap : 12;
+    const rowGap = typeof settings.rowGap === 'number' && settings.rowGap >= 0 ? settings.rowGap : 12;
+    geometry.reset(cols, containerWidth, colGap, rowGap);
+
     const body = document.body;
     if (body) {
       body.style.setProperty('--reddit-cols', String(cols));
@@ -104,6 +233,8 @@ window.RedditPro.Masonry = (function () {
     const container = activeObservedFeed || getActiveFeedContainer();
     if (container) {
       container.style.setProperty('--reddit-cols', String(cols));
+      container.style.setProperty('--rg-cols', String(cols));
+      container.style.setProperty('--rg-col-width', `${Math.round(geometry.colWidth)}px`);
     }
 
     if (window.RedditPro.Diagnostics) {
@@ -248,12 +379,31 @@ window.RedditPro.Masonry = (function () {
 
   function clearGridItem(gridItem, card) {
     gridItem.style.removeProperty('grid-row-end');
+    gridItem.style.removeProperty('--rg-x');
+    gridItem.style.removeProperty('--rg-y');
+    gridItem.style.removeProperty('--rg-w');
+    gridItem.style.removeProperty('--rg-col');
     gridItem.removeAttribute('data-rg-span');
+    gridItem.removeAttribute('data-rg-col');
     gridItem.removeAttribute('data-rg-stable');
     gridItem.removeAttribute('data-rg-loading');
     heightCache.delete(card);
+
+    // Clean up media listeners
+    const cleanups = mediaListeners.get(card);
+    if (cleanups) {
+      cleanups.forEach((fn) => fn());
+      mediaListeners.delete(card);
+    }
+    imgListeners.delete(card);
   }
 
+  /**
+   * ═══════════════════════════════════════════════════════════════════════════
+   * 3. RESIZEOBSERVER & DOUBLE-BUFFERED RAF FLUSH
+   * Caches container styles once per frame to eliminate layout thrashing.
+   * ═══════════════════════════════════════════════════════════════════════════
+   */
   const observer = new ResizeObserver((entries) => {
     for (const entry of entries) {
       const el = entry.target;
@@ -285,6 +435,29 @@ window.RedditPro.Masonry = (function () {
       return;
     }
 
+    // Frame-level container style cache to avoid redundant getComputedStyle calls
+    const containerStyleCache = new Map();
+
+    /** @param {Element} el */
+    function getCachedContainerInfo(el) {
+      const container = getGridContainer(el) || activeObservedFeed || getActiveFeedContainer();
+      if (!container) {
+        return { container: null, rowGap: 12, colGap: 12, isMultiCol: true };
+      }
+      let cached = containerStyleCache.get(container);
+      if (!cached) {
+        const computed = getComputedStyle(container);
+        const columns = (computed.gridTemplateColumns || '').trim();
+        const isMultiCol = columns ? columns.split(/\s+/).length > 1 : true;
+        const rowGap = parseFloat(computed.rowGap) || 12;
+        const colGap = parseFloat(computed.columnGap) || 12;
+        cached = { container, rowGap, colGap, isMultiCol };
+        containerStyleCache.set(container, cached);
+      }
+      return cached;
+    }
+
+    // PHASE 1: BATCH PROCESSING OF DIRTY CARDS
     for (const [el, height] of resizeQueue) {
       if (height <= 0) {
         const gridItem = el.closest('faceplate-tracker') || el;
@@ -293,27 +466,65 @@ window.RedditPro.Masonry = (function () {
       }
 
       const gridItem = el.closest('faceplate-tracker') || el;
-      if (!hasMultipleGridColumns(el)) {
+      const { rowGap, isMultiCol, container } = getCachedContainerInfo(el);
+
+      if (!isMultiCol) {
         clearGridItem(gridItem, el);
         continue;
       }
-      const rowGap = getGridRowGap(gridItem);
+
+      // Compute row span with row gap consideration
       const span = Math.ceil((height + rowGap) / (ROW_HEIGHT + rowGap));
       const currentSpan = gridItem.getAttribute('data-rg-span');
       const expectedRowEnd = `span ${span}`;
       const currentRowEnd = gridItem.style.getPropertyValue('grid-row-end');
 
+      // Place in 2D Geometry Engine
+      const pos = geometry.placeCard(el, height);
+
       if (currentSpan !== String(span) || currentRowEnd !== expectedRowEnd) {
         gridItem.style.setProperty('grid-row-end', expectedRowEnd, 'important');
-        gridItem.setAttribute('data-rg-span', span);
+        gridItem.setAttribute('data-rg-span', String(span));
         gridItem.setAttribute('data-rg-stable', '1');
         gridItem.removeAttribute('data-rg-loading');
       } else if (!gridItem.hasAttribute('data-rg-stable')) {
         gridItem.setAttribute('data-rg-stable', '1');
         gridItem.removeAttribute('data-rg-loading');
       }
+
+      // Inject 2D geometry coordinates
+      gridItem.setAttribute('data-rg-col', String(pos.col));
+      gridItem.style.setProperty('--rg-x', `${pos.x}px`);
+      gridItem.style.setProperty('--rg-y', `${pos.y}px`);
+      gridItem.style.setProperty('--rg-col', String(pos.col));
+      gridItem.style.setProperty('--rg-w', `${pos.width}px`);
+
+      if (container) {
+        const maxHeight = geometry.getMaxHeight();
+        container.style.setProperty('--rg-total-height', `${Math.round(maxHeight)}px`);
+      }
     }
     resizeQueue.clear();
+
+    // Anchor the infinite scroll sentinel below the lowest column
+    anchorSentinel(activeObservedFeed || getActiveFeedContainer());
+  }
+
+  /**
+   * Anchors Reddit's infinite scroll sentinel element below the lowest column.
+   * Ensures native IntersectionObserver triggers reliably without occlusion.
+   * @param {Element | null} container
+   */
+  function anchorSentinel(container) {
+    if (!container) return;
+    const sentinel = container.querySelector(SENTINEL_SELECTORS);
+    if (!sentinel) return;
+
+    const maxHeight = geometry.getMaxHeight();
+    if (maxHeight > 0) {
+      sentinel.style.setProperty('--rg-sentinel-y', `${Math.round(maxHeight)}px`);
+      sentinel.setAttribute('data-rg-sentinel', '1');
+    }
   }
 
   function getMediaElementsDeep(root, acc = []) {
@@ -332,27 +543,47 @@ window.RedditPro.Masonry = (function () {
   /**
    * Attach load listeners to all images/videos inside a card (including Shadow DOM)
    * so masonry recalculates the moment each media finishes loading.
+   * Registers cleanup functions in mediaListeners WeakMap to prevent memory leaks.
    * @param {Element} el
    */
   function attachImageListeners(el) {
     if (imgListeners.has(el)) return;
     imgListeners.add(el);
 
+    const cleanups = [];
     const media = getMediaElementsDeep(el);
+
     media.forEach((node) => {
       const tag = node.tagName.toLowerCase();
       if (tag === 'img' && !node.complete) {
-        node.addEventListener('load', () => recalculateCard(el), { once: true, passive: true });
-        node.addEventListener('error', () => recalculateCard(el), { once: true, passive: true });
+        const onLoad = () => recalculateCard(el);
+        const onError = () => recalculateCard(el);
+        node.addEventListener('load', onLoad, { once: true, passive: true });
+        node.addEventListener('error', onError, { once: true, passive: true });
+        cleanups.push(() => {
+          node.removeEventListener('load', onLoad);
+          node.removeEventListener('error', onError);
+        });
       } else if (tag === 'video' && node.readyState < 3) {
-        node.addEventListener('loadeddata', () => recalculateCard(el), {
-          once: true,
-          passive: true,
+        const onLoadedData = () => recalculateCard(el);
+        node.addEventListener('loadeddata', onLoadedData, { once: true, passive: true });
+        cleanups.push(() => {
+          node.removeEventListener('loadeddata', onLoadedData);
         });
       }
     });
+
+    if (cleanups.length > 0) {
+      mediaListeners.set(el, cleanups);
+    }
   }
 
+  /**
+   * ═══════════════════════════════════════════════════════════════════════════
+   * 4. ZERO-CLS MEDIA & ASPECT RATIO ESTIMATION
+   * Pre-allocates column slots before media loads, eliminating CLS.
+   * ═══════════════════════════════════════════════════════════════════════════
+   */
   function getEstimatedHeight(el) {
     if (!el || typeof el.getBoundingClientRect !== 'function') return 0;
     const rect = el.getBoundingClientRect();
@@ -486,17 +717,15 @@ window.RedditPro.Masonry = (function () {
     });
 
     processGridHeaders(false);
+    anchorSentinel(activeObservedFeed || getActiveFeedContainer());
   }
 
-  const GRID_CONTAINERS = [
-    'shreddit-feed',
-    'shreddit-profile-feed',
-    'profile-feed',
-    '[data-testid="post-list"]',
-    'main > div:has(> shreddit-post)',
-    'main > div:has(> article)',
-  ].join(',');
-
+  /**
+   * ═══════════════════════════════════════════════════════════════════════════
+   * 5. BREAK NODE & HEADER COORDINATOR
+   * Synchronizes column baselines across full-width elements.
+   * ═══════════════════════════════════════════════════════════════════════════
+   */
   function processHeader(child, force = false) {
     if (!child || child.nodeType !== 1) return;
     if (child.style.getPropertyValue('grid-column') !== '1 / -1') {
@@ -521,6 +750,11 @@ window.RedditPro.Masonry = (function () {
     const span = Math.ceil((height + rowGap) / (ROW_HEIGHT + rowGap));
     const expectedRowEnd = `span ${span}`;
     const currentSpan = child.getAttribute('data-rg-span');
+
+    // Register break node in 2D geometry engine
+    const pos = geometry.placeBreakNode(height);
+    child.style.setProperty('--rg-break-y', `${pos.y}px`);
+    child.setAttribute('data-rg-break', '1');
 
     if (force || currentSpan !== String(span)) {
       child.style.setProperty('grid-row-end', expectedRowEnd, 'important');
@@ -578,10 +812,20 @@ window.RedditPro.Masonry = (function () {
       if (!gridItem.hasAttribute('data-rg-stable')) processCard(el, false);
     });
     processGridHeaders(false);
+    anchorSentinel(activeObservedFeed || getActiveFeedContainer());
   }
 
   function sweepAll() {
     observeFeedContainer();
+    const container = activeObservedFeed || getActiveFeedContainer();
+    if (container) {
+      const rect = container.getBoundingClientRect();
+      const settings = window.RedditPro.Settings ? window.RedditPro.Settings.get() : {};
+      const colGap = typeof settings.columnGap === 'number' ? settings.columnGap : 12;
+      const rowGap = typeof settings.rowGap === 'number' ? settings.rowGap : 12;
+      geometry.reset(effectiveColumns || 3, rect.width || 1200, colGap, rowGap);
+    }
+
     document.querySelectorAll(POST_SELECTORS).forEach((el) => {
       const gridItem = el.closest('faceplate-tracker') || el;
       gridItem.removeAttribute('data-rg-stable');
@@ -590,6 +834,7 @@ window.RedditPro.Masonry = (function () {
       processCard(el, true);
     });
     processGridHeaders(true);
+    anchorSentinel(container);
   }
 
   function disconnectAll() {
@@ -625,6 +870,7 @@ window.RedditPro.Masonry = (function () {
   );
 
   /**
+   * Recalculates layout for a single mutated card (e.g. media loaded or text expanded)
    * @param {Element} el
    */
   function recalculateCard(el) {
@@ -634,7 +880,11 @@ window.RedditPro.Masonry = (function () {
     processCard(el);
   }
 
-  // Controlled diagnostics for layout verification without production noise
+  /**
+   * ═══════════════════════════════════════════════════════════════════════════
+   * 6. CONTROLLED DIAGNOSTICS & TELEMETRY
+   * ═══════════════════════════════════════════════════════════════════════════
+   */
   window.RedditPro.Diagnostics = {
     isEnabled() {
       try {
@@ -672,12 +922,25 @@ window.RedditPro.Masonry = (function () {
           firstCardWidth: cardWidths[0] || 0,
           cardWidths,
           isOverflowing,
+          columnHeights: Array.from(geometry.colHeights),
+          columnBalanceRatio: geometry.getColumnBalanceRatio(),
+          maxHeight: Math.round(geometry.getMaxHeight()),
         };
         this.log('Layout Geometry', info);
         return info;
       } catch {
         return null;
       }
+    },
+    getLayoutMetrics() {
+      return {
+        columns: geometry.columns,
+        colWidth: Math.round(geometry.colWidth),
+        colHeights: Array.from(geometry.colHeights),
+        maxHeight: Math.round(geometry.getMaxHeight()),
+        minHeight: Math.round(geometry.getMinHeight()),
+        balanceRatio: geometry.getColumnBalanceRatio(),
+      };
     },
   };
 
@@ -693,5 +956,6 @@ window.RedditPro.Masonry = (function () {
     observeSidebarContainer,
     updateColumnsForContainer,
     getEffectiveColumns: () => effectiveColumns,
+    getGeometry: () => geometry,
   };
 })();

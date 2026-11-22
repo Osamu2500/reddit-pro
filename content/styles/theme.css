@@ -36,9 +36,10 @@
   --rg-radius: 16px;       /* Card outer contour */
   --rg-radius-inner: 0;    /* Card internal borders disabled */
   --rg-radius-media: 12px; /* Media, image, and video embeds */
-  --rg-radius-btn: 8px;    /* Action buttons, vote pods, controls */
-  --rg-radius-pill: 9999px;/* Pill controls */
-  --rg-radius-sm: 4px;     /* Flairs, badges */
+  --rg-radius-avatar: 7px; /* Community icon & user avatar squircle */
+  --rg-radius-btn: 8px;    /* Action buttons, vote pods, controls squircle */
+  --rg-radius-pill: 8px;   /* Squircle pill buttons (join, tabs) */
+  --rg-radius-sm: 6px;     /* Flairs, badges squircle */
 
   /* ── Flat Shadow System ── */
   --rg-shadow: 0 4px 16px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);

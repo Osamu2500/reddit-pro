@@ -435,4 +435,239 @@ describe('Masonry layout engine & responsive columns', () => {
       expect(layoutCss).toMatch(/z-index:\s*1\s*!important/);
     });
   });
+
+  describe('JS-Driven 2D Masonry Engine & Shortest-Column Placement', () => {
+    it('tracks 2D coordinates and places cards into the shortest column', () => {
+      const feed = document.createElement('shreddit-feed');
+      feed.style.display = 'grid';
+      feed.style.gridTemplateColumns = '300px 300px 300px';
+      feed.style.columnGap = '12px';
+      feed.style.rowGap = '12px';
+      feed.getBoundingClientRect = () => ({
+        width: 924,
+        height: 1000,
+        top: 0,
+        right: 924,
+        bottom: 1000,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+      document.body.append(feed);
+
+      window.RedditPro.Settings.get = () => ({
+        columns: '3',
+        masonry: true,
+        columnGap: 12,
+        rowGap: 12,
+      });
+
+      window.RedditPro.Masonry.observeFeedContainer();
+
+      const geom = window.RedditPro.Masonry.getGeometry();
+      expect(geom.columns).toBe(3);
+
+      // Card 1: 400px -> Col 0
+      const card1 = document.createElement('shreddit-post');
+      const tracker1 = document.createElement('faceplate-tracker');
+      tracker1.append(card1);
+      feed.append(tracker1);
+      card1.getBoundingClientRect = () => ({
+        width: 300,
+        height: 400,
+        top: 0,
+        right: 300,
+        bottom: 400,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+      window.RedditPro.Masonry.processCard(card1);
+      runFrames();
+
+      expect(tracker1.getAttribute('data-rg-col')).toBe('0');
+      expect(tracker1.style.getPropertyValue('--rg-x')).toBe('0px');
+      expect(tracker1.style.getPropertyValue('--rg-y')).toBe('0px');
+
+      // Card 2: 200px -> Col 1
+      const card2 = document.createElement('shreddit-post');
+      const tracker2 = document.createElement('faceplate-tracker');
+      tracker2.append(card2);
+      feed.append(tracker2);
+      card2.getBoundingClientRect = () => ({
+        width: 300,
+        height: 200,
+        top: 0,
+        right: 300,
+        bottom: 200,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+      window.RedditPro.Masonry.processCard(card2);
+      runFrames();
+
+      expect(tracker2.getAttribute('data-rg-col')).toBe('1');
+      expect(tracker2.style.getPropertyValue('--rg-x')).toBe('312px');
+      expect(tracker2.style.getPropertyValue('--rg-y')).toBe('0px');
+
+      // Card 3: 300px -> Col 2
+      const card3 = document.createElement('shreddit-post');
+      const tracker3 = document.createElement('faceplate-tracker');
+      tracker3.append(card3);
+      feed.append(tracker3);
+      card3.getBoundingClientRect = () => ({
+        width: 300,
+        height: 300,
+        top: 0,
+        right: 300,
+        bottom: 300,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+      window.RedditPro.Masonry.processCard(card3);
+      runFrames();
+
+      expect(tracker3.getAttribute('data-rg-col')).toBe('2');
+
+      // Card 4: 150px -> Shortest column is Col 1 (height 200 vs Col 0: 400, Col 2: 300)
+      const card4 = document.createElement('shreddit-post');
+      const tracker4 = document.createElement('faceplate-tracker');
+      tracker4.append(card4);
+      feed.append(tracker4);
+      card4.getBoundingClientRect = () => ({
+        width: 300,
+        height: 150,
+        top: 0,
+        right: 300,
+        bottom: 150,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+      window.RedditPro.Masonry.processCard(card4);
+      runFrames();
+
+      // Card 4 must be placed into column 1 at Y = 200 + 12 = 212px!
+      expect(tracker4.getAttribute('data-rg-col')).toBe('1');
+      expect(tracker4.style.getPropertyValue('--rg-x')).toBe('312px');
+      expect(tracker4.style.getPropertyValue('--rg-y')).toBe('212px');
+    });
+
+    it('synchronizes baselines across all columns when a full-width break node is placed', () => {
+      const feed = document.createElement('shreddit-feed');
+      feed.style.display = 'grid';
+      feed.style.gridTemplateColumns = '300px 300px';
+      feed.getBoundingClientRect = () => ({
+        width: 612,
+        height: 800,
+        top: 0,
+        right: 612,
+        bottom: 800,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+      document.body.append(feed);
+
+      window.RedditPro.Settings.get = () => ({
+        columns: '2',
+        masonry: true,
+        columnGap: 12,
+        rowGap: 12,
+      });
+
+      window.RedditPro.Masonry.observeFeedContainer();
+
+      // Simulate a full-width header
+      const header = document.createElement('shreddit-feed-header');
+      header.getBoundingClientRect = () => ({
+        width: 612,
+        height: 100,
+        top: 0,
+        right: 612,
+        bottom: 100,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+      feed.append(header);
+
+      window.RedditPro.Masonry.sweepNew();
+      runFrames();
+
+      expect(header.getAttribute('data-rg-break')).toBe('1');
+      expect(header.style.gridColumn).toBe('1 / -1');
+
+      // Subsequent card starts below header (100 + 12 = 112px)
+      const card = document.createElement('shreddit-post');
+      const tracker = document.createElement('faceplate-tracker');
+      tracker.append(card);
+      feed.append(tracker);
+      card.getBoundingClientRect = () => ({
+        width: 300,
+        height: 200,
+        top: 0,
+        right: 300,
+        bottom: 200,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+      window.RedditPro.Masonry.processCard(card);
+      runFrames();
+
+      expect(tracker.style.getPropertyValue('--rg-y')).toBe('112px');
+    });
+
+    it('anchors the infinite scroll sentinel below the highest column baseline', () => {
+      const feed = document.createElement('shreddit-feed');
+      feed.style.display = 'grid';
+      feed.style.gridTemplateColumns = '300px 300px';
+      document.body.append(feed);
+
+      const sentinel = document.createElement('faceplate-partial');
+      sentinel.setAttribute('src', '/feeds/home?after=t3_xyz');
+      feed.append(sentinel);
+
+      const card = document.createElement('shreddit-post');
+      const tracker = document.createElement('faceplate-tracker');
+      tracker.append(card);
+      feed.append(tracker);
+      card.getBoundingClientRect = () => ({
+        width: 300,
+        height: 350,
+        top: 0,
+        right: 300,
+        bottom: 350,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+
+      window.RedditPro.Masonry.processCard(card);
+      runFrames();
+
+      expect(sentinel.getAttribute('data-rg-sentinel')).toBe('1');
+      expect(sentinel.style.getPropertyValue('--rg-sentinel-y')).toMatch(/^\d+px$/);
+    });
+
+    it('provides layout quality metrics in telemetry', () => {
+      const metrics = window.RedditPro.Diagnostics.getLayoutMetrics();
+      expect(metrics).toHaveProperty('columns');
+      expect(metrics).toHaveProperty('colHeights');
+      expect(metrics).toHaveProperty('maxHeight');
+      expect(metrics).toHaveProperty('balanceRatio');
+    });
+  });
 });
