@@ -6,7 +6,22 @@
 window.RedditPro = window.RedditPro || {};
 
 window.RedditPro.Lifecycle = (function() {
-  const PAGE_TYPE = { FEED: 'feed', POST_THREAD: 'post_thread', PROFILE: 'profile', SEARCH: 'search' };
+  const PAGE_TYPE = {
+    FEED: 'feed',
+    POST_THREAD: 'post_thread',
+    PROFILE: 'profile',
+    SAVED: 'saved',
+    SEARCH: 'search',
+    COMMUNITIES: 'communities',
+    WIKI: 'wiki',
+    ABOUT: 'about',
+    SUBMIT: 'submit',
+    NOTIFICATIONS: 'notifications',
+    MESSAGES: 'messages',
+    SETTINGS: 'settings',
+    MOD: 'mod',
+    STANDALONE: 'standalone',
+  };
   /** @type {boolean} */
   let running = false;
   /** @type {string} */
@@ -38,44 +53,189 @@ window.RedditPro.Lifecycle = (function() {
    * @returns {string}
    */
   function detectPageType(url) {
-    if (/\/comments\/[a-z0-9]+\//.test(url)) return PAGE_TYPE.POST_THREAD;
-    if (/\/user\/[^/]+\/(saved|posts|comments|history|hidden|upvoted|downvoted)/i.test(url)) return PAGE_TYPE.PROFILE;
-    if (/\/user\/[^/]+\/?$/.test(url)) return PAGE_TYPE.PROFILE;
-    if (/\/search\/?/.test(url)) return PAGE_TYPE.SEARCH;
-    if (/\/r\/[^/]+(\/?)?$/.test(url)) return PAGE_TYPE.FEED;
-    if (url.endsWith('.reddit.com/') || /reddit\.com\/?$/.test(url)) return PAGE_TYPE.FEED;
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(url, location.origin);
+    } catch {
+      return PAGE_TYPE.FEED;
+    }
+
+    const path = parsedUrl.pathname;
+
+    // 1. Post threads
+    if (/\/comments\/[a-z0-9]+\//i.test(path)) return PAGE_TYPE.POST_THREAD;
+
+    // 2. Search
+    if (/\/search(\/|\?|$)/i.test(path)) return PAGE_TYPE.SEARCH;
+
+    // 3. Saved pages
+    if (/\/(user|u)\/[^/]+\/saved(\/|\?|$)/i.test(path) || /^\/saved(\/|\?|$)/i.test(path)) {
+      return PAGE_TYPE.SAVED;
+    }
+
+    // 4. Wiki & documentation
+    if (/\/wiki(\/|$)/i.test(path)) return PAGE_TYPE.WIKI;
+
+    // 5. Subreddit About & Rules & Mod
+    if (/\/about\/mod(\/|$)/i.test(path) || /^\/mod(\/|$)/i.test(path)) return PAGE_TYPE.MOD;
+    if (/\/about(\/|$)/i.test(path)) return PAGE_TYPE.ABOUT;
+
+    // 6. Submit
+    if (/\/submit(\/|$)/i.test(path)) return PAGE_TYPE.SUBMIT;
+
+    // 7. Notifications
+    if (/^\/notifications(\/|$)/i.test(path)) return PAGE_TYPE.NOTIFICATIONS;
+
+    // 8. Messages
+    if (/^\/message(\/|$)/i.test(path)) return PAGE_TYPE.MESSAGES;
+
+    // 9. Settings
+    if (/^\/settings(\/|$)/i.test(path)) return PAGE_TYPE.SETTINGS;
+
+    // 10. Standalone utility pages
+    if (/^\/(vault|premium|policies)(\/|$)/i.test(path)) return PAGE_TYPE.STANDALONE;
+
+    // 11. Communities & subreddits directory
+    if (/^\/(communities|subreddits|topics|best\/communities)(\/|$)/i.test(path)) {
+      return PAGE_TYPE.COMMUNITIES;
+    }
+
+    // 12. Custom feeds under user (e.g. /user/spez/m/techfeed/ or /u/spez/m/news/)
+    if (/\/(user|u)\/[^/]+\/m\/[^/]+/i.test(path)) return PAGE_TYPE.FEED;
+
+    // 13. User profile pages
+    if (/\/(user|u)\/[^/]+/i.test(path)) return PAGE_TYPE.PROFILE;
+
+    // 14. Standard feeds
     return PAGE_TYPE.FEED;
   }
 
   function applyRoutingLogic() {
+    if (!document.body) {
+      if (typeof requestAnimationFrame !== 'undefined') {
+        requestAnimationFrame(applyRoutingLogic);
+      } else {
+        setTimeout(applyRoutingLogic, 20);
+      }
+      return;
+    }
+
     const pageType = detectPageType(location.href);
     
     // Manage Body Classes for SPA Routing CSS Targeting
-    document.body.classList.remove('rg-page-home', 'rg-page-community', 'rg-page-profile', 'rg-page-saved', 'rg-page-post', 'rg-page-search');
+    document.body.classList.remove(
+      'rg-page-home',
+      'rg-page-community',
+      'rg-page-profile',
+      'rg-page-saved',
+      'rg-page-post',
+      'rg-page-search',
+      'rg-page-communities',
+      'rg-page-wiki',
+      'rg-page-about',
+      'rg-page-submit',
+      'rg-page-notifications',
+      'rg-page-messages',
+      'rg-page-settings',
+      'rg-page-mod',
+      'rg-page-standalone'
+    );
     const path = location.pathname;
     
-    if (pageType === PAGE_TYPE.POST_THREAD) {
-      document.body.classList.add('rg-page-post');
-      window.RedditPro.Settings.updateActive({ columns: '1' });
-      halt();
-    } else {
-      if (pageType === PAGE_TYPE.SEARCH) document.body.classList.add('rg-page-search');
-      else if (pageType === PAGE_TYPE.PROFILE) {
-        if (path.includes('/saved')) document.body.classList.add('rg-page-saved');
-        else document.body.classList.add('rg-page-profile');
-      }
-      else if (pageType === PAGE_TYPE.FEED) {
-        if (path === '/' || path.match(/^\/(best|hot|new)\/?$/)) document.body.classList.add('rg-page-home');
-        else document.body.classList.add('rg-page-community');
-      }
-      
-      window.RedditPro.Settings.updateActive({}); 
-      resume();
+    switch (pageType) {
+      case PAGE_TYPE.POST_THREAD:
+        document.body.classList.add('rg-page-post');
+        window.RedditPro.Settings?.updateActive({ columns: '1' });
+        halt();
+        break;
+      case PAGE_TYPE.WIKI:
+        document.body.classList.add('rg-page-wiki');
+        window.RedditPro.Settings?.updateActive({ columns: '1' });
+        halt();
+        break;
+      case PAGE_TYPE.ABOUT:
+        document.body.classList.add('rg-page-about');
+        window.RedditPro.Settings?.updateActive({ columns: '1' });
+        halt();
+        break;
+      case PAGE_TYPE.SUBMIT:
+        document.body.classList.add('rg-page-submit');
+        window.RedditPro.Settings?.updateActive({ columns: '1' });
+        halt();
+        break;
+      case PAGE_TYPE.NOTIFICATIONS:
+        document.body.classList.add('rg-page-notifications');
+        window.RedditPro.Settings?.updateActive({ columns: '1' });
+        halt();
+        break;
+      case PAGE_TYPE.MESSAGES:
+        document.body.classList.add('rg-page-messages');
+        window.RedditPro.Settings?.updateActive({ columns: '1' });
+        halt();
+        break;
+      case PAGE_TYPE.SETTINGS:
+        document.body.classList.add('rg-page-settings');
+        window.RedditPro.Settings?.updateActive({ columns: '1' });
+        halt();
+        break;
+      case PAGE_TYPE.MOD:
+        document.body.classList.add('rg-page-mod');
+        window.RedditPro.Settings?.updateActive({ columns: '1' });
+        halt();
+        break;
+      case PAGE_TYPE.STANDALONE:
+        document.body.classList.add('rg-page-standalone');
+        window.RedditPro.Settings?.updateActive({ columns: '1' });
+        halt();
+        break;
+      case PAGE_TYPE.COMMUNITIES:
+        document.body.classList.add('rg-page-communities');
+        window.RedditPro.Settings?.updateActive({});
+        resume();
+        break;
+      case PAGE_TYPE.SEARCH:
+        document.body.classList.add('rg-page-search');
+        window.RedditPro.Settings?.updateActive({});
+        resume();
+        break;
+      case PAGE_TYPE.SAVED:
+        document.body.classList.add('rg-page-saved', 'rg-page-profile');
+        window.RedditPro.Settings?.updateActive({});
+        resume();
+        break;
+      case PAGE_TYPE.PROFILE:
+        document.body.classList.add('rg-page-profile');
+        window.RedditPro.Settings?.updateActive({});
+        resume();
+        break;
+      case PAGE_TYPE.FEED:
+      default:
+        if (
+          path === '/' ||
+          path.match(/^\/(best|hot|new)\/?$/) ||
+          path.startsWith('/r/popular') ||
+          path.startsWith('/r/all')
+        ) {
+          document.body.classList.add('rg-page-home');
+        } else {
+          document.body.classList.add('rg-page-community');
+        }
+        window.RedditPro.Settings?.updateActive({});
+        resume();
+        break;
     }
     
-    if (pageType !== PAGE_TYPE.POST_THREAD) {
-      setTimeout(() => window.RedditPro.Masonry.sweepAll(), 80);
-      setTimeout(() => window.RedditPro.Masonry.sweepAll(), 400);
+    const isFeedLike = [
+      PAGE_TYPE.FEED,
+      PAGE_TYPE.PROFILE,
+      PAGE_TYPE.SAVED,
+      PAGE_TYPE.SEARCH,
+      PAGE_TYPE.COMMUNITIES,
+    ].includes(pageType);
+
+    if (isFeedLike) {
+      setTimeout(() => window.RedditPro.Masonry?.sweepAll?.(), 80);
+      setTimeout(() => window.RedditPro.Masonry?.sweepAll?.(), 400);
     }
   }
 
@@ -120,7 +280,7 @@ window.RedditPro.Lifecycle = (function() {
     history.replaceState = function (...args) { _replace(...args); setTimeout(onNavigate, 0); };
   }
 
-  return { init, resume, halt };
+  return { init, resume, halt, detectPageType, applyRoutingLogic, PAGE_TYPE };
 })();
 
 if (typeof document !== 'undefined') {

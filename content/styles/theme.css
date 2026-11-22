@@ -32,16 +32,17 @@
   --rg-border: rgba(0, 0, 0, 0.08);
   --rg-border-inner: rgba(255, 255, 255, 0.4);
 
-  /* ── Radius ── */
-  --rg-radius: 16px; /* Softer card silhouette */
-  --rg-radius-inner: 14px;
-  --rg-radius-pill: 8px; /* Legacy alias */
-  --rg-radius-btn: 8px; /* Squircle button corner radius */
+  /* ── Radius & Spacing Design Tokens ── */
+  --rg-radius: 16px;       /* Card outer contour */
+  --rg-radius-inner: 0;    /* Card internal borders disabled */
+  --rg-radius-media: 12px; /* Media, image, and video embeds */
+  --rg-radius-btn: 8px;    /* Action buttons, vote pods, controls */
+  --rg-radius-pill: 9999px;/* Pill controls */
+  --rg-radius-sm: 4px;     /* Flairs, badges */
 
   /* ── Flat Shadow System ── */
-  /* Replaced 7-layer clay with a single ambient minimal shadow */
-  --rg-shadow: 0 4px 12px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
-  --rg-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
+  --rg-shadow: 0 4px 16px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
+  --rg-shadow-hover: 0 8px 28px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.05);
 
   /* ── Accent Colors ── */
   --rg-accent: #ff4500;
@@ -58,13 +59,16 @@
 
   /* ── Structural Strips ── */
   --rg-credit-bg: transparent;
-  --rg-credit-border: rgba(0, 0, 0, 0.06);
+  --rg-credit-border: transparent;
   --rg-action-bg: transparent;
-  --rg-action-border: rgba(0, 0, 0, 0.06);
+  --rg-action-border: transparent;
 
   /* ── Text ── */
   --rg-text: rgba(0, 0, 0, 0.88);
   --rg-text-muted: rgba(0, 0, 0, 0.5);
+
+  /* ── Phase 1: Unified Horizontal Padding ── */
+  --rg-card-pad-h: 14px;
 }
 
 /* ─────────────────────────────────────────────
@@ -86,10 +90,10 @@ body.rg-theme-dark {
   --rg-btn-border: rgba(255, 255, 255, 0.08);
   --rg-btn-border-hover: rgba(255, 255, 255, 0.18);
 
-  --rg-credit-border: rgba(255, 255, 255, 0.06);
-  --rg-action-border: rgba(255, 255, 255, 0.06);
+  --rg-credit-border: transparent;
+  --rg-action-border: transparent;
   --rg-text: rgba(255, 255, 255, 0.92);
-  --rg-text-muted: rgba(255, 255, 255, 0.45);
+  --rg-text-muted: rgba(255, 255, 255, 0.55); /* Phase 6.3: raised from 0.45 for WCAG AA */
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -172,14 +176,9 @@ body:not([data-reddit-grid-cols='1'])
   )
   > shreddit-comment::before,
 body:not([data-reddit-grid-cols='1']) .Post::before {
-  content: '' !important;
-  display: block !important;
-  position: absolute !important;
-  inset: 0 !important;
-  border-radius: var(--rg-radius-inner) !important;
-  border: 1px solid var(--rg-border-inner) !important;
-  pointer-events: none !important;
-  z-index: 0 !important;
+  content: none !important;
+  display: none !important;
+  border: none !important;
 }
 
 /* Disable the old edge glow ring */
@@ -248,9 +247,9 @@ body:not([data-reddit-grid-cols='1']) shreddit-post > section {
 body:not([data-reddit-grid-cols='1']) shreddit-post [slot='credit-bar'],
 body:not([data-reddit-grid-cols='1']) shreddit-post-header {
   background: var(--rg-credit-bg) !important;
-  /* Very subtle dividing line */
-  border-bottom: 1px solid var(--rg-credit-border) !important;
-  border-radius: var(--rg-radius-inner) var(--rg-radius-inner) 0 0 !important;
+  border: none !important;
+  border-bottom: none !important;
+  border-radius: 0 !important;
   padding: 12px 52px 10px 14px !important;
   position: relative !important;
   z-index: 1 !important;
@@ -262,7 +261,8 @@ body:not([data-reddit-grid-cols='1']) shreddit-post-header {
 body:not([data-reddit-grid-cols='1']) shreddit-post [slot='action-bar'],
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-post-action-bar {
   background: transparent !important;
-  border-top: 1px solid var(--rg-action-border) !important;
+  border: none !important;
+  border-top: none !important;
   border-radius: 0 !important;
   padding: 8px 14px 10px 14px !important;
 }
@@ -499,8 +499,65 @@ body:not([data-reddit-grid-cols='1']) :is(
 
 body:not([data-reddit-grid-cols='1']) shreddit-post [slot='credit-bar'],
 body:not([data-reddit-grid-cols='1']) shreddit-post-header {
-  padding: 14px 52px 12px 16px !important;
-  min-height: 54px !important;
+  padding: 12px 52px 10px 14px !important;
+  min-height: 48px !important;
+  border: none !important;
+  border-bottom: none !important;
+  border-radius: 0 !important;
+}
+
+body:not([data-reddit-grid-cols='1']) shreddit-post :is([slot='credit-bar'], shreddit-post-header) :is(div, span, section, header, nav):not(faceplate-img):not(faceplate-img *):not(shreddit-avatar):not(shreddit-avatar *):not(button):not(a.button) {
+  border: none !important;
+  border-bottom: none !important;
+  border-top: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Remove container boxes, pill backgrounds, and borders from title and text */
+body:not([data-reddit-grid-cols='1']) shreddit-post :is(
+  [slot='title'],
+  [slot='post-title'],
+  shreddit-post-title,
+  [data-post-click-location='title'],
+  [slot='text-body'],
+  [slot='post-body'],
+  shreddit-post-body
+),
+body:not([data-reddit-grid-cols='1']) shreddit-post :is(
+  [slot='title'],
+  [slot='post-title'],
+  shreddit-post-title,
+  [data-post-click-location='title'],
+  [slot='text-body'],
+  [slot='post-body'],
+  shreddit-post-body
+) :is(a, h1, h2, h3, div, span, p, article, section) {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  border-radius: 0 !important;
+}
+
+body:not([data-reddit-grid-cols='1']) shreddit-post :is([slot='title'], [slot='post-title'], shreddit-post-title, [data-post-click-location='title']) a,
+shreddit-post a[id*='post-title'],
+shreddit-post a[data-testid='post-title-text'],
+shreddit-post a[href*='/comments/']:not(:is([slot='action-bar'], shreddit-post-action-bar, rpl-action-bar) *) {
+  padding: 0 !important;
+  margin: 0 !important;
+  color: var(--rg-text) !important;
+  text-decoration: none !important;
+  display: inline !important;
+  height: auto !important;
+  max-height: none !important;
+  min-height: 0 !important;
+  width: auto !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
 }
 
 body:not([data-reddit-grid-cols='1']) shreddit-post [slot='action-bar'],
@@ -528,4 +585,20 @@ body:not([data-reddit-grid-cols='1']) shreddit-post .shreddit-player-wrapper {
   body:not([data-reddit-grid-cols='1']) :is(shreddit-post, shreddit-profile-comment, article, .Post) {
     transition: none !important;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PHASE 6 — DARK MODE GRADIENT + BORDER DEPTH
+   ═══════════════════════════════════════════════════════════════════════════ */
+body.rg-theme-dark:not([data-reddit-grid-cols='1']) shreddit-post,
+body.rg-theme-dark:not([data-reddit-grid-cols='1']) article,
+body.rg-theme-dark:not([data-reddit-grid-cols='1']) .Post {
+  background: linear-gradient(180deg, #1d2026 0%, #191c21 100%) !important;
+}
+
+/* Phase 6.2: Stronger dark border on hover */
+body.rg-theme-dark:not([data-reddit-grid-cols='1']) shreddit-post:hover,
+body.rg-theme-dark:not([data-reddit-grid-cols='1']) article:hover,
+body.rg-theme-dark:not([data-reddit-grid-cols='1']) .Post:hover {
+  border-color: rgba(255, 255, 255, 0.18) !important;
 }

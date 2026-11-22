@@ -14,6 +14,7 @@ window.RedditPro.StatsInjector = (function () {
   /** @type {number | null} */
   let fetchTimeout = null;
   let isFlushing = false;
+  let isApiBlocked = false;
   const FETCH_DELAY_MS = 250;
   const MAX_RETRIES = 2;
   const MAX_BATCH_SIZE = 100;
@@ -26,7 +27,7 @@ window.RedditPro.StatsInjector = (function () {
 
   /** @param {Element} postNode */
   function queuePost(postNode) {
-    if (!postNode || injectedPosts.has(postNode)) return;
+    if (!postNode || injectedPosts.has(postNode) || isApiBlocked) return;
 
     const id = postNode.getAttribute('id');
     if (!id || !/^t3_[a-z0-9]+(?:-|$)/i.test(id)) return;
@@ -40,8 +41,9 @@ window.RedditPro.StatsInjector = (function () {
   }
 
   async function flushQueue() {
-    if (isFlushing) {
+    if (isFlushing || isApiBlocked) {
       fetchTimeout = null;
+      pendingPosts.clear();
       return;
     }
     if (pendingPosts.size === 0) {
@@ -75,6 +77,12 @@ window.RedditPro.StatsInjector = (function () {
         `https://www.reddit.com/api/info.json?id=${encodeURIComponent(idsQuery)}`
       );
       if (!response.ok) {
+        if (response.status === 403) {
+          isApiBlocked = true;
+          pendingPosts.clear();
+          retryCounts.clear();
+          return;
+        }
         throw new Error(`Reddit API returned HTTP ${response.status}`);
       }
 

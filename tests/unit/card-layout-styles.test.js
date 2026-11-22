@@ -37,4 +37,36 @@ describe('Post card content polish', () => {
     expect(cardsCss).toContain('min-height: 48px !important');
     expect(cardsCss).toContain('outline-offset: 2px !important');
   });
+
+  it('removes container boxes, pill backgrounds, and borders from card title and text', () => {
+    const cardsCss = fs.readFileSync(path.resolve(process.cwd(), 'content/styles/cards.css'), 'utf8');
+    expect(cardsCss).toContain('background: transparent !important');
+    expect(cardsCss).toContain('border: none !important');
+    expect(cardsCss).toContain('box-shadow: none !important');
+    expect(cardsCss).toContain('border-radius: 0 !important');
+    expect(themeCss).toContain('background: transparent !important');
+  });
+
+  it('styles the three-dots overflow button cleanly in the credit bar', () => {
+    const cardsCss = fs.readFileSync(path.resolve(process.cwd(), 'content/styles/cards.css'), 'utf8');
+    expect(cardsCss).toContain('THREE-DOTS OVERFLOW BUTTON');
+    expect(cardsCss).toContain('shreddit-overflow-menu');
+    expect(cardsCss).toContain('border-radius: var(--rg-radius-btn, 8px) !important');
+  });
+
+  it('prevents huge top gaps by not forcing shreddit-app into a grid or inflating partials', () => {
+    expect(layoutCss).toContain('--reddit-sidebar-width: 0px');
+    expect(layoutCss).toContain('):not(shreddit-app)');
+    expect(layoutCss).not.toContain('faceplate-partial:not(:has(shreddit-post');
+    expect(layoutCss).toContain('community-recommendations');
+    expect(layoutCss).toContain('div:has(> faceplate-tab-group)');
+  });
+
+  it('positions feed tabs and content below the fixed topbar without clipping', () => {
+    expect(layoutCss).toContain('--reddit-topbar-height: var(--shreddit-header-height, 56px)');
+    expect(layoutCss).toContain('padding-top: var(--reddit-topbar-height, 56px) !important');
+    expect(layoutCss).toMatch(/main\s*\{[\s\S]*?padding-top:\s*var\(--reddit-topbar-height,\s*56px\)\s*!important/);
+    expect(layoutCss).toMatch(/faceplate-tab-group[\s\S]*?margin-bottom:\s*12px\s*!important/);
+    expect(layoutCss).toMatch(/sticky[\s\S]*?top:\s*var\(--reddit-topbar-height,\s*56px\)\s*!important/);
+  });
 });

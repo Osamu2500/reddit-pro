@@ -55,6 +55,14 @@ window.RedditPro.DOMObserver = (function () {
 
     if (node.matches(POST_SELECTOR)) {
       node.setAttribute('data-rg-processed', 'true');
+      node.setAttribute('data-rg-new', '1');
+      setTimeout(() => {
+        try {
+          node.removeAttribute('data-rg-new');
+        } catch {
+          /* ignore */
+        }
+      }, 300);
       processPost(node);
       return;
     }
@@ -98,57 +106,78 @@ window.RedditPro.DOMObserver = (function () {
     ).forEach(handleElement);
   }
 
+  /** @type {IntersectionObserver | null} */
   let preloadObserver = null;
+  /** @type {Element | null} */
   let lastObservedSentinel = null;
   let isPreloading = false;
   let scrollPreloadTimer = 0;
 
   function triggerNextFeedBatch() {
     if (isPreloading) return;
+
+    const feed = document.querySelector(
+      'shreddit-feed, profile-feed, shreddit-profile-feed, shreddit-user-feed, [data-testid="post-list"], main > div:has(> shreddit-post)'
+    );
+    if (!feed) return;
+
     isPreloading = true;
 
-    // 1. Target Reddit's faceplate-partial (infinite scroll chunks)
-    const partials = document.querySelectorAll(
-      'faceplate-partial[src]:not([data-rg-triggered]), faceplate-partial[loading="lazy"]:not([data-rg-triggered])'
-    );
-    for (const partial of partials) {
-      partial.setAttribute('data-rg-triggered', 'true');
-      partial.setAttribute('loading', 'eager');
-      if (typeof partial.load === 'function') {
-        partial.load();
+    // Filter to find actual bottom-of-feed pagination sentinels
+    // CRITICAL: Exclude all 190+ partials/loaders that are nested inside post cards
+    const candidates = Array.from(
+      feed.querySelectorAll(
+        'faceplate-partial, shreddit-async-loader, [slot="more-posts"], [slot="load-more"], button[aria-label*="more posts" i], button:has(> [slot*="load-more"])'
+      )
+    ).filter((el) => {
+      if (el.closest('shreddit-post, article, .Post, shreddit-profile-comment')) {
+        return false;
       }
-      setTimeout(() => {
-        isPreloading = false;
-      }, 600);
-      return;
-    }
-
-    // 2. Target shreddit-async-loader at the bottom of the feed
-    const loaders = document.querySelectorAll(
-      'shreddit-feed > shreddit-async-loader:last-of-type:not([data-rg-triggered]), faceplate-batch > shreddit-async-loader:last-of-type:not([data-rg-triggered])'
-    );
-    for (const loader of loaders) {
-      loader.setAttribute('data-rg-triggered', 'true');
-      loader.setAttribute('loading', 'eager');
-      if (typeof loader.load === 'function') {
-        loader.load();
+      if (el.querySelector('shreddit-post, article, .Post')) {
+        return false;
       }
-      setTimeout(() => {
-        isPreloading = false;
-      }, 600);
-      return;
-    }
+      return !el.hasAttribute('data-rg-triggered');
+    });
 
-    // 3. Fallback: load more button
-    const loadBtn = document.querySelector(
-      'button[aria-label*="more posts" i]:not([data-rg-triggered]), button:has(> [slot*="load-more"]):not([data-rg-triggered])'
-    );
-    if (loadBtn) {
-      loadBtn.setAttribute('data-rg-triggered', 'true');
-      /** @type {HTMLElement} */ (loadBtn).click();
+    const target = candidates.length > 0 ? candidates[candidates.length - 1] : null;
+    if (target) {
+      target.setAttribute('data-rg-triggered', 'true');
+      const targetEl = /** @type {any} */ (target);
+
+      // 1. If it's or contains a button, click it
+      const btn = target.tagName === 'BUTTON' ? target : target.querySelector('button');
+      if (btn) {
+        try { /** @type {HTMLElement} */ (btn).click(); } catch {}
+      }
+
+      // 2. Set eager loading
+      if (target.hasAttribute('loading') || target.tagName.toLowerCase() === 'faceplate-partial') {
+        target.setAttribute('loading', 'eager');
+        try { targetEl.loading = 'eager'; } catch {}
+      }
+
+      // 3. Trigger load() method if defined by Web Component
+      if (typeof targetEl.load === 'function') {
+        try { targetEl.load(); } catch {}
+      }
+
+      // 4. Dispatch standard custom events expected by Reddit Faceplate components
+      target.dispatchEvent(new CustomEvent('faceplate-load', { bubbles: true }));
+      target.dispatchEvent(new CustomEvent('faceplate-partial-load', { bubbles: true }));
+      target.dispatchEvent(new Event('load', { bubbles: true }));
+
+      // Also trigger on the feed container
+      feed.dispatchEvent(new CustomEvent('shreddit-feed-more-posts', { bubbles: true }));
+
+      setTimeout(() => {
+        if (target.isConnected && !target.querySelector('shreddit-post, article')) {
+          target.removeAttribute('data-rg-triggered');
+        }
+      }, 1500);
+
       setTimeout(() => {
         isPreloading = false;
-      }, 600);
+      }, 500);
       return;
     }
 
@@ -163,13 +192,18 @@ window.RedditPro.DOMObserver = (function () {
     );
     if (!feed) return;
 
-    const sentinel = feed.lastElementChild;
-    if (!sentinel || sentinel === lastObservedSentinel) return;
+    const targets = Array.from(
+      feed.querySelectorAll(
+        'faceplate-partial, shreddit-async-loader, [slot="more-posts"], [slot="load-more"], faceplate-batch'
+      )
+    ).filter((el) => {
+      if (el.closest('shreddit-post, article, .Post, shreddit-profile-comment')) return false;
+      if (el.querySelector('shreddit-post, article, .Post')) return false;
+      return true;
+    });
 
-    if (preloadObserver && lastObservedSentinel) {
-      preloadObserver.unobserve(lastObservedSentinel);
-    }
-    lastObservedSentinel = sentinel;
+    const sentinel = targets.length > 0 ? targets[targets.length - 1] : feed.lastElementChild;
+    if (!sentinel) return;
 
     if (!preloadObserver && typeof IntersectionObserver !== 'undefined') {
       preloadObserver = new IntersectionObserver(
@@ -188,6 +222,10 @@ window.RedditPro.DOMObserver = (function () {
       );
     }
 
+    if (lastObservedSentinel && lastObservedSentinel !== sentinel) {
+      preloadObserver?.unobserve(lastObservedSentinel);
+    }
+    lastObservedSentinel = sentinel;
     preloadObserver?.observe(sentinel);
   }
 
@@ -206,7 +244,10 @@ window.RedditPro.DOMObserver = (function () {
   function scheduleNewSweep() {
     clearTimeout(sweepTimer);
     sweepTimer = setTimeout(() => {
-      requestAnimationFrame(() => window.RedditPro.Masonry.sweepNew());
+      requestAnimationFrame(() => {
+        window.RedditPro.Masonry?.sweepNew?.();
+        observeFeedEnd();
+      });
     }, 80);
   }
 

@@ -169,9 +169,9 @@ window.RedditPro.PostModal = (function () {
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') return;
       if (!isModalOpen || activeRequestId !== requestId) return;
-      console.error('RedditPro Modal Error:', error);
-      body.textContent = 'Unable to load this post. Please try again.';
-      body.classList.add('rg-error');
+      console.warn('RedditPro Modal fetch failed, falling back to native post navigation:', error);
+      hideModal();
+      window.location.href = url;
     } finally {
       if (isModalOpen && activeRequestId === requestId) loader.style.display = 'none';
     }
