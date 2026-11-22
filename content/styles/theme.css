@@ -540,7 +540,7 @@ body:not([data-reddit-grid-cols='1'])
 body:not([data-reddit-grid-cols='1'])
   shreddit-post[data-rg-has-join='true']
   shreddit-post-header {
-  min-height: 72px !important;
+  min-height: 58px !important;
   padding-right: 76px !important;
 }
 

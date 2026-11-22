@@ -160,7 +160,7 @@ body:not([data-reddit-grid-cols='1'])
   shreddit-post-header,
 body:not([data-reddit-grid-cols='1'])
   shreddit-post[data-rg-has-join='true']::part(credit-bar) {
-  min-height: 72px !important;
+  min-height: 58px !important;
   padding-right: 76px !important;
 }
 
@@ -176,7 +176,7 @@ body[data-reddit-grid-compact='true']
 body[data-reddit-grid-compact='true']
   shreddit-post[data-rg-has-join='true']
   shreddit-post-header {
-  min-height: 62px !important;
+  min-height: 52px !important;
   padding-right: 68px !important;
 }
 
@@ -639,7 +639,8 @@ body:not([data-reddit-grid-cols='1']) shreddit-post :is(
   max-width: 100% !important;
   width: auto !important;
   box-sizing: border-box !important;
-  padding: 6px 14px 4px 14px !important;
+  margin: -4px 0 0 0 !important;
+  padding: 3px 14px 4px 14px !important;
   word-break: break-word !important;
   overflow: hidden !important;
   font-size: clamp(0.92rem, 1.2vw, 1.08rem) !important;
@@ -657,6 +658,21 @@ body:not([data-reddit-grid-cols='1']) shreddit-post :is(
   white-space: normal !important;
 }
 
+/* Ensure post title wraps cleanly before row 2 join button */
+body:not([data-reddit-grid-cols='1']) :is(
+  shreddit-post:has(shreddit-join-button, [data-testid*='join' i], button[aria-label*='join' i]),
+  shreddit-post[data-rg-has-join='true']
+) :is(
+  [slot='title'],
+  [slot='post-title'],
+  shreddit-post-title,
+  [data-post-click-location='title'],
+  a[id*='post-title'],
+  a[data-testid='post-title-text']
+) {
+  padding-right: 76px !important;
+}
+
 /* Responsive Title Typography Scaling based on Column Count */
 body[data-reddit-grid-cols='2'] :is(shreddit-post, article, .Post) :is(
   [slot='title'],
@@ -668,7 +684,7 @@ body[data-reddit-grid-cols='2'] :is(shreddit-post, article, .Post) :is(
 ) {
   font-size: 1.04rem !important;
   line-height: 1.38 !important;
-  padding: 6px 14px 4px 14px !important;
+  padding: 3px 14px 4px 14px !important;
 }
 
 body[data-reddit-grid-cols='3'] :is(shreddit-post, article, .Post) :is(
@@ -681,7 +697,7 @@ body[data-reddit-grid-cols='3'] :is(shreddit-post, article, .Post) :is(
 ) {
   font-size: 0.96rem !important;
   line-height: 1.34 !important;
-  padding: 6px 14px 4px 14px !important;
+  padding: 3px 14px 4px 14px !important;
 }
 
 body[data-reddit-grid-cols='4'] :is(shreddit-post, article, .Post) :is(
@@ -694,7 +710,7 @@ body[data-reddit-grid-cols='4'] :is(shreddit-post, article, .Post) :is(
 ) {
   font-size: 0.88rem !important;
   line-height: 1.30 !important;
-  padding: 5px 12px 3px 12px !important;
+  padding: 2px 12px 3px 12px !important;
 }
 
 body[data-reddit-grid-cols='5'] :is(shreddit-post, article, .Post) :is(
@@ -707,7 +723,7 @@ body[data-reddit-grid-cols='5'] :is(shreddit-post, article, .Post) :is(
 ) {
   font-size: 0.82rem !important;
   line-height: 1.26 !important;
-  padding: 4px 10px 3px 10px !important;
+  padding: 2px 10px 3px 10px !important;
 }
 
 body[data-reddit-grid-cols='6'] :is(shreddit-post, article, .Post) :is(
@@ -720,7 +736,7 @@ body[data-reddit-grid-cols='6'] :is(shreddit-post, article, .Post) :is(
 ) {
   font-size: 0.76rem !important;
   line-height: 1.22 !important;
-  padding: 4px 10px 2px 10px !important;
+  padding: 2px 10px 2px 10px !important;
 }
 
 body:is(
@@ -738,7 +754,7 @@ body:is(
 ) {
   font-size: 0.72rem !important;
   line-height: 1.20 !important;
-  padding: 3px 8px 2px 8px !important;
+  padding: 2px 8px 2px 8px !important;
 }
 
 /* Title Line Clamp (4 lines max) */
@@ -825,11 +841,28 @@ shreddit-post a[href*='/comments/']:not(:is([slot='action-bar'], shreddit-post-a
   text-decoration: underline !important;
 }
 
-/* Flairs inside title wrapping */
+/* Flairs inside title wrapping: container only */
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-post-flair {
   display: inline-flex !important;
-  margin-top: 6px !important;
+  margin-top: 4px !important;
   margin-left: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-post-flair:empty,
+body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-post-flair:not(:has(faceplate-pill, [slot='flair'], a, span)) {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1308,12 +1341,42 @@ body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='s
 /* ═══════════════════════════════════════════════════════════════════════════
    9. FLAIR & TAG BADGES
    ═══════════════════════════════════════════════════════════════════════════ */
+/* Container only: no background, padding or borders so empty flairs never render pill artifacts */
+body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-post-flair,
+body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-post-flair faceplate-tracker {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-width: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+}
+
+/* Hide empty flairs or flairs without text so no grey bar / pill artifact renders */
+body:not([data-reddit-grid-cols='1']) shreddit-post :is(
+  shreddit-post-flair:empty,
+  shreddit-post-flair:not(:has(faceplate-pill, [slot='flair'], a, span)),
+  faceplate-pill:empty,
+  [data-testid='post-flair']:empty,
+  .flair:empty
+) {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+}
+
 body:not([data-reddit-grid-cols='1']) shreddit-post :is(
   [data-testid='post-flair'],
   .flair,
-  shreddit-post-flair,
   shreddit-post-flair [slot='flair'],
-  shreddit-post-flair faceplate-tracker,
+  shreddit-post-flair faceplate-pill,
+  shreddit-post-flair a,
   faceplate-pill:not([slot='title'] *):not([slot='post-title'] *)
 ) {
   font-size: 0.72rem !important;

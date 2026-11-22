@@ -69,4 +69,19 @@ describe('Post card content polish', () => {
     expect(layoutCss).toMatch(/faceplate-tab-group[\s\S]*?margin-bottom:\s*12px\s*!important/);
     expect(layoutCss).toMatch(/sticky[\s\S]*?top:\s*var\(--reddit-topbar-height,\s*56px\)\s*!important/);
   });
+
+  it('hides empty flairs and neutralizes container styles to prevent mystery pill artifacts', () => {
+    const cardsCss = fs.readFileSync(path.resolve(process.cwd(), 'content/styles/cards.css'), 'utf8');
+    expect(cardsCss).toContain('shreddit-post-flair:empty');
+    expect(cardsCss).toContain('faceplate-pill:empty');
+    expect(cardsCss).toContain('shreddit-post shreddit-post-flair faceplate-tracker');
+  });
+
+  it('tightens header-to-title vertical gap while reserving right space for row 2 join button', () => {
+    const cardsCss = fs.readFileSync(path.resolve(process.cwd(), 'content/styles/cards.css'), 'utf8');
+    expect(cardsCss).toContain('min-height: 58px !important');
+    expect(cardsCss).toMatch(
+      /shreddit-post:has\(shreddit-join-button[\s\S]*?:is\(\s*\[slot='title'\][\s\S]*?padding-right:\s*76px\s*!important/
+    );
+  });
 });

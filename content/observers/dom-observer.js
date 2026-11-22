@@ -149,6 +149,26 @@ window.RedditPro.DOMObserver = (function () {
         el.style.setProperty('border-radius', '7px', 'important');
         el.style.setProperty('overflow', 'hidden', 'important');
       }
+
+      // Check empty flairs and hide them so no empty pill artifact renders
+      const isFlair =
+        tag === 'shreddit-post-flair' ||
+        tag === 'faceplate-pill' ||
+        testId === 'post-flair' ||
+        testId.includes('flair') ||
+        el.className?.includes?.('flair');
+
+      if (isFlair) {
+        const text = el.textContent?.trim() || '';
+        if (!text) {
+          el.style.setProperty('display', 'none', 'important');
+          el.style.setProperty('visibility', 'hidden', 'important');
+          el.style.setProperty('height', '0px', 'important');
+          el.style.setProperty('padding', '0px', 'important');
+          el.style.setProperty('margin', '0px', 'important');
+          el.style.setProperty('border', 'none', 'important');
+        }
+      }
     }
 
     // Traverse child nodes
