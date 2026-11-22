@@ -585,8 +585,11 @@ body:not([data-reddit-grid-cols='1'])
     [data-testid='search-results']
   )
   :is(
+    #feed-next-page-partial,
+    [slot='load-after'],
     faceplate-partial[src*='after='],
     faceplate-partial[src*='more-posts'],
+    faceplate-partial[src*='/feeds/'],
     shreddit-async-loader[bundlename*='feed' i],
     [slot='more-posts'],
     [slot='load-more'],
@@ -632,8 +635,11 @@ body:not([data-reddit-grid-cols='1'])
     [data-testid='search-results']
   )
   :is(
+    #feed-next-page-partial,
+    [slot='load-after'],
     faceplate-partial[src*='after='],
     faceplate-partial[src*='more-posts'],
+    faceplate-partial[src*='/feeds/'],
     shreddit-async-loader[bundlename*='feed' i],
     [slot='more-posts'],
     [slot='load-more']
