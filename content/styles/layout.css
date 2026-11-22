@@ -582,20 +582,32 @@ body:not([data-reddit-grid-cols='1'])
     shreddit-custom-feed,
     [data-testid='post-list'],
     [data-testid='profile-feed'],
-    [data-testid='search-results'],
-    main
+    [data-testid='search-results']
   )
   :is(
-    faceplate-partial[loading],
-    faceplate-partial[src],
+    faceplate-partial[src*='after='],
+    faceplate-partial[src*='more-posts'],
     shreddit-async-loader[bundlename*='feed' i],
-    shreddit-async-loader[loading],
-    shreddit-async-loader[src],
     [slot='more-posts'],
     [slot='load-more'],
     button[aria-label*='more posts' i],
     button:has(> [slot*='load-more'])
-  ) {
+  ),
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed,
+    [data-testid='post-list'],
+    [data-testid='profile-feed'],
+    [data-testid='search-results']
+  )
+  > :is(shreddit-async-loader, faceplate-partial):last-child,
+body:not([data-reddit-grid-cols='1'])
+  faceplate-batch
+  > :is(shreddit-async-loader, faceplate-partial):last-child {
   grid-column: 1 / -1 !important;
   width: 100% !important;
   min-height: 80px !important;
@@ -617,15 +629,12 @@ body:not([data-reddit-grid-cols='1'])
     shreddit-custom-feed,
     [data-testid='post-list'],
     [data-testid='profile-feed'],
-    [data-testid='search-results'],
-    main
+    [data-testid='search-results']
   )
   :is(
-    faceplate-partial[loading],
-    faceplate-partial[src],
+    faceplate-partial[src*='after='],
+    faceplate-partial[src*='more-posts'],
     shreddit-async-loader[bundlename*='feed' i],
-    shreddit-async-loader[loading],
-    shreddit-async-loader[src],
     [slot='more-posts'],
     [slot='load-more']
   )
