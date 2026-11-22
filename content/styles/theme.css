@@ -515,6 +515,16 @@ body:not([data-reddit-grid-cols='1']) shreddit-post-header {
   border-radius: 0 !important;
 }
 
+body:not([data-reddit-grid-cols='1'])
+  shreddit-post:has(shreddit-join-button, [data-testid*='join' i], button[aria-label*='join' i])
+  [slot='credit-bar'],
+body:not([data-reddit-grid-cols='1'])
+  shreddit-post:has(shreddit-join-button, [data-testid*='join' i], button[aria-label*='join' i])
+  shreddit-post-header {
+  min-height: 72px !important;
+  padding-right: 76px !important;
+}
+
 body:not([data-reddit-grid-cols='1']) shreddit-post :is([slot='credit-bar'], shreddit-post-header) :is(div, span, section, header, nav):not(faceplate-img):not(faceplate-img *):not(shreddit-avatar):not(shreddit-avatar *):not(button):not(a.button) {
   border: none !important;
   border-bottom: none !important;
