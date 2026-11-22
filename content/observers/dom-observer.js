@@ -30,8 +30,50 @@ window.RedditPro.DOMObserver = (function () {
       --rpl-button-border-radius: 8px !important;
       border-radius: 8px !important;
     }
-    :host(:is(button, shreddit-join-button, rpl-join-button, shreddit-vote-buttons, shreddit-comment-button)) {
+    :host(:is(button, shreddit-join-button, rpl-join-button, shreddit-vote-buttons, shreddit-comment-button, shreddit-crosspost-button, shreddit-repost-button, rpl-crosspost-button, rpl-repost-button, shreddit-post-share-button, shreddit-share-button, rpl-share-button)) {
       overflow: hidden !important;
+      border-radius: 8px !important;
+    }
+    :host(:is(shreddit-crosspost-button, shreddit-repost-button, rpl-crosspost-button, rpl-repost-button)) {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      height: 32px !important;
+      max-height: 32px !important;
+      min-width: 32px !important;
+      width: 32px !important;
+      padding: 0 !important;
+      border-radius: 8px !important;
+      background: var(--rg-btn-bg, #1a1a1b) !important;
+      border: 1px solid var(--rg-btn-border, rgba(255, 255, 255, 0.12)) !important;
+      box-sizing: border-box !important;
+    }
+    :host(:is(shreddit-post-share-button, shreddit-share-button, rpl-share-button)) {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      height: 32px !important;
+      max-height: 32px !important;
+      min-width: 32px !important;
+      padding: 0 10px !important;
+      gap: 6px !important;
+      border-radius: 8px !important;
+      background: var(--rg-btn-bg, #1a1a1b) !important;
+      border: 1px solid var(--rg-btn-border, rgba(255, 255, 255, 0.12)) !important;
+      box-sizing: border-box !important;
+    }
+    :host(:is(shreddit-crosspost-button, shreddit-repost-button, rpl-crosspost-button, rpl-repost-button, shreddit-post-share-button, shreddit-share-button, rpl-share-button)) :is(button, a, [role="button"]) {
+      background: transparent !important;
+      border: none !important;
+      border-radius: 8px !important;
+      height: 100% !important;
+      width: 100% !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      box-shadow: none !important;
+      color: inherit !important;
+      padding: 0 !important;
     }
     :host(:is(shreddit-overflow-menu, faceplate-dropdown-menu, shreddit-post-overflow-menu)) {
       overflow: visible !important;
@@ -100,6 +142,8 @@ window.RedditPro.DOMObserver = (function () {
       const testId = el.getAttribute('data-testid')?.toLowerCase() || '';
       const noun = el.getAttribute('noun')?.toLowerCase() || '';
       const action = el.getAttribute('action')?.toLowerCase() || '';
+      const clickLoc = el.getAttribute('data-post-click-location')?.toLowerCase() || '';
+      const clickId = el.getAttribute('data-click-id')?.toLowerCase() || '';
       const isJoin =
         tag === 'shreddit-join-button' ||
         tag === 'rpl-join-button' ||
@@ -119,6 +163,120 @@ window.RedditPro.DOMObserver = (function () {
         /** @type {HTMLElement} */ (host).style.setProperty('z-index', '10', 'important');
         el.style.setProperty('border-radius', '8px', 'important');
         el.style.setProperty('overflow', 'hidden', 'important');
+      }
+
+      // Check Reshare / Crosspost button
+      const isReshare =
+        tag === 'shreddit-crosspost-button' ||
+        tag === 'shreddit-repost-button' ||
+        tag === 'rpl-crosspost-button' ||
+        tag === 'rpl-repost-button' ||
+        noun.includes('crosspost') ||
+        noun.includes('repost') ||
+        noun.includes('reshare') ||
+        action.includes('crosspost') ||
+        action.includes('repost') ||
+        action.includes('reshare') ||
+        clickLoc.includes('crosspost') ||
+        clickLoc.includes('repost') ||
+        clickLoc.includes('reshare') ||
+        clickId.includes('crosspost') ||
+        clickId.includes('repost') ||
+        clickId.includes('reshare') ||
+        testId.includes('crosspost') ||
+        testId.includes('repost') ||
+        testId.includes('reshare') ||
+        ariaLabel.includes('crosspost') ||
+        ariaLabel.includes('repost') ||
+        ariaLabel.includes('reshare') ||
+        ariaLabel.includes('remix');
+
+      const isShare =
+        tag === 'shreddit-post-share-button' ||
+        tag === 'shreddit-share-button' ||
+        tag === 'rpl-share-button' ||
+        noun.includes('share') ||
+        action.includes('share') ||
+        clickLoc.includes('share') ||
+        clickId.includes('share') ||
+        testId.includes('share') ||
+        ariaLabel.includes('share');
+
+      if (isReshare) {
+        el.setAttribute('data-rg-reshare-btn', 'true');
+        el.style.setProperty('border-radius', '8px', 'important');
+        el.style.setProperty('height', '32px', 'important');
+        el.style.setProperty('max-height', '32px', 'important');
+        el.style.setProperty('min-width', '32px', 'important');
+        el.style.setProperty('box-sizing', 'border-box', 'important');
+        el.style.setProperty('display', 'inline-flex', 'important');
+        el.style.setProperty('align-items', 'center', 'important');
+        el.style.setProperty('justify-content', 'center', 'important');
+        el.style.setProperty('overflow', 'hidden', 'important');
+        const parentHasReshare = el.parentElement?.hasAttribute('data-rg-reshare-btn');
+        if (!parentHasReshare) {
+          el.style.setProperty('background', 'var(--rg-btn-bg, #1a1a1b)', 'important');
+          el.style.setProperty('border', '1px solid var(--rg-btn-border, rgba(255, 255, 255, 0.12))', 'important');
+        } else {
+          el.style.setProperty('background', 'transparent', 'important');
+          el.style.setProperty('border', 'none', 'important');
+          el.style.setProperty('width', '100%', 'important');
+          el.style.setProperty('height', '100%', 'important');
+        }
+        if (!el.textContent?.trim()) {
+          el.style.setProperty('width', '32px', 'important');
+          el.style.setProperty('padding', '0px', 'important');
+        }
+      }
+
+      if (isShare) {
+        el.setAttribute('data-rg-share-btn', 'true');
+        el.style.setProperty('border-radius', '8px', 'important');
+        el.style.setProperty('height', '32px', 'important');
+        el.style.setProperty('max-height', '32px', 'important');
+        el.style.setProperty('min-width', '32px', 'important');
+        el.style.setProperty('box-sizing', 'border-box', 'important');
+        el.style.setProperty('display', 'inline-flex', 'important');
+        el.style.setProperty('align-items', 'center', 'important');
+        el.style.setProperty('justify-content', 'center', 'important');
+        el.style.setProperty('overflow', 'hidden', 'important');
+        const parentHasShare = el.parentElement?.hasAttribute('data-rg-share-btn');
+        if (!parentHasShare) {
+          el.style.setProperty('background', 'var(--rg-btn-bg, #1a1a1b)', 'important');
+          el.style.setProperty('border', '1px solid var(--rg-btn-border, rgba(255, 255, 255, 0.12))', 'important');
+          el.style.setProperty('padding', '0 10px', 'important');
+          el.style.setProperty('gap', '6px', 'important');
+        } else {
+          el.style.setProperty('background', 'transparent', 'important');
+          el.style.setProperty('border', 'none', 'important');
+          el.style.setProperty('width', '100%', 'important');
+          el.style.setProperty('height', '100%', 'important');
+        }
+      }
+
+      // Check SVG icon for crosspost/reshare inside button or tracker
+      if (!isReshare && !isShare && (tag === 'button' || tag === 'faceplate-tracker')) {
+        const svgEl = el.querySelector('svg');
+        const svgIcon =
+          svgEl?.getAttribute('icon-name')?.toLowerCase() ||
+          el.getAttribute('icon-name')?.toLowerCase() ||
+          '';
+        if (svgIcon.includes('crosspost') || svgIcon.includes('repost') || svgIcon.includes('reshare')) {
+          el.setAttribute('data-rg-reshare-btn', 'true');
+          el.style.setProperty('border-radius', '8px', 'important');
+          el.style.setProperty('height', '32px', 'important');
+          el.style.setProperty('max-height', '32px', 'important');
+          el.style.setProperty('min-width', '32px', 'important');
+          el.style.setProperty('width', '32px', 'important');
+          el.style.setProperty('padding', '0px', 'important');
+          el.style.setProperty('box-sizing', 'border-box', 'important');
+          el.style.setProperty('display', 'inline-flex', 'important');
+          el.style.setProperty('align-items', 'center', 'important');
+          el.style.setProperty('justify-content', 'center', 'important');
+          el.style.setProperty('overflow', 'hidden', 'important');
+          el.style.setProperty('background', 'var(--rg-btn-bg, #1a1a1b)', 'important');
+          el.style.setProperty('border', '1px solid var(--rg-btn-border, rgba(255, 255, 255, 0.12))', 'important');
+        }
       }
 
       // Check all buttons, action controls, vote containers, and pill-shaped elements

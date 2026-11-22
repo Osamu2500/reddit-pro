@@ -1239,13 +1239,26 @@ body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='comment'
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='share'],
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-post-share-button,
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-share-button,
+body:not([data-reddit-grid-cols='1']) shreddit-post rpl-share-button,
 body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='share' i],
 body:not([data-reddit-grid-cols='1']) shreddit-post a[data-click-id='share'],
+body:not([data-reddit-grid-cols='1']) shreddit-post faceplate-tracker[noun='share'],
 body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='crosspost' i],
 body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='repost' i],
+body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='reshare' i],
 body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='remix' i],
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-crosspost-button,
+body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-repost-button,
+body:not([data-reddit-grid-cols='1']) shreddit-post rpl-crosspost-button,
+body:not([data-reddit-grid-cols='1']) shreddit-post rpl-repost-button,
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='crosspost'],
+body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='repost'],
+body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='reshare'],
+body:not([data-reddit-grid-cols='1']) shreddit-post faceplate-tracker[noun='crosspost'],
+body:not([data-reddit-grid-cols='1']) shreddit-post faceplate-tracker[noun='repost'],
+body:not([data-reddit-grid-cols='1']) shreddit-post faceplate-tracker[noun='reshare'],
+body:not([data-reddit-grid-cols='1']) shreddit-post [data-rg-reshare-btn],
+body:not([data-reddit-grid-cols='1']) shreddit-post [data-rg-share-btn],
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='save'],
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='award'],
 body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='save' i],
@@ -1259,13 +1272,26 @@ shreddit-post button[aria-label*='comment' i],
 shreddit-post [data-post-click-location='share'],
 shreddit-post shreddit-post-share-button,
 shreddit-post shreddit-share-button,
+shreddit-post rpl-share-button,
 shreddit-post button[aria-label*='share' i],
 shreddit-post a[data-click-id='share'],
+shreddit-post faceplate-tracker[noun='share'],
 shreddit-post button[aria-label*='crosspost' i],
 shreddit-post button[aria-label*='repost' i],
+shreddit-post button[aria-label*='reshare' i],
 shreddit-post button[aria-label*='remix' i],
 shreddit-post shreddit-crosspost-button,
+shreddit-post shreddit-repost-button,
+shreddit-post rpl-crosspost-button,
+shreddit-post rpl-repost-button,
 shreddit-post [data-post-click-location='crosspost'],
+shreddit-post [data-post-click-location='repost'],
+shreddit-post [data-post-click-location='reshare'],
+shreddit-post faceplate-tracker[noun='crosspost'],
+shreddit-post faceplate-tracker[noun='repost'],
+shreddit-post faceplate-tracker[noun='reshare'],
+shreddit-post [data-rg-reshare-btn],
+shreddit-post [data-rg-share-btn],
 shreddit-post [data-post-click-location='save'],
 shreddit-post [data-post-click-location='award'],
 shreddit-post button[aria-label*='save' i],
@@ -1273,12 +1299,27 @@ shreddit-post button[aria-label*='award' i],
 shreddit-post-share-button,
 shreddit-post-share-button button,
 shreddit-post-share-button a,
-shreddit-crosspost-button button {
+shreddit-share-button,
+shreddit-share-button button,
+shreddit-share-button a,
+rpl-share-button,
+rpl-share-button button,
+shreddit-crosspost-button,
+shreddit-crosspost-button button,
+shreddit-repost-button,
+shreddit-repost-button button,
+rpl-crosspost-button,
+rpl-crosspost-button button,
+rpl-repost-button,
+rpl-repost-button button,
+[data-rg-reshare-btn],
+[data-rg-share-btn] {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   height: 32px !important;
   max-height: 32px !important;
+  min-width: 32px !important;
   padding: 0 10px !important;
   gap: 6px !important;
   border-radius: var(--rg-radius-btn, 8px) !important;
@@ -1307,11 +1348,45 @@ shreddit-crosspost-button button {
     transform 0.1s ease !important;
 }
 
+/* Icon-only Reshare / Crosspost button: square squircle geometry (32px x 32px) */
+:is(
+  shreddit-crosspost-button,
+  shreddit-repost-button,
+  rpl-crosspost-button,
+  rpl-repost-button,
+  [data-post-click-location='crosspost'],
+  [data-post-click-location='repost'],
+  [data-post-click-location='reshare'],
+  button[aria-label*='crosspost' i],
+  button[aria-label*='repost' i],
+  button[aria-label*='reshare' i],
+  faceplate-tracker[noun='crosspost'],
+  faceplate-tracker[noun='repost'],
+  faceplate-tracker[noun='reshare'],
+  [data-rg-reshare-btn]
+):not(:has(faceplate-number, [slot='count'], span:not(:empty))) {
+  width: 32px !important;
+  min-width: 32px !important;
+  padding: 0 !important;
+}
+
 shreddit-comment-button::part(button),
 shreddit-post-share-button::part(button),
 shreddit-share-button::part(button),
-shreddit-crosspost-button::part(button) {
+rpl-share-button::part(button),
+shreddit-crosspost-button::part(button),
+shreddit-repost-button::part(button),
+rpl-crosspost-button::part(button),
+rpl-repost-button::part(button) {
   border-radius: var(--rg-radius-btn, 8px) !important;
+  background: transparent !important;
+  border: none !important;
+  height: 100% !important;
+  width: 100% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
 }
 
 /* Neutralize Reddit rounded-full classes inside cards & enforce modern squircle styling */
@@ -1369,6 +1444,22 @@ body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='c
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-testid='comments-button']:hover,
 body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-comment-button:hover,
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='share']:hover,
+body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-post-share-button:hover,
+body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-share-button:hover,
+body:not([data-reddit-grid-cols='1']) shreddit-post rpl-share-button:hover,
+body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='share' i]:hover,
+body:not([data-reddit-grid-cols='1']) shreddit-post [data-rg-share-btn]:hover,
+body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='crosspost']:hover,
+body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='repost']:hover,
+body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='reshare']:hover,
+body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-crosspost-button:hover,
+body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-repost-button:hover,
+body:not([data-reddit-grid-cols='1']) shreddit-post rpl-crosspost-button:hover,
+body:not([data-reddit-grid-cols='1']) shreddit-post rpl-repost-button:hover,
+body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='crosspost' i]:hover,
+body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='repost' i]:hover,
+body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='reshare' i]:hover,
+body:not([data-reddit-grid-cols='1']) shreddit-post [data-rg-reshare-btn]:hover,
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='save']:hover,
 body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='save' i]:hover,
 body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='award' i]:hover {
@@ -1379,6 +1470,13 @@ body:not([data-reddit-grid-cols='1']) shreddit-post button[aria-label*='award' i
 
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='comments']:active,
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='share']:active,
+body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-post-share-button:active,
+body:not([data-reddit-grid-cols='1']) shreddit-post [data-rg-share-btn]:active,
+body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='crosspost']:active,
+body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='repost']:active,
+body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='reshare']:active,
+body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-crosspost-button:active,
+body:not([data-reddit-grid-cols='1']) shreddit-post [data-rg-reshare-btn]:active,
 body:not([data-reddit-grid-cols='1']) shreddit-post [data-post-click-location='save']:active {
   transform: scale(0.96) !important;
 }

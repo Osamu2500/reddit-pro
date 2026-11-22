@@ -138,4 +138,38 @@ describe('Post action buttons redesign & interaction preservation', () => {
     expect(cardsCss).toContain('shreddit-post-share-button::part(button)');
     expect(themeCss).toContain('--button-border-radius: 8px !important');
   });
+
+  it('defines standardized squircle styling and square geometry for reshare and share buttons', () => {
+    // Both reshare and share are included in the 32px squircle action button rule
+    expect(cardsCss).toContain('shreddit-crosspost-button');
+    expect(cardsCss).toContain('shreddit-post-share-button');
+    expect(cardsCss).toContain('data-rg-reshare-btn');
+    expect(cardsCss).toContain('data-rg-share-btn');
+
+    // Reshare icon-only buttons receive 32px square squircle geometry
+    expect(cardsCss).toContain('width: 32px !important');
+    expect(cardsCss).toContain('min-width: 32px !important');
+
+    // Both crosspost and share components define shadow-root ::part(button) styling
+    expect(cardsCss).toContain('shreddit-crosspost-button::part(button)');
+    expect(cardsCss).toContain('shreddit-post-share-button::part(button)');
+    expect(cardsCss).toContain('shreddit-share-button::part(button)');
+  });
+
+  it('preserves native click event bubbling and focusability on reshare buttons', () => {
+    const { actionBar } = createPostWithActionBar();
+    const reshareBtn = document.createElement('button');
+    reshareBtn.setAttribute('data-post-click-location', 'crosspost');
+    reshareBtn.setAttribute('aria-label', 'crosspost');
+    actionBar.insertBefore(reshareBtn, actionBar.querySelector('[data-post-click-location="share"]'));
+
+    const reshareListener = vi.fn();
+    reshareBtn.addEventListener('click', reshareListener);
+
+    reshareBtn.click();
+    expect(reshareListener).toHaveBeenCalledTimes(1);
+
+    reshareBtn.focus();
+    expect(document.activeElement).toBe(reshareBtn);
+  });
 });
