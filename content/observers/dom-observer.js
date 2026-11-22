@@ -214,6 +214,17 @@ window.RedditPro.DOMObserver = (function () {
     deepPierceSquircle(node);
     node.addEventListener('mouseenter', () => deepPierceSquircle(node), { passive: true });
 
+    // Ensure title box formatting and uniform line alignment across line breaks
+    const titleEl = node.querySelector(
+      '[slot="title"], [slot="post-title"], shreddit-post-title, a[id*="post-title"]'
+    );
+    if (titleEl) {
+      /** @type {HTMLElement} */ (titleEl).style.setProperty('display', 'block', 'important');
+      /** @type {HTMLElement} */ (titleEl).style.setProperty('box-sizing', 'border-box', 'important');
+      /** @type {HTMLElement} */ (titleEl).style.setProperty('width', '100%', 'important');
+      /** @type {HTMLElement} */ (titleEl).style.setProperty('word-break', 'break-word', 'important');
+    }
+
     const aspectRatioNode = /** @type {HTMLElement | null} */ (
       node.querySelector('[id$="-aspect-ratio"]')
     );

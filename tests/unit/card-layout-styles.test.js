@@ -77,12 +77,11 @@ describe('Post card content polish', () => {
     expect(cardsCss).toContain('shreddit-post shreddit-post-flair faceplate-tracker');
   });
 
-  it('tightens header-to-title vertical gap while reserving right space for row 2 join button', () => {
+  it('formats title as a multi-line clamped block box with consistent indentation across all lines', () => {
     const cardsCss = fs.readFileSync(path.resolve(process.cwd(), 'content/styles/cards.css'), 'utf8');
     expect(cardsCss).toContain('min-height: 58px !important');
-    expect(cardsCss).toMatch(
-      /shreddit-post:has\(shreddit-join-button[\s\S]*?:is\(\s*\[slot='title'\][\s\S]*?padding-right:\s*76px\s*!important/
-    );
+    expect(cardsCss).toContain('-webkit-line-clamp: 3 !important');
+    expect(cardsCss).toContain('word-break: break-word !important');
   });
 
   it('elevates card z-index, sets overflow visible and aligns dropdown menu to prevent card edge clipping', () => {

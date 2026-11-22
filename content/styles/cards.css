@@ -687,9 +687,9 @@ body:not([data-reddit-grid-cols='1']) shreddit-post shreddit-post-context {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   6. TITLE SLOT (Typography & Clean Anchor Reset)
+   6. TITLE SLOT (Typography & Clean Block Box Formatting)
    ═══════════════════════════════════════════════════════════════════════════ */
-body:not([data-reddit-grid-cols='1']) shreddit-post :is(
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is(
   [slot='title'],
   [slot='post-title'],
   shreddit-post-title,
@@ -697,16 +697,20 @@ body:not([data-reddit-grid-cols='1']) shreddit-post :is(
   a[id*='post-title'],
   a[data-testid='post-title-text']
 ) {
-  display: block !important;
+  display: -webkit-box !important;
+  -webkit-box-orient: vertical !important;
+  -webkit-line-clamp: 3 !important;
   max-width: 100% !important;
-  width: auto !important;
+  width: 100% !important;
   box-sizing: border-box !important;
-  margin: -4px 0 0 0 !important;
+  margin: 0 !important;
   padding: 3px 14px 4px 14px !important;
   word-break: break-word !important;
+  overflow-wrap: break-word !important;
   overflow: hidden !important;
+  text-overflow: ellipsis !important;
   font-size: clamp(0.92rem, 1.2vw, 1.08rem) !important;
-  line-height: 1.38 !important;
+  line-height: 1.32 !important;
   font-weight: 650 !important;
   background: transparent !important;
   background-color: transparent !important;
@@ -716,23 +720,8 @@ body:not([data-reddit-grid-cols='1']) shreddit-post :is(
   box-shadow: none !important;
   outline: none !important;
   border-radius: 0 !important;
-  text-overflow: clip !important;
-  white-space: normal !important;
-}
-
-/* Ensure post title wraps cleanly before row 2 join button */
-body:not([data-reddit-grid-cols='1']) :is(
-  shreddit-post:has(shreddit-join-button, [data-testid*='join' i], button[aria-label*='join' i]),
-  shreddit-post[data-rg-has-join='true']
-) :is(
-  [slot='title'],
-  [slot='post-title'],
-  shreddit-post-title,
-  [data-post-click-location='title'],
-  a[id*='post-title'],
-  a[data-testid='post-title-text']
-) {
-  padding-right: 76px !important;
+  color: var(--rg-text) !important;
+  text-decoration: none !important;
 }
 
 /* Responsive Title Typography Scaling based on Column Count */
@@ -879,11 +868,11 @@ shreddit-post a[href*='/comments/']:not(:is([slot='action-bar'], shreddit-post-a
   margin: 0 !important;
   color: var(--rg-text) !important;
   text-decoration: none !important;
-  display: inline !important;
+  display: block !important;
   height: auto !important;
   max-height: none !important;
   min-height: 0 !important;
-  width: auto !important;
+  width: 100% !important;
   max-width: 100% !important;
   font-size: inherit !important;
   font-weight: inherit !important;
@@ -895,6 +884,8 @@ shreddit-post a[href*='/comments/']:not(:is([slot='action-bar'], shreddit-post-a
   outline: none !important;
   background: transparent !important;
   background-color: transparent !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
 }
 
 body:not([data-reddit-grid-cols='1']) shreddit-post :is([slot='title'], [slot='post-title'], shreddit-post-title, [data-post-click-location='title']) a:hover,
