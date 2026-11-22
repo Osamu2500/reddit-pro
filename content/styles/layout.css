@@ -572,13 +572,70 @@ body:not([data-reddit-grid-cols='1'])
   > :is(shreddit-async-loader, faceplate-partial, [slot='more-posts'], [slot='load-more'], button[aria-label*='more posts' i]),
 body:not([data-reddit-grid-cols='1'])
   faceplate-batch
-  > :is(shreddit-async-loader, faceplate-partial, [slot='more-posts'], [slot='load-more'], button[aria-label*='more posts' i]) {
+  > :is(shreddit-async-loader, faceplate-partial, [slot='more-posts'], [slot='load-more'], button[aria-label*='more posts' i]),
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed,
+    [data-testid='post-list'],
+    [data-testid='profile-feed'],
+    [data-testid='search-results'],
+    main
+  )
+  :is(
+    faceplate-partial[loading],
+    faceplate-partial[src],
+    shreddit-async-loader[bundlename*='feed' i],
+    shreddit-async-loader[loading],
+    shreddit-async-loader[src],
+    [slot='more-posts'],
+    [slot='load-more'],
+    button[aria-label*='more posts' i],
+    button:has(> [slot*='load-more'])
+  ) {
   grid-column: 1 / -1 !important;
   width: 100% !important;
-  min-height: 48px !important;
+  min-height: 80px !important;
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
+  clear: both !important;
+  margin: 16px auto !important;
+  box-sizing: border-box !important;
+}
+
+/* Center loading spinner within the sentinel */
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed,
+    [data-testid='post-list'],
+    [data-testid='profile-feed'],
+    [data-testid='search-results'],
+    main
+  )
+  :is(
+    faceplate-partial[loading],
+    faceplate-partial[src],
+    shreddit-async-loader[bundlename*='feed' i],
+    shreddit-async-loader[loading],
+    shreddit-async-loader[src],
+    [slot='more-posts'],
+    [slot='load-more']
+  )
+  > * {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  min-height: 60px !important;
+  margin: 0 auto !important;
 }
 
 /* Feed batches and partials that contain posts flatten to display: contents to participate in the multi-column grid */

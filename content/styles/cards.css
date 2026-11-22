@@ -153,6 +153,35 @@ body:not([data-reddit-grid-cols='1'])
   padding-right: 68px !important;
 }
 
+/* Card internal headers and wrappers: NO internal border-radius, NO borders, NO backgrounds */
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is(
+  [slot='credit-bar'],
+  shreddit-post-header,
+  header,
+  [slot='credit-bar'] > *,
+  shreddit-post-header > *,
+  header > *
+),
+:is(shreddit-post, article, .Post) :is(
+  [slot='credit-bar'],
+  shreddit-post-header,
+  header,
+  [slot='credit-bar'] > *,
+  shreddit-post-header > *,
+  header > *
+) {
+  border: none !important;
+  border-width: 0 !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
 /* Avatar — Clean Circular Shape (24px) */
 body:not([data-reddit-grid-cols='1']) shreddit-post :is(
   [slot='credit-bar'] img,
@@ -229,39 +258,64 @@ body:not([data-reddit-grid-cols='1']) shreddit-post-header button:not([aria-hasp
 /* ═══════════════════════════════════════════════════════════════════════════
    3. THREE-DOTS OVERFLOW BUTTON
    ═══════════════════════════════════════════════════════════════════════════ */
-body:not([data-reddit-grid-cols='1']) shreddit-post :is(
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is(
   shreddit-overflow-menu,
   [data-post-click-location='overflow-menu'],
   [slot='overflow'],
   [slot='credit-bar'] button[aria-haspopup='menu'],
-  shreddit-post-header button[aria-haspopup='menu']
+  shreddit-post-header button[aria-haspopup='menu'],
+  shreddit-post-overflow-menu,
+  button[aria-label*='more options' i],
+  button[aria-label*='more actions' i]
+),
+:is(shreddit-post, article, .Post) :is(
+  shreddit-overflow-menu,
+  [data-post-click-location='overflow-menu'],
+  [slot='overflow'],
+  [slot='credit-bar'] button[aria-haspopup='menu'],
+  shreddit-post-header button[aria-haspopup='menu'],
+  shreddit-post-overflow-menu
 ) {
   position: absolute !important;
   top: 10px !important;
   right: 12px !important;
   margin: 0 !important;
   z-index: 10 !important;
-  opacity: 0 !important;
+  opacity: 0.75 !important;
+  display: inline-flex !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
   transition: opacity 0.18s ease !important;
 }
 
-body:not([data-reddit-grid-cols='1']) shreddit-post:hover :is(
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post):hover :is(
+  shreddit-overflow-menu,
+  [data-post-click-location='overflow-menu'],
+  [slot='overflow'],
+  [slot='credit-bar'] button[aria-haspopup='menu'],
+  shreddit-post-header button[aria-haspopup='menu'],
+  shreddit-post-overflow-menu,
+  button[aria-label*='more options' i],
+  button[aria-label*='more actions' i]
+),
+:is(shreddit-post, article, .Post):hover :is(
   shreddit-overflow-menu,
   [data-post-click-location='overflow-menu'],
   [slot='overflow'],
   [slot='credit-bar'] button[aria-haspopup='menu'],
   shreddit-post-header button[aria-haspopup='menu']
 ) {
-  opacity: 0.75 !important;
+  opacity: 1 !important;
 }
 
 /* Keep three-dots fully visible when the dropdown menu is open */
-body:not([data-reddit-grid-cols='1']) shreddit-post:has([open]) :is(
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post):has([open]) :is(
   shreddit-overflow-menu,
   [data-post-click-location='overflow-menu'],
   [slot='overflow'],
   [slot='credit-bar'] button[aria-haspopup='menu'],
-  shreddit-post-header button[aria-haspopup='menu']
+  shreddit-post-header button[aria-haspopup='menu'],
+  shreddit-post-overflow-menu
 ) {
   opacity: 1 !important;
 }
@@ -547,11 +601,19 @@ body:not([data-reddit-grid-cols='1']) shreddit-post :is(
 }
 
 /* Neutralize title container pill, background, border and padding */
-body:not([data-reddit-grid-cols='1']) shreddit-post :is(
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is(
   [slot='title'],
   [slot='post-title'],
   shreddit-post-title,
-  [data-post-click-location='title']
+  [data-post-click-location='title'],
+  a.text-neutral-content-strong
+) :is(a, h1, h2, h3, div, span, p),
+:is(shreddit-post, article, .Post) :is(
+  [slot='title'],
+  [slot='post-title'],
+  shreddit-post-title,
+  [data-post-click-location='title'],
+  a.text-neutral-content-strong
 ) :is(a, h1, h2, h3, div, span, p) {
   background: transparent !important;
   background-color: transparent !important;
@@ -566,7 +628,12 @@ body:not([data-reddit-grid-cols='1']) shreddit-post :is(
   text-overflow: clip !important;
 }
 
-body:not([data-reddit-grid-cols='1']) shreddit-post :is([slot='title'], [slot='post-title'], shreddit-post-title, [data-post-click-location='title']) a,
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is([slot='title'], [slot='post-title'], shreddit-post-title, [data-post-click-location='title']) a,
+:is(shreddit-post, article, .Post) :is([slot='title'], [slot='post-title'], shreddit-post-title, [data-post-click-location='title']) a,
+:is(shreddit-post, article, .Post) a[id*='post-title'],
+:is(shreddit-post, article, .Post) a[data-testid='post-title-text'],
+:is(shreddit-post, article, .Post) a.text-neutral-content-strong,
+:is(shreddit-post, article, .Post) a[href*='/comments/']:not(:is([slot='action-bar'], shreddit-post-action-bar, rpl-action-bar) *),
 shreddit-post :is([slot='title'], [slot='post-title'], shreddit-post-title, [data-post-click-location='title']) a,
 shreddit-post a[id*='post-title'],
 shreddit-post a[data-testid='post-title-text'],
@@ -588,6 +655,7 @@ shreddit-post a[href*='/comments/']:not(:is([slot='action-bar'], shreddit-post-a
   border-width: 0 !important;
   border-radius: 0 !important;
   box-shadow: none !important;
+  outline: none !important;
   background: transparent !important;
   background-color: transparent !important;
 }

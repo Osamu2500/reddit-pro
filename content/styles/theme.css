@@ -245,14 +245,24 @@ body:not([data-reddit-grid-cols='1']) shreddit-post > section {
    Flat, minimal layout. 
    ═══════════════════════════════════════════════════════════════════════════ */
 body:not([data-reddit-grid-cols='1']) shreddit-post [slot='credit-bar'],
-body:not([data-reddit-grid-cols='1']) shreddit-post-header {
+body:not([data-reddit-grid-cols='1']) shreddit-post-header,
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is([slot='credit-bar'], shreddit-post-header, header),
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is([slot='credit-bar'], shreddit-post-header, header) > * {
   background: var(--rg-credit-bg) !important;
   border: none !important;
   border-bottom: none !important;
+  border-top: none !important;
   border-radius: 0 !important;
   padding: 12px 52px 10px 14px !important;
   position: relative !important;
   z-index: 1 !important;
+}
+
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is([slot='credit-bar'], shreddit-post-header, header) > * {
+  padding: 0 !important;
+  border-radius: 0 !important;
+  border: none !important;
+  background: transparent !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -516,33 +526,40 @@ body:not([data-reddit-grid-cols='1']) shreddit-post :is([slot='credit-bar'], shr
 }
 
 /* Remove container boxes, pill backgrounds, and borders from title and text */
-body:not([data-reddit-grid-cols='1']) shreddit-post :is(
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is(
   [slot='title'],
   [slot='post-title'],
   shreddit-post-title,
   [data-post-click-location='title'],
   [slot='text-body'],
   [slot='post-body'],
-  shreddit-post-body
+  shreddit-post-body,
+  a.text-neutral-content-strong
 ),
-body:not([data-reddit-grid-cols='1']) shreddit-post :is(
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is(
   [slot='title'],
   [slot='post-title'],
   shreddit-post-title,
   [data-post-click-location='title'],
   [slot='text-body'],
   [slot='post-body'],
-  shreddit-post-body
+  shreddit-post-body,
+  a.text-neutral-content-strong
 ) :is(a, h1, h2, h3, div, span, p, article, section) {
   background: transparent !important;
   background-color: transparent !important;
   border: none !important;
+  border-width: 0 !important;
   box-shadow: none !important;
   outline: none !important;
   border-radius: 0 !important;
 }
 
-body:not([data-reddit-grid-cols='1']) shreddit-post :is([slot='title'], [slot='post-title'], shreddit-post-title, [data-post-click-location='title']) a,
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is([slot='title'], [slot='post-title'], shreddit-post-title, [data-post-click-location='title']) a,
+:is(shreddit-post, article, .Post) a[id*='post-title'],
+:is(shreddit-post, article, .Post) a[data-testid='post-title-text'],
+:is(shreddit-post, article, .Post) a.text-neutral-content-strong,
+:is(shreddit-post, article, .Post) a[href*='/comments/']:not(:is([slot='action-bar'], shreddit-post-action-bar, rpl-action-bar) *),
 shreddit-post a[id*='post-title'],
 shreddit-post a[data-testid='post-title-text'],
 shreddit-post a[href*='/comments/']:not(:is([slot='action-bar'], shreddit-post-action-bar, rpl-action-bar) *) {
@@ -556,8 +573,12 @@ shreddit-post a[href*='/comments/']:not(:is([slot='action-bar'], shreddit-post-a
   min-height: 0 !important;
   width: auto !important;
   border: none !important;
+  border-width: 0 !important;
   border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
   background: transparent !important;
+  background-color: transparent !important;
 }
 
 body:not([data-reddit-grid-cols='1']) shreddit-post [slot='action-bar'],

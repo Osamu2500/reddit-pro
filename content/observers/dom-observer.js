@@ -73,6 +73,10 @@ window.RedditPro.DOMObserver = (function () {
       observeFeedEnd();
       window.RedditPro.AudioObserver?.observeIn(node);
       window.RedditPro.Virtualizer?.observeBatch(node);
+      const posts = node.querySelectorAll(POST_SELECTOR);
+      if (posts.length > 0) {
+        posts.forEach(handleElement);
+      }
       return;
     }
 
@@ -117,14 +121,14 @@ window.RedditPro.DOMObserver = (function () {
     if (isPreloading) return;
 
     const feed = document.querySelector(
-      'shreddit-feed, profile-feed, shreddit-profile-feed, shreddit-user-feed, [data-testid="post-list"], main > div:has(> shreddit-post)'
+      'shreddit-feed, profile-feed, shreddit-profile-feed, shreddit-user-feed, [data-testid="post-list"], main > div:has(> shreddit-post), main > div:has(> article)'
     );
     if (!feed) return;
 
     isPreloading = true;
 
     // Filter to find actual bottom-of-feed pagination sentinels
-    // CRITICAL: Exclude all 190+ partials/loaders that are nested inside post cards
+    // CRITICAL: Exclude all partials/loaders that are nested inside individual post cards
     const candidates = Array.from(
       feed.querySelectorAll(
         'faceplate-partial, shreddit-async-loader, [slot="more-posts"], [slot="load-more"], button[aria-label*="more posts" i], button:has(> [slot*="load-more"])'
@@ -150,36 +154,40 @@ window.RedditPro.DOMObserver = (function () {
         try { /** @type {HTMLElement} */ (btn).click(); } catch {}
       }
 
-      // 2. Set eager loading
+      // 2. Set eager loading on lazy elements
       if (target.hasAttribute('loading') || target.tagName.toLowerCase() === 'faceplate-partial') {
         target.setAttribute('loading', 'eager');
         try { targetEl.loading = 'eager'; } catch {}
       }
 
-      // 3. Trigger load() method if defined by Web Component
+      // 3. Trigger native methods if defined by Web Component
       if (typeof targetEl.load === 'function') {
         try { targetEl.load(); } catch {}
+      } else if (typeof targetEl.fetch === 'function') {
+        try { targetEl.fetch(); } catch {}
+      } else if (typeof targetEl.reload === 'function') {
+        try { targetEl.reload(); } catch {}
       }
 
       // 4. Dispatch standard custom events expected by Reddit Faceplate components
-      target.dispatchEvent(new CustomEvent('faceplate-load', { bubbles: true }));
-      target.dispatchEvent(new CustomEvent('faceplate-partial-load', { bubbles: true }));
-      target.dispatchEvent(new Event('load', { bubbles: true }));
-
-      // Also trigger on the feed container
+      // Note: Never dispatch synthetic "load" event which prematurely flags the loader as completed
+      target.dispatchEvent(new CustomEvent('faceplate-trigger', { bubbles: true }));
       feed.dispatchEvent(new CustomEvent('shreddit-feed-more-posts', { bubbles: true }));
 
       setTimeout(() => {
-        if (target.isConnected && !target.querySelector('shreddit-post, article')) {
+        if (target.isConnected && !target.querySelector('shreddit-post, article, .Post')) {
           target.removeAttribute('data-rg-triggered');
         }
-      }, 1500);
+      }, 2000);
 
       setTimeout(() => {
         isPreloading = false;
       }, 500);
       return;
     }
+
+    // Fallback: Notify feed container
+    feed.dispatchEvent(new CustomEvent('shreddit-feed-more-posts', { bubbles: true }));
 
     setTimeout(() => {
       isPreloading = false;
@@ -188,7 +196,7 @@ window.RedditPro.DOMObserver = (function () {
 
   function observeFeedEnd() {
     const feed = document.querySelector(
-      'shreddit-feed, profile-feed, shreddit-profile-feed, [data-testid="post-list"]'
+      'shreddit-feed, profile-feed, shreddit-profile-feed, shreddit-user-feed, [data-testid="post-list"], main > div:has(> shreddit-post), main > div:has(> article)'
     );
     if (!feed) return;
 
