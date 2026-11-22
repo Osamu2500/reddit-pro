@@ -41,6 +41,18 @@
   --rg-radius-pill: 8px;   /* Squircle pill buttons (join, tabs) */
   --rg-radius-sm: 6px;     /* Flairs, badges squircle */
 
+  /* ── Web Component & Shadow DOM Pass-Through Tokens ── */
+  --button-border-radius: 8px !important;
+  --rem-button-border-radius: 0.5rem !important;
+  --radius-full: 8px !important;
+  --faceplate-button-border-radius: 8px !important;
+  --color-button-border-radius: 8px !important;
+  --shreddit-button-border-radius: 8px !important;
+  --rpl-radius-full: 8px !important;
+  --rpl-button-border-radius: 8px !important;
+  --shreddit-avatar-border-radius: 7px !important;
+  --faceplate-avatar-border-radius: 7px !important;
+
   /* ── Flat Shadow System ── */
   --rg-shadow: 0 4px 16px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
   --rg-shadow-hover: 0 8px 28px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.05);
@@ -521,6 +533,12 @@ body:not([data-reddit-grid-cols='1'])
   [slot='credit-bar'],
 body:not([data-reddit-grid-cols='1'])
   shreddit-post:has(shreddit-join-button, [data-testid*='join' i], button[aria-label*='join' i])
+  shreddit-post-header,
+body:not([data-reddit-grid-cols='1'])
+  shreddit-post[data-rg-has-join='true']
+  [slot='credit-bar'],
+body:not([data-reddit-grid-cols='1'])
+  shreddit-post[data-rg-has-join='true']
   shreddit-post-header {
   min-height: 72px !important;
   padding-right: 76px !important;

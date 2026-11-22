@@ -124,4 +124,10 @@ describe('Credit bar layout & join button separation from overflow menu', () => 
     overflowBtn.click();
     expect(overflowClickListener).toHaveBeenCalledTimes(1);
   });
+
+  it('supports data-rg-join-target and data-rg-has-join to ensure join button row 2 positioning and credit bar expansion', () => {
+    expect(cardsCss).toContain("[data-rg-join-target='true']");
+    expect(cardsCss).toContain("shreddit-post[data-rg-has-join='true']");
+    expect(themeCss).toContain("shreddit-post[data-rg-has-join='true']");
+  });
 });

@@ -151,7 +151,15 @@ body:not([data-reddit-grid-cols='1'])
   shreddit-post:has(shreddit-join-button, [data-testid*='join' i], button[aria-label*='join' i])
   shreddit-post-header,
 body:not([data-reddit-grid-cols='1'])
-  shreddit-post:has(shreddit-join-button, [data-testid*='join' i], button[aria-label*='join' i])::part(credit-bar) {
+  shreddit-post:has(shreddit-join-button, [data-testid*='join' i], button[aria-label*='join' i])::part(credit-bar),
+body:not([data-reddit-grid-cols='1'])
+  shreddit-post[data-rg-has-join='true']
+  [slot='credit-bar'],
+body:not([data-reddit-grid-cols='1'])
+  shreddit-post[data-rg-has-join='true']
+  shreddit-post-header,
+body:not([data-reddit-grid-cols='1'])
+  shreddit-post[data-rg-has-join='true']::part(credit-bar) {
   min-height: 72px !important;
   padding-right: 76px !important;
 }
@@ -161,6 +169,12 @@ body[data-reddit-grid-compact='true']
   [slot='credit-bar'],
 body[data-reddit-grid-compact='true']
   shreddit-post:has(shreddit-join-button, [data-testid*='join' i], button[aria-label*='join' i])
+  shreddit-post-header,
+body[data-reddit-grid-compact='true']
+  shreddit-post[data-rg-has-join='true']
+  [slot='credit-bar'],
+body[data-reddit-grid-compact='true']
+  shreddit-post[data-rg-has-join='true']
   shreddit-post-header {
   min-height: 62px !important;
   padding-right: 68px !important;
@@ -942,6 +956,12 @@ rpl-vote-buttons,
   background: var(--rg-btn-bg) !important;
   border: 1px solid var(--rg-btn-border) !important;
   box-shadow: none !important;
+  --button-border-radius: var(--rg-radius-btn, 8px) !important;
+  --rem-button-border-radius: 0.5rem !important;
+  --radius-full: var(--rg-radius-btn, 8px) !important;
+  --faceplate-button-border-radius: var(--rg-radius-btn, 8px) !important;
+  --color-button-border-radius: var(--rg-radius-btn, 8px) !important;
+  --shreddit-button-border-radius: var(--rg-radius-btn, 8px) !important;
   transition:
     background 0.15s ease,
     border-color 0.15s ease !important;
@@ -953,7 +973,13 @@ rpl-vote-buttons,
     rpl-vote-buttons,
     [data-post-click-location='vote']
   )
-  :is(div, span, [class*='rounded-full']) {
+  :is(div, span, button, a, [class*='rounded-full'], [class*='rounded-']) {
+  border-radius: var(--rg-radius-btn, 8px) !important;
+}
+
+shreddit-vote-buttons::part(button),
+shreddit-vote-buttons::part(container),
+rpl-vote-buttons::part(button) {
   border-radius: var(--rg-radius-btn, 8px) !important;
 }
 
@@ -1170,9 +1196,16 @@ shreddit-crosspost-button button {
   padding: 0 10px !important;
   gap: 6px !important;
   border-radius: var(--rg-radius-btn, 8px) !important;
+  overflow: hidden !important;
   background: var(--rg-btn-bg) !important;
   border: 1px solid var(--rg-btn-border) !important;
   box-shadow: none !important;
+  --button-border-radius: var(--rg-radius-btn, 8px) !important;
+  --rem-button-border-radius: 0.5rem !important;
+  --radius-full: var(--rg-radius-btn, 8px) !important;
+  --faceplate-button-border-radius: var(--rg-radius-btn, 8px) !important;
+  --color-button-border-radius: var(--rg-radius-btn, 8px) !important;
+  --shreddit-button-border-radius: var(--rg-radius-btn, 8px) !important;
   font-size: 11.5px !important;
   font-weight: 500 !important;
   color: var(--rg-text-muted) !important;
@@ -1186,6 +1219,13 @@ shreddit-crosspost-button button {
     border-color 0.15s ease,
     color 0.15s ease,
     transform 0.1s ease !important;
+}
+
+shreddit-comment-button::part(button),
+shreddit-post-share-button::part(button),
+shreddit-share-button::part(button),
+shreddit-crosspost-button::part(button) {
+  border-radius: var(--rg-radius-btn, 8px) !important;
 }
 
 /* Neutralize Reddit rounded-full classes inside action bar & enforce modern squircle styling */
@@ -1330,25 +1370,19 @@ body:not([data-reddit-grid-cols='1']) shreddit-post .spoiler-tag {
 }
 
 /* Modern credit bar Join button: aligned cleanly directly below the three-dots button at top: 42px, right: 12px */
+body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is(
+  shreddit-join-button,
+  [data-testid='join-button'],
+  [data-testid='credit-bar-join-button'],
+  [data-testid*='join' i],
+  rpl-join-button
+),
 body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) faceplate-tracker:has(
   shreddit-join-button,
   [data-testid*='join' i],
   button[aria-label*='join' i]
 ),
-body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) :is(
-  [slot='credit-bar'],
-  shreddit-post-header
-) > :is(
-  shreddit-join-button,
-  [data-testid='join-button'],
-  [data-testid='credit-bar-join-button'],
-  [data-testid*='join' i]
-):not(faceplate-tracker *),
-body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) > :is(
-  shreddit-join-button,
-  [data-testid='join-button'],
-  [data-testid='credit-bar-join-button']
-):not(faceplate-tracker *) {
+body:not([data-reddit-grid-cols='1']) [data-rg-join-target='true'] {
   position: absolute !important;
   top: 42px !important;
   right: 12px !important;
@@ -1369,31 +1403,25 @@ body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) > :is(
   transform: none !important;
 }
 
+body[data-reddit-grid-compact='true'] :is(shreddit-post, article, .Post) :is(
+  shreddit-join-button,
+  [data-testid='join-button'],
+  [data-testid='credit-bar-join-button'],
+  [data-testid*='join' i],
+  rpl-join-button
+),
 body[data-reddit-grid-compact='true'] :is(shreddit-post, article, .Post) faceplate-tracker:has(
   shreddit-join-button,
   [data-testid*='join' i],
   button[aria-label*='join' i]
 ),
-body[data-reddit-grid-compact='true'] :is(shreddit-post, article, .Post) :is(
-  [slot='credit-bar'],
-  shreddit-post-header
-) > :is(
-  shreddit-join-button,
-  [data-testid='join-button'],
-  [data-testid='credit-bar-join-button'],
-  [data-testid*='join' i]
-):not(faceplate-tracker *),
-body[data-reddit-grid-compact='true'] :is(shreddit-post, article, .Post) > :is(
-  shreddit-join-button,
-  [data-testid='join-button'],
-  [data-testid='credit-bar-join-button']
-):not(faceplate-tracker *) {
+body[data-reddit-grid-compact='true'] [data-rg-join-target='true'] {
   top: 36px !important;
   right: 10px !important;
   height: 22px !important;
 }
 
-/* Reset inner join elements so they do not compound absolute offsets */
+/* If faceplate-tracker wraps shreddit-join-button, prevent double offset */
 body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) faceplate-tracker:has(
   shreddit-join-button,
   [data-testid*='join' i],
@@ -1434,9 +1462,19 @@ rpl-join-button,
 shreddit-join-button :is(button, a, [role='button'], div, span, [class*='rounded-full']),
 rpl-join-button :is(button, a, [role='button'], div, span, [class*='rounded-full']) {
   border-radius: var(--rg-radius-btn, 8px) !important;
+  overflow: hidden !important;
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
+  --button-border-radius: var(--rg-radius-btn, 8px) !important;
+  --radius-full: var(--rg-radius-btn, 8px) !important;
+  --rem-button-border-radius: 0.5rem !important;
+  --faceplate-button-border-radius: var(--rg-radius-btn, 8px) !important;
+}
+
+shreddit-join-button::part(button),
+rpl-join-button::part(button) {
+  border-radius: var(--rg-radius-btn, 8px) !important;
 }
 
 body:not([data-reddit-grid-cols='1']) :is(shreddit-post, article, .Post) shreddit-join-button button,

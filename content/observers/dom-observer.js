@@ -18,9 +18,116 @@ window.RedditPro.DOMObserver = (function () {
     'faceplate-batch, shreddit-feed, profile-feed, shreddit-profile-feed, shreddit-user-feed';
   const PLAYER_SELECTOR = 'shreddit-player';
 
+  const SQUIRCLE_SHADOW_STYLE = `
+    :host {
+      --button-border-radius: 8px !important;
+      --rem-button-border-radius: 0.5rem !important;
+      --radius-full: 8px !important;
+      --faceplate-button-border-radius: 8px !important;
+      --color-button-border-radius: 8px !important;
+      --shreddit-button-border-radius: 8px !important;
+      --rpl-radius-full: 8px !important;
+      --rpl-button-border-radius: 8px !important;
+      border-radius: 8px !important;
+      overflow: hidden !important;
+    }
+    button,
+    [role="button"],
+    a,
+    div,
+    span,
+    [class*="rounded-full"],
+    [class*="rounded-"],
+    [class*="button"],
+    .button,
+    .rounded-full,
+    svg {
+      border-radius: 8px !important;
+    }
+  `;
+
+  /**
+   * Injects squircle styling into open shadow root to pierce web component encapsulation.
+   * @param {ShadowRoot | null} root
+   */
+  function injectSquircleToShadow(root) {
+    if (!root || root.querySelector('style[data-rg-squircle]')) return;
+    try {
+      const style = document.createElement('style');
+      style.setAttribute('data-rg-squircle', 'true');
+      style.textContent = SQUIRCLE_SHADOW_STYLE;
+      root.appendChild(style);
+    } catch {
+      /* ignore */
+    }
+    try {
+      root
+        .querySelectorAll('button, a, [role="button"], [class*="rounded-full"]')
+        .forEach((el) => {
+          /** @type {HTMLElement} */ (el).style.setProperty('border-radius', '8px', 'important');
+        });
+    } catch {
+      /* ignore */
+    }
+  }
+
+  /**
+   * Applies squircle / rounded-square shape to community avatars and all buttons inside a card,
+   * piercing open shadow roots (shreddit-join-button, shreddit-comment-button, etc.)
+   * and correctly positioning the join button directly below three dots.
+   * @param {Element} card
+   */
+  function applySquircleAndButtonStyles(card) {
+    if (!card) return;
+
+    // 1. Detect and configure Join Button placement below three dots
+    const joinEl = card.querySelector(
+      'shreddit-join-button, [data-testid="join-button"], [data-testid="credit-bar-join-button"], [data-testid*="join" i], button[aria-label*="join" i]'
+    );
+    if (joinEl) {
+      card.setAttribute('data-rg-has-join', 'true');
+      const host = joinEl.closest('faceplate-tracker') || joinEl;
+      host.setAttribute('data-rg-join-target', 'true');
+    }
+
+    // 2. Pierce Shadow DOM for all Web Component buttons & action controls
+    const shadowHosts = card.querySelectorAll(
+      'shreddit-join-button, shreddit-comment-button, shreddit-post-share-button, shreddit-share-button, shreddit-vote-buttons, vote-buttons, rpl-vote-buttons, shreddit-overflow-menu, shreddit-crosspost-button, rpl-button, rpl-join-button, [slot="action-bar"] > *, [slot="credit-bar"] > *'
+    );
+    shadowHosts.forEach((host) => {
+      const htmlHost = /** @type {HTMLElement} */ (host);
+      htmlHost.style.setProperty('border-radius', '8px', 'important');
+      htmlHost.style.setProperty('overflow', 'hidden', 'important');
+      if (host.shadowRoot) {
+        injectSquircleToShadow(host.shadowRoot);
+      }
+    });
+
+    // 3. Style all Light DOM buttons, vote controls, comments, shares
+    const lightButtons = card.querySelectorAll(
+      'button, a[role="button"], [class*="rounded-full"], [data-post-click-location="vote"], [data-post-click-location="comments"], [data-post-click-location="share"], [data-post-click-location="save"]'
+    );
+    lightButtons.forEach((btn) => {
+      /** @type {HTMLElement} */ (btn).style.setProperty('border-radius', '8px', 'important');
+    });
+
+    // 4. Style Community Avatars & Icons to 7px squircle
+    const avatars = card.querySelectorAll(
+      '[slot="credit-bar"] img, shreddit-post-header img, [data-testid="subreddit-icon"] img, [data-testid="user-avatar"] img, faceplate-img img, shreddit-avatar'
+    );
+    avatars.forEach((avatar) => {
+      /** @type {HTMLElement} */ (avatar).style.setProperty('border-radius', '7px', 'important');
+      /** @type {HTMLElement} */ (avatar).style.setProperty('overflow', 'hidden', 'important');
+    });
+  }
+
   /** @param {Element} node */
   function processPost(node) {
     const settings = window.RedditPro.Settings.get();
+
+    // Ensure squircle styling and Join button positioning are enforced immediately
+    applySquircleAndButtonStyles(node);
+    node.addEventListener('mouseenter', () => applySquircleAndButtonStyles(node), { passive: true });
 
     const aspectRatioNode = /** @type {HTMLElement | null} */ (
       node.querySelector('[id$="-aspect-ratio"]')

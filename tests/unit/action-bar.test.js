@@ -130,4 +130,12 @@ describe('Post action buttons redesign & interaction preservation', () => {
     expect(cardsCss).toContain('@media (max-width: 900px)');
     expect(cardsCss).toContain('gap: 4px');
   });
+
+  it('defines shadow-root pass-through tokens and part selectors for squircle action buttons', () => {
+    expect(cardsCss).toContain('--button-border-radius');
+    expect(cardsCss).toContain('--radius-full');
+    expect(cardsCss).toContain('shreddit-comment-button::part(button)');
+    expect(cardsCss).toContain('shreddit-post-share-button::part(button)');
+    expect(themeCss).toContain('--button-border-radius: 8px !important');
+  });
 });
