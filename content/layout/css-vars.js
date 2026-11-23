@@ -12,6 +12,8 @@ window.RedditPro.CSSVars = (function () {
   let colorSchemeMedia = null;
   /** @type {((e: MediaQueryListEvent) => void) | null} */
   let colorSchemeListener = null;
+  /** @type {string} */
+  let lastAppliedLayoutKey = '';
 
   /**
    * Initializes the CSS Variables controller.
@@ -77,7 +79,21 @@ window.RedditPro.CSSVars = (function () {
 
     manageScrollbar(settings.hideScrollbar);
 
-    if (window.RedditPro.Masonry) {
+    const layoutKey = [
+      settings.columns,
+      settings.masonry,
+      settings.autoFit,
+      settings.minCardWidth,
+      settings.maxColumns,
+      settings.columnGap,
+      settings.rowGap,
+      settings.hideSidebar,
+    ].join('|');
+
+    const layoutChanged = layoutKey !== lastAppliedLayoutKey;
+    lastAppliedLayoutKey = layoutKey;
+
+    if (window.RedditPro.Masonry && layoutChanged) {
       if (settings.columns !== '1') {
         window.RedditPro.Masonry.observeFeedContainer();
         requestAnimationFrame(() => window.RedditPro.Masonry.sweepAll());

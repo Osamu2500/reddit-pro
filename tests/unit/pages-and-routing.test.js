@@ -21,8 +21,12 @@ const domObserverSource = fs.readFileSync(
 
 describe('Pages, Routing & Feed UI support across Reddit', () => {
   let settingsState;
+  const originalPushState = history.pushState;
+  const originalReplaceState = history.replaceState;
 
   beforeEach(() => {
+    history.pushState = originalPushState;
+    history.replaceState = originalReplaceState;
     window.history.replaceState(null, '', '/');
     settingsState = {
       columns: '3',
@@ -66,6 +70,8 @@ describe('Pages, Routing & Feed UI support across Reddit', () => {
   });
 
   afterEach(() => {
+    history.pushState = originalPushState;
+    history.replaceState = originalReplaceState;
     document.body.className = '';
     document.body.replaceChildren();
     vi.restoreAllMocks();
@@ -380,6 +386,50 @@ describe('Pages, Routing & Feed UI support across Reddit', () => {
 
       // Should be measured and observed without error
       expect(commentCard).toBeDefined();
+    });
+  });
+
+  describe('Infinite Scroll & Navigation Stability', () => {
+    it('ignores pagination query parameters and does not re-apply routing or collapse feed', async () => {
+      vi.useFakeTimers();
+      window.history.replaceState(null, '', '/r/Daytrading/');
+      window.RedditPro.Lifecycle.applyRoutingLogic();
+      await vi.advanceTimersByTimeAsync(500);
+
+      const sweepSpy = vi.spyOn(window.RedditPro.Masonry, 'sweepAll');
+
+      // Simulating infinite scroll pagination update by Shreddit
+      window.history.replaceState(null, '', '/r/Daytrading/?after=t3_12345&count=25');
+      await vi.advanceTimersByTimeAsync(500);
+
+      // Must not trigger sweepAll during pagination update on same page
+      expect(sweepSpy).not.toHaveBeenCalled();
+      vi.useRealTimers();
+    });
+
+    it('triggerNextFeedBatch ignores back-to-top buttons and only clicks load-more buttons', () => {
+      const feed = document.createElement('shreddit-feed');
+      document.body.appendChild(feed);
+
+      const backToTopBtn = document.createElement('button');
+      backToTopBtn.setAttribute('aria-label', 'Back to top');
+      backToTopBtn.setAttribute('icon-name', 'back-to-top');
+      const clickTopSpy = vi.fn();
+      backToTopBtn.addEventListener('click', clickTopSpy);
+      feed.appendChild(backToTopBtn);
+
+      window.RedditPro.DOMObserver.triggerNextFeedBatch();
+      expect(clickTopSpy).not.toHaveBeenCalled();
+
+      const loadMoreBtn = document.createElement('button');
+      loadMoreBtn.setAttribute('slot', 'load-more');
+      loadMoreBtn.textContent = 'Load more posts';
+      const clickLoadSpy = vi.fn();
+      loadMoreBtn.addEventListener('click', clickLoadSpy);
+      feed.appendChild(loadMoreBtn);
+
+      window.RedditPro.DOMObserver.triggerNextFeedBatch();
+      expect(clickLoadSpy).toHaveBeenCalled();
     });
   });
 });

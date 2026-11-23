@@ -149,7 +149,18 @@ window.RedditPro.Settings = (function () {
 
   /** @param {Partial<RedditProSettings>} overrides */
   function updateActive(overrides) {
-    activeOverrides = { ...(overrides || {}) };
+    const newOverrides = { ...(overrides || {}) };
+    const prev = /** @type {Record<string, any>} */ (activeOverrides);
+    const next = /** @type {Record<string, any>} */ (newOverrides);
+    const prevKeys = Object.keys(prev);
+    const newKeys = Object.keys(next);
+    if (
+      prevKeys.length === newKeys.length &&
+      prevKeys.every((k) => prev[k] === next[k])
+    ) {
+      return;
+    }
+    activeOverrides = newOverrides;
     applyActiveSettings();
     notifyListeners();
   }

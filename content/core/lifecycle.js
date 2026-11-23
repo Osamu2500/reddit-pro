@@ -27,6 +27,8 @@ window.RedditPro.Lifecycle = (function() {
   let running = false;
   /** @type {string} */
   let lastUrl = location.href;
+  /** @type {string} */
+  let lastRoutedPath = '';
   /** @type {number | null} */
   let navDebounce = null;
   /** @type {boolean} */
@@ -212,10 +214,11 @@ window.RedditPro.Lifecycle = (function() {
       PAGE_TYPE.COMMUNITIES,
     ].includes(pageType);
 
-    if (isFeedLike) {
+    if (isFeedLike && (!running || path !== lastRoutedPath)) {
       setTimeout(() => window.RedditPro.Masonry?.sweepAll?.(), 80);
       setTimeout(() => window.RedditPro.Masonry?.sweepAll?.(), 400);
     }
+    lastRoutedPath = path;
   }
 
   function resume() {
@@ -242,7 +245,49 @@ window.RedditPro.Lifecycle = (function() {
   function onNavigate() {
     const current = location.href;
     if (current === lastUrl) return;
+
+    let isPaginationOrScrollUpdate = false;
+    try {
+      const prevUrlObj = new URL(lastUrl, location.origin);
+      const currUrlObj = new URL(current, location.origin);
+
+      if (prevUrlObj.pathname === currUrlObj.pathname) {
+        // Compare query params excluding pagination/scroll tracking params
+        const prevParams = new URLSearchParams(prevUrlObj.search);
+        const currParams = new URLSearchParams(currUrlObj.search);
+        const scrollParams = [
+          'after',
+          'before',
+          'count',
+          'cursor',
+          'page',
+          'feed_view',
+          'feedView',
+          'uuid',
+          'source',
+        ];
+        scrollParams.forEach((p) => {
+          prevParams.delete(p);
+          currParams.delete(p);
+        });
+        if (prevParams.toString() === currParams.toString()) {
+          isPaginationOrScrollUpdate = true;
+        }
+      }
+    } catch {
+      // In case of invalid URL, fallback to full navigate
+    }
+
+    const currentPageType = detectPageType(current);
+    const previousPageType = detectPageType(lastUrl);
+
     lastUrl = current;
+
+    // Ignore query parameter and pagination cursor changes on the same page
+    if (isPaginationOrScrollUpdate && currentPageType === previousPageType) {
+      return;
+    }
+
     // @ts-ignore
     clearTimeout(navDebounce);
     navDebounce = window.setTimeout(() => applyRoutingLogic(), 250);
@@ -255,23 +300,34 @@ window.RedditPro.Lifecycle = (function() {
         if (location.href !== lastUrl) onNavigate();
       }).observe(headForTitle, { childList: true, subtree: false });
     }
-    window.addEventListener('popstate', onNavigate);
-    window.addEventListener('hashchange', onNavigate);
-    const _push = history.pushState.bind(history);
-    const _replace = history.replaceState.bind(history);
-    history.pushState = function (...args) {
-      const res = _push(...args);
-      setTimeout(onNavigate, 0);
-      return res;
-    };
-    history.replaceState = function (...args) {
-      const res = _replace(...args);
-      setTimeout(onNavigate, 0);
-      return res;
-    };
+    if (!window.__rpNavListenersAttached) {
+      window.addEventListener('popstate', () => window.RedditPro?.Lifecycle?.__onNavigate?.());
+      window.addEventListener('hashchange', () => window.RedditPro?.Lifecycle?.__onNavigate?.());
+      window.__rpNavListenersAttached = true;
+    }
+    if (!history.pushState.__redditProPatched) {
+      const _push = history.pushState.bind(history);
+      const pushWrapper = function (...args) {
+        const res = _push(...args);
+        setTimeout(() => window.RedditPro?.Lifecycle?.__onNavigate?.(), 0);
+        return res;
+      };
+      pushWrapper.__redditProPatched = true;
+      history.pushState = pushWrapper;
+    }
+    if (!history.replaceState.__redditProPatched) {
+      const _replace = history.replaceState.bind(history);
+      const replaceWrapper = function (...args) {
+        const res = _replace(...args);
+        setTimeout(() => window.RedditPro?.Lifecycle?.__onNavigate?.(), 0);
+        return res;
+      };
+      replaceWrapper.__redditProPatched = true;
+      history.replaceState = replaceWrapper;
+    }
   }
 
-  return { init, resume, halt, detectPageType, applyRoutingLogic, PAGE_TYPE };
+  return { init, resume, halt, detectPageType, applyRoutingLogic, PAGE_TYPE, __onNavigate: onNavigate };
 })();
 
 if (typeof document !== 'undefined') {

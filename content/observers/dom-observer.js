@@ -574,9 +574,36 @@ window.RedditPro.DOMObserver = (function () {
     target.setAttribute('data-rg-triggered', 'true');
     const targetEl = /** @type {any} */ (target);
 
-    // 1. If it's or contains a button, click it
+    // 1. If it's or contains a button, click it (only if it's genuinely a load-more button, never back-to-top)
+    const isLoadMoreButton = (/** @type {Element | null} */ el) => {
+      if (!el || el.tagName !== 'BUTTON') return false;
+      const label = (
+        el.getAttribute('aria-label') ||
+        el.getAttribute('title') ||
+        el.textContent ||
+        ''
+      ).toLowerCase();
+      const icon = (el.getAttribute('icon-name') || '').toLowerCase();
+      if (
+        label.includes('top') ||
+        label.includes('up') ||
+        icon.includes('top') ||
+        icon.includes('up') ||
+        icon === 'back-to-top'
+      ) {
+        return false;
+      }
+      return (
+        el.getAttribute('slot') === 'load-more' ||
+        el.getAttribute('slot') === 'more-posts' ||
+        label.includes('more posts') ||
+        label.includes('load more') ||
+        label.includes('view more')
+      );
+    };
+
     const btn = target.tagName === 'BUTTON' ? target : target.querySelector('button');
-    if (btn) {
+    if (btn && isLoadMoreButton(btn)) {
       try { /** @type {HTMLElement} */ (btn).click(); } catch {}
     }
 
@@ -621,7 +648,7 @@ window.RedditPro.DOMObserver = (function () {
     );
     if (!feed) return;
 
-    const sentinel = findFeedSentinel(feed) || feed.lastElementChild;
+    const sentinel = findFeedSentinel(feed);
     if (!sentinel) return;
 
     if (!preloadObserver && typeof IntersectionObserver !== 'undefined') {
@@ -659,7 +686,6 @@ window.RedditPro.DOMObserver = (function () {
       if (scrollHeight - currentScroll < 2600) {
         triggerNextFeedBatch();
       }
-      if (document.body) deepPierceSquircle(document.body);
     });
   }
 
@@ -796,5 +822,5 @@ window.RedditPro.DOMObserver = (function () {
     rafPending = false;
   }
 
-  return { start, stop };
+  return { start, stop, triggerNextFeedBatch };
 })();

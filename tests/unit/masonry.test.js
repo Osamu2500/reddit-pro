@@ -666,6 +666,144 @@ describe('Masonry layout engine & responsive columns', () => {
       expect(sentinel.style.getPropertyValue('--rg-sentinel-y')).toMatch(/^\d+px$/);
     });
 
+    it('neutralizes spent sentinels and prevents full-width grid breaks across batches', () => {
+      const feed = document.createElement('shreddit-feed');
+      feed.style.display = 'grid';
+      feed.style.gridTemplateColumns = '300px 300px';
+      feed.getBoundingClientRect = () => ({
+        width: 612,
+        height: 1200,
+        top: 0,
+        left: 0,
+        right: 612,
+        bottom: 1200,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+      document.body.append(feed);
+
+      window.RedditPro.Settings.get = () => ({
+        columns: '2',
+        masonry: true,
+        columnGap: 12,
+        rowGap: 12,
+      });
+      window.RedditPro.Masonry.observeFeedContainer();
+
+      // Batch 1: card1 + sentinel1
+      const card1 = document.createElement('shreddit-post');
+      const tracker1 = document.createElement('faceplate-tracker');
+      tracker1.append(card1);
+      feed.append(tracker1);
+      card1.getBoundingClientRect = () => ({
+        width: 300,
+        height: 400,
+        top: 0,
+        right: 300,
+        bottom: 400,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+
+      const sentinel1 = document.createElement('faceplate-partial');
+      sentinel1.setAttribute('src', '/feeds/home?after=t3_batch1');
+      feed.append(sentinel1);
+
+      window.RedditPro.Masonry.processCard(card1);
+      runFrames();
+
+      expect(sentinel1.getAttribute('data-rg-sentinel')).toBe('1');
+
+      // Batch 2 arrives: card2 + sentinel2
+      const card2 = document.createElement('shreddit-post');
+      const tracker2 = document.createElement('faceplate-tracker');
+      tracker2.append(card2);
+      feed.append(tracker2);
+      card2.getBoundingClientRect = () => ({
+        width: 300,
+        height: 200,
+        top: 0,
+        right: 300,
+        bottom: 200,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+
+      const sentinel2 = document.createElement('faceplate-partial');
+      sentinel2.setAttribute('src', '/feeds/home?after=t3_batch2');
+      feed.append(sentinel2);
+
+      window.RedditPro.Masonry.processCard(card2);
+      runFrames();
+
+      // Sentinel 1 must be marked spent and hidden so it never forces a row barrier
+      expect(sentinel1.hasAttribute('data-rg-sentinel')).toBe(false);
+      expect(sentinel1.getAttribute('data-rg-spent-sentinel')).toBe('1');
+      expect(sentinel1.style.display).toBe('none');
+
+      // Sentinel 2 is now the active sentinel
+      expect(sentinel2.getAttribute('data-rg-sentinel')).toBe('1');
+
+      // Card 2 must be placed in column 1 (the shortest column from Batch 1)
+      expect(tracker2.getAttribute('data-rg-col')).toBe('1');
+      expect(tracker2.style.getPropertyValue('grid-column-start')).toBe('2');
+    });
+
+    it('does not wipe geometry or column heights when container width changes without changing column count', () => {
+      const feed = document.createElement('shreddit-feed');
+      feed.style.display = 'grid';
+      feed.style.gridTemplateColumns = 'repeat(2, 1fr)';
+      document.body.append(feed);
+
+      feed.getBoundingClientRect = () => ({
+        width: 612,
+        height: 800,
+        top: 0,
+        right: 612,
+        bottom: 800,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+
+      window.RedditPro.Masonry.observeFeedContainer();
+
+      const card = document.createElement('shreddit-post');
+      const tracker = document.createElement('faceplate-tracker');
+      tracker.append(card);
+      feed.append(tracker);
+      card.getBoundingClientRect = () => ({
+        width: 300,
+        height: 400,
+        top: 0,
+        right: 300,
+        bottom: 400,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+
+      window.RedditPro.Masonry.processCard(card);
+      runFrames();
+
+      const metricsBefore = window.RedditPro.Diagnostics.getLayoutMetrics();
+      expect(metricsBefore.maxHeight).toBeGreaterThan(0);
+
+      // Width shifts slightly by 10px (e.g. scrollbar appearing or minor reflow), columns remain 2
+      window.RedditPro.Masonry.updateColumnsForContainer(602);
+
+      const metricsAfter = window.RedditPro.Diagnostics.getLayoutMetrics();
+      // Height must be preserved and not wiped to 0
+      expect(metricsAfter.maxHeight).toBe(metricsBefore.maxHeight);
+    });
+
     it('provides layout quality metrics in telemetry', () => {
       const metrics = window.RedditPro.Diagnostics.getLayoutMetrics();
       expect(metrics).toHaveProperty('columns');
