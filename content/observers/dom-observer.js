@@ -147,10 +147,18 @@ window.RedditPro.DOMObserver = (function () {
       const isJoin =
         tag === 'shreddit-join-button' ||
         tag === 'rpl-join-button' ||
-        testId.includes('join') ||
-        ariaLabel.includes('join') ||
+        testId === 'join-button' ||
+        testId === 'join' ||
         noun === 'join' ||
-        action === 'join';
+        action === 'join' ||
+        (ariaLabel &&
+          (ariaLabel === 'join' ||
+            ariaLabel === 'joined' ||
+            /^join\s+(community|r\/|[a-z0-9_]+)/i.test(ariaLabel)) &&
+          !ariaLabel.includes('discussion') &&
+          !ariaLabel.includes('conversation') &&
+          !ariaLabel.includes('chat') &&
+          !ariaLabel.includes('thread'));
 
       if (isJoin) {
         const post = el.closest('shreddit-post, article, .Post');
@@ -369,8 +377,15 @@ window.RedditPro.DOMObserver = (function () {
     const settings = window.RedditPro.Settings.get();
 
     // Ensure squircle styling and Join button positioning are enforced immediately
-    deepPierceSquircle(node);
-    node.addEventListener('mouseenter', () => deepPierceSquircle(node), { passive: true });
+    if (!node.hasAttribute('data-rg-squircle-done')) {
+      node.setAttribute('data-rg-squircle-done', 'true');
+      deepPierceSquircle(node);
+      node.addEventListener(
+        'mouseenter',
+        () => deepPierceSquircle(node),
+        { once: true, passive: true }
+      );
+    }
 
     // Ensure title box formatting and uniform line alignment across line breaks
     const titleEl = node.querySelector(
@@ -477,14 +492,10 @@ window.RedditPro.DOMObserver = (function () {
     if (node.tagName === 'IMG') {
       node.setAttribute('data-rg-processed', 'true');
       const card = node.closest(POST_SELECTOR);
-      const image = /** @type {HTMLImageElement} */ (node);
-      if (card && !image.complete) {
-        node.addEventListener(
-          'load',
-          () => window.RedditPro.Masonry.recalculateCard(card),
-          { once: true, passive: true }
-        );
+      if (card) {
+        window.RedditPro.Masonry?.attachImageListeners?.(card);
       }
+      return;
     }
   }
 
@@ -503,7 +514,7 @@ window.RedditPro.DOMObserver = (function () {
   /** @type {Element | null} */
   let lastObservedSentinel = null;
   let isPreloading = false;
-  let scrollPreloadTimer = 0;
+  let scrollPreloadRafPending = false;
 
   /**
    * Identifies the genuine pagination sentinel at the bottom of the feed.
@@ -638,16 +649,18 @@ window.RedditPro.DOMObserver = (function () {
   }
 
   function handleScrollPreload() {
-    clearTimeout(scrollPreloadTimer);
-    scrollPreloadTimer = window.setTimeout(() => {
+    if (scrollPreloadRafPending) return;
+    scrollPreloadRafPending = true;
+    requestAnimationFrame(() => {
+      scrollPreloadRafPending = false;
       const doc = document.documentElement;
-      const scrollHeight = doc.scrollHeight || document.body.scrollHeight;
+      const scrollHeight = doc ? doc.scrollHeight : (document.body?.scrollHeight || 0);
       const currentScroll = window.scrollY + window.innerHeight;
-      if (scrollHeight - currentScroll < 2200) {
+      if (scrollHeight - currentScroll < 2600) {
         triggerNextFeedBatch();
       }
       if (document.body) deepPierceSquircle(document.body);
-    }, 120);
+    });
   }
 
   function scheduleNewSweep() {
@@ -680,6 +693,67 @@ window.RedditPro.DOMObserver = (function () {
     }
   }
 
+  /** @param {Event} e */
+  function onSidebarToggleClick(e) {
+    const target = /** @type {Element | null} */ (e.target);
+    if (
+      target &&
+      target.closest?.(
+        'button[aria-label*="Navigation" i], #left-sidebar-container button, reddit-sidebar-nav button'
+      )
+    ) {
+      setTimeout(() => {
+        window.RedditPro.Masonry?.observeSidebarContainer?.();
+      }, 60);
+    }
+  }
+
+  /** @param {Event} e */
+  function onDropdownClick(e) {
+    const target = /** @type {Element | null} */ (e.target);
+    if (!target) return;
+
+    const trigger = target.closest(
+      'shreddit-overflow-menu, [data-post-click-location="overflow-menu"], button[aria-haspopup="menu"]'
+    );
+
+    if (trigger) {
+      const post = trigger.closest('shreddit-post, article, .Post');
+      if (post) {
+        requestAnimationFrame(() => {
+          const isOpen =
+            trigger.hasAttribute('open') ||
+            trigger.querySelector('[open], [aria-expanded="true"]') !== null ||
+            trigger.getAttribute('aria-expanded') === 'true' ||
+            !post.hasAttribute('data-rg-menu-open');
+
+          document.querySelectorAll('[data-rg-menu-open="true"]').forEach((p) => {
+            if (p !== post) p.removeAttribute('data-rg-menu-open');
+          });
+
+          if (isOpen) {
+            post.setAttribute('data-rg-menu-open', 'true');
+            /** @type {HTMLElement} */ (post).style.setProperty('overflow', 'visible', 'important');
+            /** @type {HTMLElement} */ (post).style.setProperty('z-index', '99999', 'important');
+
+            const menu = post.querySelector('faceplate-dropdown-menu, [role="menu"], [slot="dropdown"]');
+            if (menu) {
+              /** @type {HTMLElement} */ (menu).style.setProperty('right', '0px', 'important');
+              /** @type {HTMLElement} */ (menu).style.setProperty('left', 'auto', 'important');
+              /** @type {HTMLElement} */ (menu).style.setProperty('z-index', '100000', 'important');
+            }
+          } else {
+            post.removeAttribute('data-rg-menu-open');
+          }
+        });
+      }
+    } else if (!target.closest('faceplate-dropdown-menu, [role="menu"], [slot="dropdown"]')) {
+      document.querySelectorAll('[data-rg-menu-open="true"]').forEach((p) => {
+        p.removeAttribute('data-rg-menu-open');
+      });
+    }
+  }
+
   function start() {
     if (observer || !document.documentElement) return;
 
@@ -691,73 +765,10 @@ window.RedditPro.DOMObserver = (function () {
     observer.observe(document.documentElement, { childList: true, subtree: true });
 
     // Track sidebar expansion/collapse toggle buttons
-    document.addEventListener(
-      'click',
-      (e) => {
-        const target = /** @type {Element | null} */ (e.target);
-        if (
-          target &&
-          target.closest?.(
-            'button[aria-label*="Navigation" i], #left-sidebar-container button, reddit-sidebar-nav button'
-          )
-        ) {
-          setTimeout(() => {
-            window.RedditPro.Masonry?.observeSidebarContainer?.();
-          }, 60);
-        }
-      },
-      { passive: true }
-    );
+    document.addEventListener('click', onSidebarToggleClick, { passive: true });
 
     // Track three-dots dropdown open/close to elevate host card and prevent edge clipping
-    document.addEventListener(
-      'click',
-      (e) => {
-        const target = /** @type {Element | null} */ (e.target);
-        if (!target) return;
-
-        const trigger = target.closest(
-          'shreddit-overflow-menu, [data-post-click-location="overflow-menu"], button[aria-haspopup="menu"]'
-        );
-
-        if (trigger) {
-          const post = trigger.closest('shreddit-post, article, .Post');
-          if (post) {
-            requestAnimationFrame(() => {
-              const isOpen =
-                trigger.hasAttribute('open') ||
-                trigger.querySelector('[open], [aria-expanded="true"]') !== null ||
-                trigger.getAttribute('aria-expanded') === 'true' ||
-                !post.hasAttribute('data-rg-menu-open');
-
-              document.querySelectorAll('[data-rg-menu-open="true"]').forEach((p) => {
-                if (p !== post) p.removeAttribute('data-rg-menu-open');
-              });
-
-              if (isOpen) {
-                post.setAttribute('data-rg-menu-open', 'true');
-                /** @type {HTMLElement} */ (post).style.setProperty('overflow', 'visible', 'important');
-                /** @type {HTMLElement} */ (post).style.setProperty('z-index', '99999', 'important');
-
-                const menu = post.querySelector('faceplate-dropdown-menu, [role="menu"], [slot="dropdown"]');
-                if (menu) {
-                  /** @type {HTMLElement} */ (menu).style.setProperty('right', '0px', 'important');
-                  /** @type {HTMLElement} */ (menu).style.setProperty('left', 'auto', 'important');
-                  /** @type {HTMLElement} */ (menu).style.setProperty('z-index', '100000', 'important');
-                }
-              } else {
-                post.removeAttribute('data-rg-menu-open');
-              }
-            });
-          }
-        } else if (!target.closest('faceplate-dropdown-menu, [role="menu"], [slot="dropdown"]')) {
-          document.querySelectorAll('[data-rg-menu-open="true"]').forEach((p) => {
-            p.removeAttribute('data-rg-menu-open');
-          });
-        }
-      },
-      true
-    );
+    document.addEventListener('click', onDropdownClick, true);
 
     // Existing posts may already be present before the observer is attached.
     handleAddedNode(document.documentElement);
@@ -777,7 +788,9 @@ window.RedditPro.DOMObserver = (function () {
     preloadObserver = null;
     lastObservedSentinel = null;
     window.removeEventListener('scroll', handleScrollPreload);
-    clearTimeout(scrollPreloadTimer);
+    document.removeEventListener('click', onSidebarToggleClick);
+    document.removeEventListener('click', onDropdownClick, true);
+    scrollPreloadRafPending = false;
     clearTimeout(sweepTimer);
     mutationBatch.clear();
     rafPending = false;

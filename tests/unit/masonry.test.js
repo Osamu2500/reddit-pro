@@ -558,6 +558,10 @@ describe('Masonry layout engine & responsive columns', () => {
       expect(tracker4.getAttribute('data-rg-col')).toBe('1');
       expect(tracker4.style.getPropertyValue('--rg-x')).toBe('312px');
       expect(tracker4.style.getPropertyValue('--rg-y')).toBe('212px');
+      expect(tracker1.style.getPropertyValue('grid-column-start')).toBe('1');
+      expect(tracker2.style.getPropertyValue('grid-column-start')).toBe('2');
+      expect(tracker3.style.getPropertyValue('grid-column-start')).toBe('3');
+      expect(tracker4.style.getPropertyValue('grid-column-start')).toBe('2');
     });
 
     it('synchronizes baselines across all columns when a full-width break node is placed', () => {

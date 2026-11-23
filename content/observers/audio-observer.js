@@ -19,18 +19,22 @@ window.RedditPro.AudioObserver = (function () {
 
   /** @param {HTMLElement} player */
   function mutePlayer(player) {
-    const video = getVideo(player);
-    if (video) video.muted = true;
-    if ('muted' in player) player.muted = true;
-    player.setAttribute('muted', '');
+    try {
+      const video = getVideo(player);
+      if (video) video.muted = true;
+      if ('muted' in player) player.muted = true;
+      player.setAttribute('muted', '');
+    } catch {}
   }
 
   /** @param {HTMLElement} player */
   function unmutePlayer(player) {
-    const video = getVideo(player);
-    if (video) video.muted = false;
-    if ('muted' in player) player.muted = false;
-    player.removeAttribute('muted');
+    try {
+      const video = getVideo(player);
+      if (video) video.muted = false;
+      if ('muted' in player) player.muted = false;
+      player.removeAttribute('muted');
+    } catch {}
   }
 
   function muteAll() {
@@ -56,7 +60,7 @@ window.RedditPro.AudioObserver = (function () {
     if (
       !settings.autoPlayAudio ||
       visible.size === 0 ||
-      /\/comments\/[a-z0-9]+\//i.test(location.pathname)
+      /\/comments\/[a-z0-9]+(?:\/|$)/i.test(location.pathname)
     ) {
       muteAll();
       return;

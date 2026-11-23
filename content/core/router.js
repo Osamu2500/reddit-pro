@@ -39,7 +39,7 @@ window.RedditPro.Router = (function () {
     const path = parsedUrl.pathname;
 
     // 1. Post threads
-    if (/\/comments\/[a-z0-9]+\//i.test(path)) return PAGE_TYPE.POST_THREAD;
+    if (/\/comments\/[a-z0-9]+(?:\/|$)/i.test(path)) return PAGE_TYPE.POST_THREAD;
 
     // 2. Search
     if (/\/search(\/|\?|$)/i.test(path)) return PAGE_TYPE.SEARCH;

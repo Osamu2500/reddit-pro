@@ -569,7 +569,7 @@ body:not([data-reddit-grid-cols='1'])
   max-width: 100% !important;
   width: 100% !important;
   height: auto !important;
-  max-height: none !important;
+  max-height: min(720px, 80vh) !important;
   min-height: 0 !important;
   display: block !important;
   position: relative !important;
@@ -587,7 +587,7 @@ body:not([data-reddit-grid-cols='1']) shreddit-player::part(video),
 body:not([data-reddit-grid-cols='1']) shreddit-player video {
   width: 100% !important;
   height: auto !important;
-  max-height: none !important;
+  max-height: min(720px, 80vh) !important;
   object-fit: cover !important;
   border-radius: 12px !important;
 }
@@ -597,7 +597,7 @@ body:not([data-reddit-grid-cols='1']) gallery-carousel {
   width: 100% !important;
   max-width: 100% !important;
   height: auto !important;
-  max-height: none !important;
+  max-height: min(720px, 80vh) !important;
   display: block !important;
   position: relative !important;
   overflow: hidden !important;
@@ -608,7 +608,7 @@ body:not([data-reddit-grid-cols='1']) gallery-carousel :is(ul, li, figure, pictu
   width: 100% !important;
   max-width: 100% !important;
   height: auto !important;
-  max-height: none !important;
+  max-height: min(720px, 80vh) !important;
   margin: 0 !important;
   padding: 0 !important;
   list-style: none !important;
@@ -619,7 +619,7 @@ body:not([data-reddit-grid-cols='1']) gallery-carousel img:not(.post-background-
   width: 100% !important;
   max-width: 100% !important;
   height: auto !important;
-  max-height: none !important;
+  max-height: min(720px, 80vh) !important;
   object-fit: cover !important;
   display: block !important;
   border-radius: 12px !important;

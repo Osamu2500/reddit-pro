@@ -433,7 +433,7 @@ body:not([data-reddit-grid-cols='1']):not(.rg-page-post):not(.rg-page-wiki):not(
   display: grid !important;
   grid-template-columns: repeat(var(--reddit-cols, 3), minmax(0, 1fr)) !important;
   grid-auto-rows: 1px !important;
-  grid-auto-flow: row !important;
+  grid-auto-flow: row dense !important;
   column-gap: var(--reddit-col-gap, 12px) !important;
   row-gap: var(--reddit-row-gap, 12px) !important;
   align-items: start !important;

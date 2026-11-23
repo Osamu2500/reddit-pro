@@ -44,13 +44,47 @@ body:not([data-reddit-grid-cols="1"]) .Post {
 }
 
 /* ENTRANCE */
-body:not([data-reddit-grid-cols="1"]) shreddit-post:not([data-rg-loading]),
-body:not([data-reddit-grid-cols="1"]) .Post:not([data-rg-loading]) {
+@keyframes rg-card-entrance {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rg-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+body:not([data-reddit-grid-cols="1"]) :is(faceplate-tracker, shreddit-post)[data-rg-loading] {
+  min-height: 160px !important;
+  background: linear-gradient(
+    90deg,
+    rgba(128, 128, 128, 0.04) 25%,
+    rgba(128, 128, 128, 0.1) 50%,
+    rgba(128, 128, 128, 0.04) 75%
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: rg-shimmer 1.4s infinite linear !important;
+}
+
+body:not([data-reddit-grid-cols="1"]) :is(shreddit-post, .Post)[data-rg-new="1"] {
+  animation: rg-card-entrance 0.28s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+}
+
+body:not([data-reddit-grid-cols="1"]) :is(shreddit-post, .Post):not([data-rg-loading]):not([data-rg-stable]) {
   animation: rg-reveal 0.3s ease both !important;
 }
 
-body:not([data-reddit-grid-cols="1"]) shreddit-post[data-rg-stable],
-body:not([data-reddit-grid-cols="1"]) .Post[data-rg-stable] {
+body:not([data-reddit-grid-cols="1"]) :is(shreddit-post, .Post)[data-rg-stable]:not([data-rg-new="1"]) {
   animation: none !important;
 }
 

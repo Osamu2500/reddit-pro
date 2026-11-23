@@ -10,6 +10,7 @@ window.RedditPro.PostModal = (function () {
   let isModalOpen = false;
   let originalTitle = document.title;
   let originalUrl = location.href;
+  let savedScrollY = 0;
   /** @type {AbortController | null} */
   let requestController = null;
   let requestId = 0;
@@ -87,7 +88,7 @@ window.RedditPro.PostModal = (function () {
 
     if (
       targetUrl.origin !== location.origin ||
-      !/\/comments\/[a-z0-9]+\//i.test(targetUrl.pathname)
+      !/\/comments\/[a-z0-9]+(?:\/|$)/i.test(targetUrl.pathname)
     ) return;
 
     event.preventDefault();
@@ -115,6 +116,7 @@ window.RedditPro.PostModal = (function () {
     requestController = new AbortController();
 
     clearTimeout(clearTimer);
+    savedScrollY = window.scrollY || document.documentElement.scrollTop || 0;
     originalUrl = location.href;
     originalTitle = document.title;
 
@@ -179,7 +181,7 @@ window.RedditPro.PostModal = (function () {
 
   /** @param {Element} root */
   function sanitizeClone(root) {
-    root.querySelectorAll('script, object, embed').forEach((element) => element.remove());
+    root.querySelectorAll('script, object, embed, iframe, form').forEach((element) => element.remove());
 
     const elements = [root, ...Array.from(root.querySelectorAll('*'))];
     elements.forEach((element) => {
@@ -206,6 +208,9 @@ window.RedditPro.PostModal = (function () {
     modalContainer.classList.add('rg-modal-hidden');
     document.body.classList.remove('rg-modal-open');
     document.title = originalTitle;
+    if (typeof window.scrollTo === 'function') {
+      window.scrollTo(0, savedScrollY);
+    }
     returnFocusElement?.focus({ preventScroll: true });
     returnFocusElement = null;
 

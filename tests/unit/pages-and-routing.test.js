@@ -154,8 +154,17 @@ describe('Pages, Routing & Feed UI support across Reddit', () => {
       expect(detectPageType('https://www.reddit.com/comments/123abc4/')).toBe(
         PAGE_TYPE.POST_THREAD
       );
+      expect(detectPageType('https://www.reddit.com/comments/123abc4')).toBe(
+        PAGE_TYPE.POST_THREAD
+      );
+      expect(detectPageType('https://www.reddit.com/r/technology/comments/123abc4')).toBe(
+        PAGE_TYPE.POST_THREAD
+      );
       expect(
         detectPageType('https://www.reddit.com/user/spez/comments/123abc4/announcement/')
+      ).toBe(PAGE_TYPE.POST_THREAD);
+      expect(
+        detectPageType('https://www.reddit.com/user/spez/comments/123abc4')
       ).toBe(PAGE_TYPE.POST_THREAD);
     });
 

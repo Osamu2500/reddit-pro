@@ -88,7 +88,12 @@ window.RedditPro.Masonry = (function () {
       this.colHeights = new Float64Array(this.columns);
       const totalGaps = (this.columns - 1) * this.colGap;
       const usableWidth = Math.max(0, this.containerWidth - totalGaps);
-      this.colWidth = this.columns > 0 ? Math.max(180, usableWidth / this.columns) : usableWidth;
+      this.colWidth =
+        this.columns === 1
+          ? usableWidth
+          : this.columns > 0
+            ? Math.max(160, usableWidth / this.columns)
+            : usableWidth;
     }
 
     getShortestColumn() {
@@ -105,6 +110,14 @@ window.RedditPro.Masonry = (function () {
     }
 
     placeCard(card, height) {
+      const existing = this.cardPositions.get(card);
+      if (existing) {
+        const delta = height - existing.height;
+        existing.height = Math.round(height);
+        this.colHeights[existing.col] = Math.max(0, this.colHeights[existing.col] + delta);
+        return existing;
+      }
+
       const { col, y } = this.getShortestColumn();
       const x = col * (this.colWidth + this.colGap);
       const pos = {
@@ -117,6 +130,17 @@ window.RedditPro.Masonry = (function () {
       this.colHeights[col] = y + height + this.rowGap;
       this.cardPositions.set(card, pos);
       return pos;
+    }
+
+    removeCard(card) {
+      const existing = this.cardPositions.get(card);
+      if (existing) {
+        this.colHeights[existing.col] = Math.max(
+          0,
+          this.colHeights[existing.col] - (existing.height + this.rowGap)
+        );
+        this.cardPositions.delete(card);
+      }
     }
 
     placeBreakNode(height) {
@@ -379,6 +403,7 @@ window.RedditPro.Masonry = (function () {
 
   function clearGridItem(gridItem, card) {
     gridItem.style.removeProperty('grid-row-end');
+    gridItem.style.removeProperty('grid-column-start');
     gridItem.style.removeProperty('--rg-x');
     gridItem.style.removeProperty('--rg-y');
     gridItem.style.removeProperty('--rg-w');
@@ -388,6 +413,7 @@ window.RedditPro.Masonry = (function () {
     gridItem.removeAttribute('data-rg-stable');
     gridItem.removeAttribute('data-rg-loading');
     heightCache.delete(card);
+    geometry.removeCard(card);
 
     // Clean up media listeners
     const cleanups = mediaListeners.get(card);
@@ -449,8 +475,10 @@ window.RedditPro.Masonry = (function () {
         const computed = getComputedStyle(container);
         const columns = (computed.gridTemplateColumns || '').trim();
         const isMultiCol = columns ? columns.split(/\s+/).length > 1 : true;
-        const rowGap = parseFloat(computed.rowGap) || 12;
-        const colGap = parseFloat(computed.columnGap) || 12;
+        const parsedRowGap = parseFloat(computed.rowGap);
+        const parsedColGap = parseFloat(computed.columnGap);
+        const rowGap = Number.isFinite(parsedRowGap) ? parsedRowGap : 12;
+        const colGap = Number.isFinite(parsedColGap) ? parsedColGap : 12;
         cached = { container, rowGap, colGap, isMultiCol };
         containerStyleCache.set(container, cached);
       }
@@ -490,6 +518,13 @@ window.RedditPro.Masonry = (function () {
       } else if (!gridItem.hasAttribute('data-rg-stable')) {
         gridItem.setAttribute('data-rg-stable', '1');
         gridItem.removeAttribute('data-rg-loading');
+      }
+
+      // Enforce column placement in CSS Grid so shortest-column arrangement renders accurately
+      if (geometry.columns > 1 && pos.col >= 0) {
+        gridItem.style.setProperty('grid-column-start', String(pos.col + 1), 'important');
+      } else {
+        gridItem.style.removeProperty('grid-column-start');
       }
 
       // Inject 2D geometry coordinates
@@ -590,11 +625,13 @@ window.RedditPro.Masonry = (function () {
     if (rect.height > 120) return rect.height;
 
     // Check for aspect ratio on the card or media child
+    const aspectEl = el.querySelector?.('[id$="-aspect-ratio"], shreddit-aspect-ratio');
     const ratioVal =
       el.style?.getPropertyValue?.('--card-aspect-ratio') ||
       el.getAttribute?.('style')?.match(/--card-aspect-ratio:\s*([0-9./]+)/)?.[1] ||
-      el.querySelector?.('[id$="-aspect-ratio"]')?.style?.aspectRatio ||
-      el.querySelector?.('shreddit-aspect-ratio')?.style?.aspectRatio;
+      aspectEl?.style?.aspectRatio ||
+      aspectEl?.getAttribute?.('aspect-ratio') ||
+      aspectEl?.getAttribute?.('style')?.match(/aspect-ratio:\s*([0-9./]+)/)?.[1];
 
     if (ratioVal) {
       let ratio = parseFloat(ratioVal);
@@ -620,7 +657,7 @@ window.RedditPro.Masonry = (function () {
           3;
         const colGap = getGridRowGap(el) || 12;
         const cardWidth = Math.max(180, (gridWidth - (cols - 1) * colGap) / cols);
-        const mediaHeight = cardWidth / ratio;
+        const mediaHeight = Math.min(720, cardWidth / ratio);
         // Non-media card content: credit bar (~44px) + title (~40px) + action bar (~40px) = ~124px
         return Math.round(mediaHeight + 124);
       }
@@ -641,7 +678,8 @@ window.RedditPro.Masonry = (function () {
               : 1200;
         const cols = effectiveColumns || 3;
         const cardWidth = Math.max(180, gridWidth / cols);
-        return Math.round(cardWidth / ratio + 124);
+        const mediaHeight = Math.min(720, cardWidth / ratio);
+        return Math.round(mediaHeight + 124);
       }
     }
 
@@ -675,25 +713,36 @@ window.RedditPro.Masonry = (function () {
 
       // Pre-allocate initial span from estimated height so new cards never collapse to 0 or 40px
       const estimated = getEstimatedHeight(el);
-      if (estimated > 80 && !gridItem.hasAttribute('data-rg-span')) {
+      const preallocHeight = estimated > 80 ? estimated : 180;
+      if (!gridItem.hasAttribute('data-rg-span')) {
         const rowGap = getGridRowGap(gridItem);
-        const initialSpan = Math.ceil((estimated + rowGap) / (ROW_HEIGHT + rowGap));
+        const initialSpan = Math.ceil((preallocHeight + rowGap) / (ROW_HEIGHT + rowGap));
         gridItem.style.setProperty('grid-row-end', `span ${initialSpan}`, 'important');
         gridItem.setAttribute('data-rg-span', String(initialSpan));
       }
 
-      requestAnimationFrame(() => {
-        if (!el.isConnected) return;
-        const height = el.getBoundingClientRect().height;
-        if (height > 0) {
-          heightCache.set(el, height);
-          resizeQueue.set(el, height);
-          if (!resizePending) {
-            resizePending = true;
-            requestAnimationFrame(flush);
-          }
+      const currentHeight = el.getBoundingClientRect ? el.getBoundingClientRect().height : 0;
+      if (currentHeight > 0) {
+        heightCache.set(el, currentHeight);
+        resizeQueue.set(el, currentHeight);
+        if (!resizePending) {
+          resizePending = true;
+          requestAnimationFrame(flush);
         }
-      });
+      } else {
+        requestAnimationFrame(() => {
+          if (!el.isConnected) return;
+          const height = el.getBoundingClientRect().height;
+          if (height > 0) {
+            heightCache.set(el, height);
+            resizeQueue.set(el, height);
+            if (!resizePending) {
+              resizePending = true;
+              requestAnimationFrame(flush);
+            }
+          }
+        });
+      }
     } else {
       observer.unobserve(el);
       clearGridItem(gridItem, el);
@@ -951,6 +1000,7 @@ window.RedditPro.Masonry = (function () {
     sweepAll,
     disconnectAll,
     recalculateCard,
+    attachImageListeners,
     calculateColumns,
     observeFeedContainer,
     observeSidebarContainer,

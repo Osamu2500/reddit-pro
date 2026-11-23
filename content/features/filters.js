@@ -122,7 +122,9 @@ window.RedditPro.Filters = (function () {
       card.getAttribute('post-title') ||
       card.querySelector('a[slot="title"], h1, h2, h3')?.textContent ||
       '';
-    const flair = card.querySelector('shreddit-post-flair')?.textContent || '';
+    const flair =
+      card.querySelector('shreddit-post-flair, [slot="flair"], [data-testid="post-flair"]')?.textContent ||
+      '';
     return { title: title.trim(), flair: flair.trim() };
   }
 
@@ -141,7 +143,7 @@ window.RedditPro.Filters = (function () {
     const flairLower = flair.toLowerCase();
     const hasVideo = !!card.querySelector('shreddit-player, video');
     const hasImage = !!card.querySelector(
-      'shreddit-media-lightbox, shreddit-image, [slot="post-media-container"] img, img[alt="Post image"]'
+      'shreddit-media-lightbox, shreddit-image, [slot="post-media-container"] img, img[alt="Post image"], gallery-carousel, shreddit-gallery-carousel, [slot="post-media-container"]'
     );
 
     const keywordMatch = activeFilters.keywords.some((keyword) =>

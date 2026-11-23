@@ -16,6 +16,7 @@ describe('Feed card presentation and positioning styles', () => {
   it('uses consistent feed spacing and top-aligned stretched grid items', () => {
     expect(layoutCss).toContain('--reddit-col-gap: 16px');
     expect(layoutCss).toContain('--reddit-row-gap: 16px');
+    expect(layoutCss).toContain('grid-auto-flow: row dense !important');
     expect(layoutCss).toContain('align-content: start !important');
     expect(layoutCss).toContain('justify-items: stretch !important');
   });
@@ -36,6 +37,7 @@ describe('Post card content polish', () => {
     expect(cardsCss).toContain('width: calc(100% - 20px) !important');
     expect(cardsCss).toContain('min-height: 48px !important');
     expect(cardsCss).toContain('outline-offset: 2px !important');
+    expect(cardsCss).toContain('max-height: min(720px, 80vh) !important');
   });
 
   it('removes container boxes, pill backgrounds, and borders from card title and text', () => {

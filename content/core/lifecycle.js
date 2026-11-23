@@ -66,7 +66,7 @@ window.RedditPro.Lifecycle = (function() {
     }
 
     const path = parsedUrl.pathname;
-    if (/\/comments\/[a-z0-9]+\//i.test(path)) return PAGE_TYPE.POST_THREAD;
+    if (/\/comments\/[a-z0-9]+(?:\/|$)/i.test(path)) return PAGE_TYPE.POST_THREAD;
     if (/\/search(\/|\?|$)/i.test(path)) return PAGE_TYPE.SEARCH;
     if (/\/(user|u)\/[^/]+\/saved(\/|\?|$)/i.test(path) || /^\/saved(\/|\?|$)/i.test(path)) return PAGE_TYPE.SAVED;
     if (/\/wiki(\/|$)/i.test(path)) return PAGE_TYPE.WIKI;
@@ -90,6 +90,12 @@ window.RedditPro.Lifecycle = (function() {
       } else {
         setTimeout(applyRoutingLogic, 20);
       }
+      return;
+    }
+
+    // Do not disrupt the background feed layout while a post modal preview is open
+    if (document.body.classList.contains('rg-modal-open') || history.state?.redditProModal === true) {
+      window.RedditPro.AudioObserver?.muteAll();
       return;
     }
 
@@ -221,8 +227,12 @@ window.RedditPro.Lifecycle = (function() {
 
   function halt() {
     // A route transition can leave a feed player visible while the feed observers
-    // are being stopped. Mute immediately, even when already halted.
-    window.RedditPro.AudioObserver?.muteAll();
+    // are being stopped. Mute and disconnect immediately to prevent memory leaks.
+    if (typeof window.RedditPro.AudioObserver?.disconnectAll === 'function') {
+      window.RedditPro.AudioObserver.disconnectAll();
+    } else {
+      window.RedditPro.AudioObserver?.muteAll?.();
+    }
     if (!running) return;
     running = false;
     if (window.RedditPro.DOMObserver) window.RedditPro.DOMObserver.stop();
@@ -249,8 +259,16 @@ window.RedditPro.Lifecycle = (function() {
     window.addEventListener('hashchange', onNavigate);
     const _push = history.pushState.bind(history);
     const _replace = history.replaceState.bind(history);
-    history.pushState = function (...args) { _push(...args); setTimeout(onNavigate, 0); };
-    history.replaceState = function (...args) { _replace(...args); setTimeout(onNavigate, 0); };
+    history.pushState = function (...args) {
+      const res = _push(...args);
+      setTimeout(onNavigate, 0);
+      return res;
+    };
+    history.replaceState = function (...args) {
+      const res = _replace(...args);
+      setTimeout(onNavigate, 0);
+      return res;
+    };
   }
 
   return { init, resume, halt, detectPageType, applyRoutingLogic, PAGE_TYPE };

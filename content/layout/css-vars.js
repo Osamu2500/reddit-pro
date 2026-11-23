@@ -8,6 +8,10 @@ window.RedditPro = window.RedditPro || {};
 window.RedditPro.CSSVars = (function () {
   /** @type {HTMLStyleElement | null} */
   let scrollbarStyleTag = null;
+  /** @type {MediaQueryList | null} */
+  let colorSchemeMedia = null;
+  /** @type {((e: MediaQueryListEvent) => void) | null} */
+  let colorSchemeListener = null;
 
   /**
    * Initializes the CSS Variables controller.
@@ -39,13 +43,30 @@ window.RedditPro.CSSVars = (function () {
       window.RedditPro.Masonry?.observeSidebarContainer?.();
     }
 
-    if (
-      settings.theme === 'dark' ||
-      (settings.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
-    ) {
+    // Clean up previous colorScheme listener if any
+    if (colorSchemeMedia && colorSchemeListener) {
+      colorSchemeMedia.removeEventListener?.('change', colorSchemeListener);
+      colorSchemeMedia = null;
+      colorSchemeListener = null;
+    }
+
+    const isSystemDark =
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    if (settings.theme === 'dark' || (settings.theme === 'system' && isSystemDark)) {
       body.classList.add('rg-theme-dark');
     } else {
       body.classList.remove('rg-theme-dark');
+    }
+
+    if (settings.theme === 'system' && typeof window.matchMedia === 'function') {
+      colorSchemeMedia = window.matchMedia('(prefers-color-scheme: dark)');
+      colorSchemeListener = (e) => {
+        if (e.matches) body.classList.add('rg-theme-dark');
+        else body.classList.remove('rg-theme-dark');
+      };
+      colorSchemeMedia.addEventListener?.('change', colorSchemeListener);
     }
 
     const colGap = (typeof settings.columnGap === 'number' ? settings.columnGap : 12) + 'px';
@@ -74,17 +95,29 @@ window.RedditPro.CSSVars = (function () {
   function manageScrollbar(hide) {
     if (hide) {
       if (!scrollbarStyleTag) {
-        scrollbarStyleTag = document.createElement('style');
-        scrollbarStyleTag.id = 'rg-scrollbar-styles';
-        (document.head || document.documentElement).appendChild(scrollbarStyleTag);
+        scrollbarStyleTag = /** @type {HTMLStyleElement | null} */ (
+          document.getElementById('rg-scrollbar-styles')
+        );
+        if (!scrollbarStyleTag) {
+          scrollbarStyleTag = document.createElement('style');
+          scrollbarStyleTag.id = 'rg-scrollbar-styles';
+          (document.head || document.documentElement).appendChild(scrollbarStyleTag);
+        }
         scrollbarStyleTag.textContent = `
           html, body { -ms-overflow-style: none !important; scrollbar-width: none !important; }
           html::-webkit-scrollbar, body::-webkit-scrollbar { display: none !important; }
         `;
       }
-    } else if (scrollbarStyleTag) {
-      scrollbarStyleTag.remove();
-      scrollbarStyleTag = null;
+    } else {
+      if (!scrollbarStyleTag) {
+        scrollbarStyleTag = /** @type {HTMLStyleElement | null} */ (
+          document.getElementById('rg-scrollbar-styles')
+        );
+      }
+      if (scrollbarStyleTag) {
+        scrollbarStyleTag.remove();
+        scrollbarStyleTag = null;
+      }
     }
   }
 

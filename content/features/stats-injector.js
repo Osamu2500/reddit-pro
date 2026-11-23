@@ -15,6 +15,7 @@ window.RedditPro.StatsInjector = (function () {
   let fetchTimeout = null;
   let isFlushing = false;
   let isApiBlocked = false;
+  let isRateLimited = false;
   const FETCH_DELAY_MS = 250;
   const MAX_RETRIES = 2;
   const MAX_BATCH_SIZE = 100;
@@ -41,9 +42,9 @@ window.RedditPro.StatsInjector = (function () {
   }
 
   async function flushQueue() {
-    if (isFlushing || isApiBlocked) {
+    if (isFlushing || isApiBlocked || isRateLimited) {
       fetchTimeout = null;
-      pendingPosts.clear();
+      if (isApiBlocked) pendingPosts.clear();
       return;
     }
     if (pendingPosts.size === 0) {
@@ -62,7 +63,7 @@ window.RedditPro.StatsInjector = (function () {
       }
     } finally {
       isFlushing = false;
-      if (pendingPosts.size > 0 && !fetchTimeout) {
+      if (pendingPosts.size > 0 && !fetchTimeout && !isRateLimited && !isApiBlocked) {
         fetchTimeout = setTimeout(flushQueue, FETCH_DELAY_MS);
       }
     }
@@ -82,6 +83,16 @@ window.RedditPro.StatsInjector = (function () {
           pendingPosts.clear();
           retryCounts.clear();
           return;
+        }
+        if (response.status === 429) {
+          isRateLimited = true;
+          setTimeout(() => {
+            isRateLimited = false;
+            if (pendingPosts.size > 0 && !fetchTimeout) {
+              fetchTimeout = setTimeout(flushQueue, FETCH_DELAY_MS);
+            }
+          }, 8000);
+          throw new Error('Reddit API rate limited (HTTP 429)');
         }
         throw new Error(`Reddit API returned HTTP ${response.status}`);
       }
@@ -128,7 +139,7 @@ window.RedditPro.StatsInjector = (function () {
   function injectStats(postNode, data) {
     if (!postNode?.isConnected || injectedPosts.has(postNode)) return;
 
-    const creditBar = postNode.querySelector('[slot="credit-bar"]');
+    const creditBar = postNode.querySelector('[slot="credit-bar"], shreddit-post-header, header');
     if (!creditBar) {
       waitForCreditBar(postNode, data);
       return;
@@ -147,7 +158,7 @@ window.RedditPro.StatsInjector = (function () {
         return;
       }
 
-      const creditBar = postNode.querySelector('[slot="credit-bar"]');
+      const creditBar = postNode.querySelector('[slot="credit-bar"], shreddit-post-header, header');
       if (creditBar) {
         stopWaiting(postNode);
         renderStats(postNode, creditBar, data);
