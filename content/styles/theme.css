@@ -157,6 +157,30 @@ body:not([data-reddit-grid-cols='1']) .Post {
   position: relative !important;
 }
 
+/* Strip card borders, backgrounds and padding from wrapper articles that contain a shreddit-post */
+body:not([data-reddit-grid-cols='1']) article:has(shreddit-post),
+body:not([data-reddit-grid-cols='1']) faceplate-tracker:has(shreddit-post),
+body:not([data-reddit-grid-cols='1']) faceplate-tracker > article {
+  border: none !important;
+  border-bottom: none !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Remove trailing separator lines and dividers */
+body:not([data-reddit-grid-cols='1']) hr,
+body:not([data-reddit-grid-cols='1']) [role='separator'],
+body:not([data-reddit-grid-cols='1']) shreddit-separator {
+  display: none !important;
+  border: none !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    ::before — INNER BORDER 
    Subtle inner highlight for glass edge crispness (Notion dark mode uses this)

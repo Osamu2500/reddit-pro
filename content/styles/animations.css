@@ -47,7 +47,7 @@ body:not([data-reddit-grid-cols="1"]) .Post {
 @keyframes rg-card-entrance {
   0% {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(6px);
   }
   100% {
     opacity: 1;
@@ -81,7 +81,7 @@ body:not([data-reddit-grid-cols="1"]) :is(shreddit-post, .Post)[data-rg-new="1"]
 }
 
 body:not([data-reddit-grid-cols="1"]) :is(shreddit-post, .Post):not([data-rg-loading]):not([data-rg-stable]) {
-  animation: rg-reveal 0.3s ease both !important;
+  animation: rg-reveal 0.15s ease both !important;
 }
 
 body:not([data-reddit-grid-cols="1"]) :is(shreddit-post, .Post)[data-rg-stable]:not([data-rg-new="1"]) {

@@ -811,5 +811,344 @@ describe('Masonry layout engine & responsive columns', () => {
       expect(metrics).toHaveProperty('maxHeight');
       expect(metrics).toHaveProperty('balanceRatio');
     });
+
+    it('locks already loaded posts to their columns without shifting and fits new incoming posts into the shortest column', () => {
+      const feed = document.createElement('shreddit-feed');
+      feed.style.display = 'grid';
+      feed.style.gridTemplateColumns = 'repeat(2, 1fr)';
+      document.body.append(feed);
+
+      feed.getBoundingClientRect = () => ({
+        width: 612,
+        height: 1000,
+        top: 0,
+        right: 612,
+        bottom: 1000,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+
+      window.RedditPro.Masonry.observeFeedContainer();
+
+      // Card 1 in Col 0 (height 200)
+      const card1 = document.createElement('shreddit-post');
+      const tracker1 = document.createElement('faceplate-tracker');
+      tracker1.append(card1);
+      feed.append(tracker1);
+      card1.getBoundingClientRect = () => ({
+        width: 300,
+        height: 200,
+        top: 0,
+        right: 300,
+        bottom: 200,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+
+      // Card 2 in Col 1 (height 200 initially)
+      const card2 = document.createElement('shreddit-post');
+      const tracker2 = document.createElement('faceplate-tracker');
+      tracker2.append(card2);
+      feed.append(tracker2);
+      card2.getBoundingClientRect = () => ({
+        width: 300,
+        height: 200,
+        top: 0,
+        right: 300,
+        bottom: 200,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+
+      // Card 3 downstream in Col 0 (height 200)
+      const card3 = document.createElement('shreddit-post');
+      const tracker3 = document.createElement('faceplate-tracker');
+      tracker3.append(card3);
+      feed.append(tracker3);
+      card3.getBoundingClientRect = () => ({
+        width: 300,
+        height: 200,
+        top: 1200,
+        right: 300,
+        bottom: 1400,
+        left: 0,
+        x: 0,
+        y: 1200,
+        toJSON: () => ({}),
+      });
+
+      window.RedditPro.Masonry.processCard(card1);
+      window.RedditPro.Masonry.processCard(card2);
+      window.RedditPro.Masonry.processCard(card3);
+      runFrames();
+
+      expect(tracker1.getAttribute('data-rg-col')).toBe('0');
+      expect(tracker2.getAttribute('data-rg-col')).toBe('1');
+      expect(tracker3.getAttribute('data-rg-col')).toBe('0');
+
+      // Card 1 expands massively (e.g. high-resolution image loaded) to 800px!
+      card1.getBoundingClientRect = () => ({
+        width: 300,
+        height: 800,
+        top: 0,
+        right: 300,
+        bottom: 800,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+
+      // Recalculate card 1 and flush frames
+      window.RedditPro.Masonry.recalculateCard(card1);
+      runFrames();
+
+      // Trigger autoAdjustAndFillGaps
+      window.RedditPro.Masonry.autoAdjustAndFillGaps(feed);
+
+      // Already loaded cards MUST NEVER shift or rearrange to another column
+      expect(tracker1.getAttribute('data-rg-col')).toBe('0');
+      expect(tracker2.getAttribute('data-rg-col')).toBe('1');
+      expect(tracker3.getAttribute('data-rg-col')).toBe('0');
+      expect(tracker3.style.getPropertyValue('grid-column-start')).toBe('1');
+
+      // Now new incoming post arrives as user scrolls (card 4)
+      const card4 = document.createElement('shreddit-post');
+      const tracker4 = document.createElement('faceplate-tracker');
+      tracker4.append(card4);
+      feed.append(tracker4);
+      card4.getBoundingClientRect = () => ({
+        width: 300,
+        height: 200,
+        top: 1400,
+        right: 300,
+        bottom: 1600,
+        left: 0,
+        x: 0,
+        y: 1400,
+        toJSON: () => ({}),
+      });
+
+      window.RedditPro.Masonry.processCard(card4);
+      runFrames();
+
+      // Card 4 must fit into the shortest column (Col 1, since Col 0 is ~1000px and Col 1 is ~200px)
+      expect(tracker4.getAttribute('data-rg-col')).toBe('1');
+      expect(tracker4.style.getPropertyValue('grid-column-start')).toBe('2');
+
+      // Old loaded posts still never shifted
+      expect(tracker1.getAttribute('data-rg-col')).toBe('0');
+      expect(tracker2.getAttribute('data-rg-col')).toBe('1');
+      expect(tracker3.getAttribute('data-rg-col')).toBe('0');
+    });
+
+    it('neutralizes zero-height elements and styles in-feed recommendation widgets as single-column cards', () => {
+      const feed = document.createElement('shreddit-feed');
+      feed.style.display = 'grid';
+      feed.style.gridTemplateColumns = 'repeat(3, 1fr)';
+      document.body.append(feed);
+
+      feed.getBoundingClientRect = () => ({
+        width: 900,
+        height: 800,
+        top: 0,
+        right: 900,
+        bottom: 800,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+
+      window.RedditPro.Masonry.observeFeedContainer();
+
+      // In-feed recommendations widget
+      const recWidget = document.createElement('community-recommendations');
+      recWidget.getBoundingClientRect = () => ({
+        width: 300,
+        height: 250,
+        top: 400,
+        right: 300,
+        bottom: 650,
+        left: 0,
+        x: 0,
+        y: 400,
+        toJSON: () => ({}),
+      });
+      feed.append(recWidget);
+
+      // Empty hidden separator
+      const emptyDiv = document.createElement('div');
+      emptyDiv.getBoundingClientRect = () => ({
+        width: 0,
+        height: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+      feed.append(emptyDiv);
+
+      window.RedditPro.Masonry.autoAdjustAndFillGaps(feed);
+
+      // Recommendation widget must span 1 column, NOT break full grid width
+      expect(recWidget.style.getPropertyValue('grid-column')).toBe('span 1');
+
+      // Empty div must NOT hold 1 / -1 grid column
+      expect(emptyDiv.style.getPropertyValue('grid-column')).not.toBe('1 / -1');
+    });
+
+    it('assigns explicit grid-row-start to prevent auto-placement gaps and packs cards tightly in columns', () => {
+      const feed = document.createElement('shreddit-feed');
+      feed.style.display = 'grid';
+      feed.style.gridTemplateColumns = 'repeat(2, 1fr)';
+      document.body.append(feed);
+
+      feed.getBoundingClientRect = () => ({
+        width: 612,
+        height: 1000,
+        top: 0,
+        right: 612,
+        bottom: 1000,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+
+      window.RedditPro.Masonry.observeFeedContainer();
+
+      // Card 1 in Col 0: 200px tall (span 17)
+      const card1 = document.createElement('shreddit-post');
+      const tracker1 = document.createElement('faceplate-tracker');
+      tracker1.append(card1);
+      feed.append(tracker1);
+      card1.getBoundingClientRect = () => ({
+        width: 300,
+        height: 200,
+        top: 0,
+        right: 300,
+        bottom: 200,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+
+      // Card 2 in Col 1: 600px tall (span 48)
+      const card2 = document.createElement('shreddit-post');
+      const tracker2 = document.createElement('faceplate-tracker');
+      tracker2.append(card2);
+      feed.append(tracker2);
+      card2.getBoundingClientRect = () => ({
+        width: 300,
+        height: 600,
+        top: 0,
+        right: 300,
+        bottom: 600,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+
+      // Card 3 in Col 0: 150px tall
+      const card3 = document.createElement('shreddit-post');
+      const tracker3 = document.createElement('faceplate-tracker');
+      tracker3.append(card3);
+      feed.append(tracker3);
+      card3.getBoundingClientRect = () => ({
+        width: 300,
+        height: 150,
+        top: 0,
+        right: 300,
+        bottom: 150,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+
+      window.RedditPro.Masonry.processCard(card1);
+      window.RedditPro.Masonry.processCard(card2);
+      window.RedditPro.Masonry.processCard(card3);
+      runFrames();
+
+      // Card 1 in Col 0 starts at track 1
+      expect(tracker1.getAttribute('data-rg-col')).toBe('0');
+      expect(tracker1.style.getPropertyValue('grid-column-start')).toBe('1');
+      expect(tracker1.style.getPropertyValue('grid-row-start')).toBe('1');
+      const span1 = parseInt(tracker1.getAttribute('data-rg-span'), 10);
+
+      // Card 2 in Col 1 starts at track 1
+      expect(tracker2.getAttribute('data-rg-col')).toBe('1');
+      expect(tracker2.style.getPropertyValue('grid-column-start')).toBe('2');
+      expect(tracker2.style.getPropertyValue('grid-row-start')).toBe('1');
+
+      // Card 3 in Col 0 MUST start at exactly (1 + span1) — NOT jumping down to match Card 2!
+      expect(tracker3.getAttribute('data-rg-col')).toBe('0');
+      expect(tracker3.style.getPropertyValue('grid-column-start')).toBe('1');
+      expect(tracker3.style.getPropertyValue('grid-row-start')).toBe(String(1 + span1));
+      expect(parseInt(tracker3.style.getPropertyValue('grid-row-start'), 10)).toBeLessThan(
+        parseInt(tracker2.getAttribute('data-rg-span'), 10)
+      );
+    });
+
+    it('enforces monotonic non-decreasing min-height on feed container during dynamic mutations', () => {
+      const feed = document.createElement('shreddit-feed');
+      feed.style.display = 'grid';
+      feed.style.gridTemplateColumns = 'repeat(2, 1fr)';
+      document.body.append(feed);
+
+      feed.getBoundingClientRect = () => ({
+        width: 612,
+        height: 800,
+        top: 0,
+        right: 612,
+        bottom: 800,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+
+      window.RedditPro.Masonry.observeFeedContainer();
+
+      const card1 = document.createElement('shreddit-post');
+      const tracker1 = document.createElement('faceplate-tracker');
+      tracker1.append(card1);
+      feed.append(tracker1);
+      card1.getBoundingClientRect = () => ({
+        width: 300,
+        height: 500,
+        top: 0,
+        right: 300,
+        bottom: 500,
+        left: 0,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      });
+
+      window.RedditPro.Masonry.processCard(card1);
+      runFrames();
+
+      const initialMinHeight = parseInt(feed.style.minHeight, 10);
+      expect(initialMinHeight).toBeGreaterThan(450);
+
+      // Trigger auto adjust; min-height must never shrink below initial
+      window.RedditPro.Masonry.autoAdjustAndFillGaps(feed);
+      const afterMinHeight = parseInt(feed.style.minHeight, 10);
+      expect(afterMinHeight).toBeGreaterThanOrEqual(initialMinHeight);
+    });
   });
 });

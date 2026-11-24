@@ -9,7 +9,7 @@ window.RedditPro.StatsInjector = (function () {
   const pendingPosts = new Map();
   /** @type {Map<string, number>} */
   const retryCounts = new Map();
-  /** @type {WeakMap<Element, { observer: MutationObserver, timeout: number }>} */
+  /** @type {WeakMap<Element, { interval?: any, observer?: MutationObserver, timeout?: any }>} */
   const pendingInjection = new WeakMap();
   /** @type {number | null} */
   let fetchTimeout = null;
@@ -19,7 +19,6 @@ window.RedditPro.StatsInjector = (function () {
   const FETCH_DELAY_MS = 250;
   const MAX_RETRIES = 2;
   const MAX_BATCH_SIZE = 100;
-  const CREDIT_BAR_WAIT_MS = 8000;
   const injectedPosts = new WeakSet();
 
   function init() {
@@ -152,8 +151,10 @@ window.RedditPro.StatsInjector = (function () {
   function waitForCreditBar(postNode, data) {
     if (pendingInjection.has(postNode)) return;
 
-    const observer = new MutationObserver(() => {
-      if (!postNode.isConnected) {
+    let retries = 0;
+    const maxRetries = 12;
+    const interval = setInterval(() => {
+      if (!postNode.isConnected || retries++ >= maxRetries) {
         stopWaiting(postNode);
         return;
       }
@@ -163,19 +164,18 @@ window.RedditPro.StatsInjector = (function () {
         stopWaiting(postNode);
         renderStats(postNode, creditBar, data);
       }
-    });
+    }, 150);
 
-    const timeout = setTimeout(() => stopWaiting(postNode), CREDIT_BAR_WAIT_MS);
-    pendingInjection.set(postNode, { observer, timeout });
-    observer.observe(postNode, { childList: true, subtree: true });
+    pendingInjection.set(postNode, { interval });
   }
 
   /** @param {Element} postNode */
   function stopWaiting(postNode) {
     const pending = pendingInjection.get(postNode);
     if (!pending) return;
-    pending.observer.disconnect();
-    clearTimeout(pending.timeout);
+    if (pending.interval) clearInterval(pending.interval);
+    if (pending.observer) pending.observer.disconnect();
+    if (pending.timeout) clearTimeout(pending.timeout);
     pendingInjection.delete(postNode);
   }
 

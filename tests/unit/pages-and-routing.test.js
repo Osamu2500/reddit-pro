@@ -431,5 +431,66 @@ describe('Pages, Routing & Feed UI support across Reddit', () => {
       window.RedditPro.DOMObserver.triggerNextFeedBatch();
       expect(clickLoadSpy).toHaveBeenCalled();
     });
+
+    it('triggerNextFeedBatch ignores spent sentinels and selects the active sentinel', () => {
+      const feed = document.createElement('shreddit-feed');
+      document.body.appendChild(feed);
+
+      // Dead / spent sentinel from previous batch
+      const spentSentinel = document.createElement('faceplate-partial');
+      spentSentinel.setAttribute('src', '/feeds/home?after=t3_batch1');
+      spentSentinel.setAttribute('data-rg-spent-sentinel', '1');
+      const spentSpy = vi.fn();
+      spentSentinel.addEventListener('faceplate-trigger', spentSpy);
+      feed.appendChild(spentSentinel);
+
+      // Active fresh sentinel for next batch
+      const activeSentinel = document.createElement('faceplate-partial');
+      activeSentinel.setAttribute('src', '/feeds/home?after=t3_batch2');
+      const activeSpy = vi.fn();
+      activeSentinel.addEventListener('faceplate-trigger', activeSpy);
+      feed.appendChild(activeSentinel);
+
+      window.RedditPro.DOMObserver.triggerNextFeedBatch();
+
+      expect(spentSpy).not.toHaveBeenCalled();
+      expect(activeSpy).toHaveBeenCalled();
+      expect(activeSentinel.getAttribute('data-rg-sentinel')).toBe('1');
+      expect(activeSentinel.getAttribute('data-rg-triggered')).toBe('true');
+    });
+
+    it('fetchBatchDirectly fetches HTML payload and injects new posts, marking old sentinel spent', async () => {
+      const feed = document.createElement('shreddit-feed');
+      document.body.appendChild(feed);
+
+      const sentinel = document.createElement('faceplate-partial');
+      sentinel.setAttribute('src', '/svc/shreddit/feeds/test-feed');
+      feed.appendChild(sentinel);
+
+      const mockHtml = `
+        <div>
+          <faceplate-batch>
+            <article class="Post" id="p1">Post 1</article>
+            <article class="Post" id="p2">Post 2</article>
+          </faceplate-batch>
+          <faceplate-partial id="feed-next-page-partial" src="/svc/shreddit/feeds/next"></faceplate-partial>
+        </div>
+      `;
+
+      const originalFetch = global.fetch;
+      // @ts-ignore
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        text: () => Promise.resolve(mockHtml),
+      });
+
+      await window.RedditPro.DOMObserver.fetchBatchDirectly(sentinel, feed, '/svc/shreddit/feeds/test-feed');
+
+      expect(sentinel.getAttribute('data-rg-spent-sentinel')).toBe('1');
+      expect(feed.querySelectorAll('.Post').length).toBe(2);
+      expect(feed.querySelector('faceplate-partial[id="feed-next-page-partial"]')).not.toBeNull();
+
+      global.fetch = originalFetch;
+    });
   });
 });

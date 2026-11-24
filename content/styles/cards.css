@@ -1823,10 +1823,24 @@ body[data-reddit-grid-compact='true'] shreddit-post-header {
 }
 
 body[data-reddit-grid-compact='true'] shreddit-post hr,
+body:not([data-reddit-grid-cols='1']) hr,
 body:not([data-reddit-grid-cols='1']) shreddit-post hr,
+body:not([data-reddit-grid-cols='1']) article hr,
 body:not([data-reddit-grid-cols='1']) shreddit-feed hr,
-body:not([data-reddit-grid-cols='1']) faceplate-batch hr {
+body:not([data-reddit-grid-cols='1']) faceplate-batch hr,
+body:not([data-reddit-grid-cols='1']) [role='separator'],
+body:not([data-reddit-grid-cols='1']) shreddit-separator,
+body:not([data-reddit-grid-cols='1']) [data-testid*='separator'],
+body:not([data-reddit-grid-cols='1']) [data-testid*='divider'],
+body:not([data-reddit-grid-cols='1']) [class*='separator'],
+body:not([data-reddit-grid-cols='1']) [class*='divider'] {
   display: none !important;
+  height: 0 !important;
+  max-height: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
 }
 
 body:not([data-reddit-grid-cols='1']) shreddit-post + shreddit-post,

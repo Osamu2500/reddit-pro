@@ -17,6 +17,7 @@ window.RedditPro.DOMObserver = (function () {
   const BATCH_SELECTOR =
     'faceplate-batch, shreddit-feed, profile-feed, shreddit-profile-feed, shreddit-user-feed';
   const PLAYER_SELECTOR = 'shreddit-player';
+  const processedSquircleRoots = new WeakSet();
 
   const SQUIRCLE_SHADOW_STYLE = `
     :host {
@@ -78,6 +79,17 @@ window.RedditPro.DOMObserver = (function () {
     :host(:is(shreddit-overflow-menu, faceplate-dropdown-menu, shreddit-post-overflow-menu)) {
       overflow: visible !important;
     }
+    hr,
+    [role="separator"],
+    shreddit-separator,
+    .separator,
+    .divider {
+      display: none !important;
+      height: 0 !important;
+      border: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
     button,
     [role="button"],
     a,
@@ -122,15 +134,18 @@ window.RedditPro.DOMObserver = (function () {
    * Recursively traverses an element, its children, and any open ShadowRoots,
    * injecting squircle styling directly into each shadow root and styling all buttons and avatars.
    * @param {Node} rootNode
+   * @param {boolean} [force]
    */
-  function deepPierceSquircle(rootNode) {
+  function deepPierceSquircle(rootNode, force = false) {
     if (!rootNode) return;
+    if (!force && processedSquircleRoots.has(rootNode)) return;
+    processedSquircleRoots.add(rootNode);
 
     // 1. If this node has an open shadowRoot, inject squircle style and recurse inside it
     const elWithShadow = /** @type {any} */ (rootNode);
     if (elWithShadow.shadowRoot) {
       injectSquircleToShadow(elWithShadow.shadowRoot);
-      deepPierceSquircle(elWithShadow.shadowRoot);
+      deepPierceSquircle(elWithShadow.shadowRoot, force);
     }
 
     if (rootNode.nodeType === 1) {
@@ -366,7 +381,7 @@ window.RedditPro.DOMObserver = (function () {
       for (let i = 0; i < children.length; i++) {
         const child = children[i];
         if (child.nodeType === 1 || child.nodeType === 11) {
-          deepPierceSquircle(child);
+          deepPierceSquircle(child, force);
         }
       }
     }
@@ -379,10 +394,10 @@ window.RedditPro.DOMObserver = (function () {
     // Ensure squircle styling and Join button positioning are enforced immediately
     if (!node.hasAttribute('data-rg-squircle-done')) {
       node.setAttribute('data-rg-squircle-done', 'true');
-      deepPierceSquircle(node);
+      deepPierceSquircle(node, true);
       node.addEventListener(
         'mouseenter',
-        () => deepPierceSquircle(node),
+        () => deepPierceSquircle(node, true),
         { once: true, passive: true }
       );
     }
@@ -456,9 +471,45 @@ window.RedditPro.DOMObserver = (function () {
   function handleElement(node) {
     if (node.nodeType !== 1 || node.hasAttribute('data-rg-processed')) return;
 
+    // Immediately collapse and eliminate any hr, separator or divider elements
+    if (
+      node.matches?.(
+        'hr, [role="separator"], shreddit-separator, [data-testid*="separator"], [data-testid*="divider"]'
+      )
+    ) {
+      node.setAttribute('data-rg-processed', 'true');
+      const nodeEl = /** @type {any} */ (node);
+      if (nodeEl.style) {
+        nodeEl.style.setProperty('display', 'none', 'important');
+        nodeEl.style.setProperty('height', '0px', 'important');
+        nodeEl.style.setProperty('margin', '0px', 'important');
+        nodeEl.style.setProperty('padding', '0px', 'important');
+        nodeEl.style.setProperty('border', 'none', 'important');
+      }
+      return;
+    }
+    if (node.querySelectorAll) {
+      node
+        .querySelectorAll('hr, [role="separator"], shreddit-separator, [data-testid*="separator"], [data-testid*="divider"]')
+        .forEach((sep) => {
+          const sepEl = /** @type {any} */ (sep);
+          if (sepEl.style) {
+            sepEl.style.setProperty('display', 'none', 'important');
+            sepEl.style.setProperty('height', '0px', 'important');
+            sepEl.style.setProperty('margin', '0px', 'important');
+            sepEl.style.setProperty('padding', '0px', 'important');
+            sepEl.style.setProperty('border', 'none', 'important');
+          }
+        });
+    }
+
     if (node.matches(POST_SELECTOR)) {
       node.setAttribute('data-rg-processed', 'true');
       node.setAttribute('data-rg-new', '1');
+      isPreloading = false;
+      if (lastObservedSentinel?.isConnected) {
+        lastObservedSentinel.removeAttribute('data-rg-triggered');
+      }
       setTimeout(() => {
         try {
           node.removeAttribute('data-rg-new');
@@ -467,11 +518,16 @@ window.RedditPro.DOMObserver = (function () {
         }
       }, 300);
       processPost(node);
+      observeFeedEnd();
       return;
     }
 
     if (node.matches(BATCH_SELECTOR)) {
       node.setAttribute('data-rg-processed', 'true');
+      isPreloading = false;
+      if (lastObservedSentinel?.isConnected) {
+        lastObservedSentinel.removeAttribute('data-rg-triggered');
+      }
       window.RedditPro.Masonry?.processBatch(node);
       observeFeedEnd();
       window.RedditPro.AudioObserver?.observeIn(node);
@@ -503,6 +559,53 @@ window.RedditPro.DOMObserver = (function () {
   function handleAddedNode(root) {
     if (root.nodeType !== 1) return;
 
+    // Immediately eliminate any separators or horizontal lines in this added subtree
+    if (
+      root.matches?.(
+        'hr, [role="separator"], shreddit-separator, [data-testid*="separator"], [data-testid*="divider"], [class*="separator"], [class*="divider"]'
+      )
+    ) {
+      root.setAttribute('data-rg-processed', 'true');
+      const rootEl = /** @type {any} */ (root);
+      if (rootEl.style) {
+        rootEl.style.setProperty('display', 'none', 'important');
+        rootEl.style.setProperty('height', '0px', 'important');
+        rootEl.style.setProperty('margin', '0px', 'important');
+        rootEl.style.setProperty('padding', '0px', 'important');
+        rootEl.style.setProperty('border', 'none', 'important');
+      }
+      return;
+    }
+
+    if (root.querySelectorAll) {
+      root
+        .querySelectorAll(
+          'hr, [role="separator"], shreddit-separator, [data-testid*="separator"], [data-testid*="divider"], [class*="separator"], [class*="divider"]'
+        )
+        .forEach((sep) => {
+          const sepEl = /** @type {any} */ (sep);
+          if (sepEl.style) {
+            sepEl.style.setProperty('display', 'none', 'important');
+            sepEl.style.setProperty('height', '0px', 'important');
+            sepEl.style.setProperty('margin', '0px', 'important');
+            sepEl.style.setProperty('padding', '0px', 'important');
+            sepEl.style.setProperty('border', 'none', 'important');
+          }
+        });
+
+      // Strip border-bottom and padding from any wrapper article containing shreddit-post
+      root.querySelectorAll('article:has(shreddit-post), faceplate-tracker:has(shreddit-post)').forEach((el) => {
+        const artEl = /** @type {any} */ (el);
+        if (artEl.style) {
+          artEl.style.setProperty('border', 'none', 'important');
+          artEl.style.setProperty('border-bottom', 'none', 'important');
+          artEl.style.setProperty('background', 'transparent', 'important');
+          artEl.style.setProperty('padding-bottom', '0px', 'important');
+          artEl.style.setProperty('margin-bottom', '0px', 'important');
+        }
+      });
+    }
+
     handleElement(root);
     root.querySelectorAll?.(
       `${POST_SELECTOR}, ${BATCH_SELECTOR}, ${PLAYER_SELECTOR}, img`
@@ -532,6 +635,7 @@ window.RedditPro.DOMObserver = (function () {
         '#feed-next-page-partial, [slot="load-after"], [slot="more-posts"], [slot="load-more"], faceplate-partial[src*="after="], faceplate-partial[src*="/feeds/"], shreddit-async-loader[bundlename*="feed" i], button[aria-label*="more posts" i], button:has(> [slot*="load-more"])'
       )
     ).filter((el) => {
+      if (el.hasAttribute('data-rg-spent-sentinel') || el.matches('[data-rg-spent-sentinel="1"]')) return false;
       if (el.closest('shreddit-post, article, .Post, shreddit-profile-comment')) return false;
       if (el.querySelector('shreddit-post, article, .Post')) return false;
       return true;
@@ -547,6 +651,7 @@ window.RedditPro.DOMObserver = (function () {
         'faceplate-partial, shreddit-async-loader, [slot="more-posts"], [slot="load-more"], button[aria-label*="more posts" i]'
       )
     ).filter((el) => {
+      if (el.hasAttribute('data-rg-spent-sentinel') || el.matches('[data-rg-spent-sentinel="1"]')) return false;
       if (el.closest('shreddit-post, article, .Post, shreddit-profile-comment')) return false;
       if (el.querySelector('shreddit-post, article, .Post')) return false;
       const src = (el.getAttribute('src') || el.getAttribute('data-src') || '').toLowerCase();
@@ -555,6 +660,96 @@ window.RedditPro.DOMObserver = (function () {
     });
 
     return generalCandidates.length > 0 ? generalCandidates[generalCandidates.length - 1] : null;
+  }
+
+  /**
+   * Directly fetches the partial HTML payload from Reddit when the native custom element
+   * fails or stalls to load content, then safely injects the new post cards and updates layout.
+   * @param {Element} sentinel
+   * @param {Element} feed
+   * @param {string} src
+   */
+  async function fetchBatchDirectly(sentinel, feed, src) {
+    if (!sentinel || !feed || !src) return;
+    try {
+      const fullUrl = src.startsWith('http') ? src : `${window.location.origin}${src}`;
+      const response = await fetch(fullUrl, {
+        credentials: 'include',
+        headers: {
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        },
+      });
+
+      if (!response.ok) return;
+
+      const html = await response.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+
+      // Strip any hr, separator or divider elements from server HTML immediately
+      doc
+        .querySelectorAll('hr, [role="separator"], shreddit-separator, [data-testid*="separator"], [data-testid*="divider"]')
+        .forEach((el) => el.remove());
+
+      // Extract batch, post cards, and subsequent sentinel partials
+      const elementsToInject = doc.querySelectorAll(
+        'faceplate-batch, shreddit-post, article, .Post, faceplate-partial[slot="load-after"], faceplate-partial[id*="feed-next-page"], faceplate-partial[src*="/feeds/"]'
+      );
+
+      if (elementsToInject.length === 0) return;
+
+      // Mark the spent sentinel so it doesn't get triggered again
+      sentinel.setAttribute('data-rg-spent-sentinel', '1');
+      sentinel.removeAttribute('data-rg-sentinel');
+      sentinel.removeAttribute('data-rg-triggered');
+      const sentinelEl = /** @type {any} */ (sentinel);
+      if (sentinelEl.style) {
+        sentinelEl.style.setProperty('display', 'none', 'important');
+      }
+
+      const fragment = document.createDocumentFragment();
+      /** @type {Element | null} */
+      let nextSentinel = null;
+      const seen = new Set();
+
+      elementsToInject.forEach((el) => {
+        if (el.matches?.('faceplate-partial')) {
+          nextSentinel = el;
+          return;
+        }
+
+        const tag = el.tagName.toLowerCase();
+        if (tag === 'faceplate-batch') {
+          if (!seen.has(el)) {
+            seen.add(el);
+            fragment.appendChild(el);
+            el.querySelectorAll('shreddit-post, article, .Post').forEach((c) => seen.add(c));
+          }
+        } else if (!seen.has(el) && !el.closest('faceplate-batch')) {
+          seen.add(el);
+          fragment.appendChild(el);
+        }
+      });
+
+      if (nextSentinel) {
+        fragment.appendChild(nextSentinel);
+      }
+
+      if (sentinel.parentNode === feed) {
+        feed.insertBefore(fragment, sentinel);
+      } else {
+        feed.appendChild(fragment);
+      }
+
+      // Re-observe feed container and recalculate layout
+      if (window.RedditPro?.Masonry?.observeFeedContainer) {
+        window.RedditPro.Masonry.observeFeedContainer();
+      }
+    } catch {
+      // Fallback network or parse error silently ignored
+    } finally {
+      isPreloading = false;
+    }
   }
 
   function triggerNextFeedBatch() {
@@ -571,8 +766,17 @@ window.RedditPro.DOMObserver = (function () {
     }
 
     isPreloading = true;
+    target.setAttribute('data-rg-sentinel', '1');
     target.setAttribute('data-rg-triggered', 'true');
     const targetEl = /** @type {any} */ (target);
+    if (targetEl.style) {
+      targetEl.style.setProperty('display', 'flex', 'important');
+      targetEl.style.setProperty('grid-column', '1 / -1', 'important');
+      targetEl.style.setProperty('width', '100%', 'important');
+      targetEl.style.setProperty('min-height', '80px', 'important');
+      targetEl.style.setProperty('align-items', 'center', 'important');
+      targetEl.style.setProperty('justify-content', 'center', 'important');
+    }
 
     // 1. If it's or contains a button, click it (only if it's genuinely a load-more button, never back-to-top)
     const isLoadMoreButton = (/** @type {Element | null} */ el) => {
@@ -607,18 +811,19 @@ window.RedditPro.DOMObserver = (function () {
       try { /** @type {HTMLElement} */ (btn).click(); } catch {}
     }
 
-    // 2. Trigger native Web Component loading
-    // CRITICAL: Reddit Faceplate components (e.g. O.load) explicitly throw unless loading is 'programmatic'!
-    if (
-      typeof targetEl.load === 'function' ||
-      target.tagName.toLowerCase() === 'faceplate-partial' ||
-      target.id === 'feed-next-page-partial'
-    ) {
+    // 2. Set eager loading on lazy elements so Faceplate fetches immediately
+    try {
+      target.setAttribute('loading', 'eager');
+      targetEl.loading = 'eager';
+    } catch {}
+
+    // 3. Trigger native Web Component loading methods
+    if (typeof targetEl.loadContent === 'function') {
+      try { targetEl.loadContent(); } catch {}
+    } else if (typeof targetEl.load === 'function') {
       try {
         target.setAttribute('loading', 'programmatic');
         targetEl.loading = 'programmatic';
-      } catch {}
-      try {
         targetEl.load();
       } catch {}
     } else if (typeof targetEl.fetch === 'function') {
@@ -627,19 +832,54 @@ window.RedditPro.DOMObserver = (function () {
       try { targetEl.reload(); } catch {}
     }
 
-    // 3. Dispatch standard custom events expected by Reddit Faceplate components
+    // 4. Dispatch standard custom events expected by Reddit Faceplate components
     target.dispatchEvent(new CustomEvent('faceplate-trigger', { bubbles: true }));
     feed.dispatchEvent(new CustomEvent('shreddit-feed-more-posts', { bubbles: true }));
+
+    // 5. Direct Fetch fallback: If Reddit's web component does not append posts within 1200ms,
+    // fetch the src directly and inject the next batch seamlessly.
+    const initialPostCount = feed.querySelectorAll(POST_SELECTOR).length;
+    const src = target.getAttribute('src') || target.getAttribute('data-src');
+    if (src) {
+      setTimeout(() => {
+        if (
+          target.isConnected &&
+          !target.querySelector(POST_SELECTOR) &&
+          feed.querySelectorAll(POST_SELECTOR).length <= initialPostCount
+        ) {
+          fetchBatchDirectly(target, feed, src);
+        }
+      }, 1200);
+    }
+
+    // 6. Ensure that if the custom element hasn't been defined/upgraded yet, we trigger once defined
+    if (typeof customElements !== 'undefined' && customElements && typeof customElements.get === 'function') {
+      const tag = target.tagName.toLowerCase();
+      if (tag.includes('-') && !customElements.get(tag)) {
+        customElements
+          .whenDefined(tag)
+          .then(() => {
+            if (target.isConnected && !target.querySelector('shreddit-post, article, .Post')) {
+              try {
+                if (typeof targetEl.loadContent === 'function') targetEl.loadContent();
+                else if (typeof targetEl.load === 'function') targetEl.load();
+                else if (typeof targetEl.fetch === 'function') targetEl.fetch();
+              } catch {}
+            }
+          })
+          .catch(() => {});
+      }
+    }
 
     setTimeout(() => {
       if (target.isConnected && !target.querySelector('shreddit-post, article, .Post')) {
         target.removeAttribute('data-rg-triggered');
       }
-    }, 2500);
+    }, 1500);
 
     setTimeout(() => {
       isPreloading = false;
-    }, 600);
+    }, 1000);
   }
 
   function observeFeedEnd() {
@@ -662,7 +902,7 @@ window.RedditPro.DOMObserver = (function () {
         },
         {
           root: null,
-          rootMargin: '2500px 0px',
+          rootMargin: '800px 0px',
           threshold: 0,
         }
       );
@@ -680,10 +920,12 @@ window.RedditPro.DOMObserver = (function () {
     scrollPreloadRafPending = true;
     requestAnimationFrame(() => {
       scrollPreloadRafPending = false;
+      if (isPreloading) return;
+      if (window.scrollY < 200) return;
       const doc = document.documentElement;
       const scrollHeight = doc ? doc.scrollHeight : (document.body?.scrollHeight || 0);
       const currentScroll = window.scrollY + window.innerHeight;
-      if (scrollHeight - currentScroll < 2600) {
+      if (scrollHeight - currentScroll < 1000) {
         triggerNextFeedBatch();
       }
     });
@@ -695,7 +937,6 @@ window.RedditPro.DOMObserver = (function () {
       requestAnimationFrame(() => {
         window.RedditPro.Masonry?.sweepNew?.();
         observeFeedEnd();
-        if (document.body) deepPierceSquircle(document.body);
       });
     }, 80);
   }
@@ -705,9 +946,42 @@ window.RedditPro.DOMObserver = (function () {
     mutationBatch.clear();
     rafPending = false;
     batch.forEach((node) => {
-      if (node instanceof Element) handleAddedNode(node);
+      if (node instanceof Element) {
+        handleAddedNode(node);
+        deepPierceSquircle(node);
+      }
     });
-    if (document.body) deepPierceSquircle(document.body);
+
+    // Feed-wide sweep to eliminate any lingering separators or trailing lines on infinite scroll
+    const feed = document.querySelector(
+      'shreddit-feed, profile-feed, shreddit-profile-feed, shreddit-user-feed, [data-testid="post-list"]'
+    );
+    if (feed) {
+      feed
+        .querySelectorAll(
+          'hr, [role="separator"], shreddit-separator, [data-testid*="separator"], [data-testid*="divider"]'
+        )
+        .forEach((el) => {
+          const sep = /** @type {any} */ (el);
+          if (sep.style) {
+            sep.style.setProperty('display', 'none', 'important');
+            sep.style.setProperty('height', '0px', 'important');
+            sep.style.setProperty('margin', '0px', 'important');
+            sep.style.setProperty('padding', '0px', 'important');
+            sep.style.setProperty('border', 'none', 'important');
+          }
+        });
+      feed.querySelectorAll('article:has(shreddit-post), faceplate-tracker:has(shreddit-post)').forEach((el) => {
+        const art = /** @type {any} */ (el);
+        if (art.style) {
+          art.style.setProperty('border', 'none', 'important');
+          art.style.setProperty('border-bottom', 'none', 'important');
+          art.style.setProperty('background', 'transparent', 'important');
+          art.style.setProperty('padding-bottom', '0px', 'important');
+          art.style.setProperty('margin-bottom', '0px', 'important');
+        }
+      });
+    }
   }
 
   /** @param {Node[]} nodes */
@@ -822,5 +1096,5 @@ window.RedditPro.DOMObserver = (function () {
     rafPending = false;
   }
 
-  return { start, stop, triggerNextFeedBatch };
+  return { start, stop, triggerNextFeedBatch, fetchBatchDirectly };
 })();

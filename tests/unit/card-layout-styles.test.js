@@ -95,4 +95,15 @@ describe('Post card content polish', () => {
     );
     expect(themeCss).toContain('z-index: 99999 !important');
   });
+
+  it('eliminates trailing divider lines, hr tags, and wrapper article bottom borders at the end of posts', () => {
+    const cardsCss = fs.readFileSync(path.resolve(process.cwd(), 'content/styles/cards.css'), 'utf8');
+    const layoutCss = fs.readFileSync(path.resolve(process.cwd(), 'content/styles/layout.css'), 'utf8');
+    const themeCss = fs.readFileSync(path.resolve(process.cwd(), 'content/styles/theme.css'), 'utf8');
+
+    expect(layoutCss).toContain("body:not([data-reddit-grid-cols='1']) hr");
+    expect(layoutCss).toContain('border-bottom: none !important');
+    expect(cardsCss).toContain("body:not([data-reddit-grid-cols='1']) hr");
+    expect(themeCss).toContain('article:has(shreddit-post)');
+  });
 });

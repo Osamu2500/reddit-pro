@@ -486,13 +486,14 @@ body:not([data-reddit-grid-cols='1']):not(.rg-page-post):not(.rg-page-wiki):not(
   align-items: start !important;
   align-content: start !important;
   justify-items: stretch !important;
+  min-height: var(--rg-total-height, auto);
   width: 100% !important;
   box-sizing: border-box !important;
   padding-top: 0 !important;
   margin-top: 0 !important;
 }
 
-/* Non-card headers, carousels, and discovery units must span all columns */
+/* Non-card page headers and banner units span all columns */
 body:not([data-reddit-grid-cols='1']):not(.rg-page-post):not(.rg-page-wiki):not(.rg-page-about):not(
     .rg-page-submit
   ):not(.rg-page-notifications):not(.rg-page-messages):not(.rg-page-settings):not(.rg-page-mod):not(
@@ -525,30 +526,50 @@ body:not([data-reddit-grid-cols='1']):not(.rg-page-post):not(.rg-page-wiki):not(
     [slot='header'],
     [slot='banner'],
     div:has(> shreddit-sort-dropdown),
-    shreddit-subreddit-discovery-unit,
-    shreddit-carousel,
-    community-recommendations,
     [data-testid*='header'],
     [data-testid*='tab'],
-    [data-testid*='discovery'],
-    [data-testid*='recommendation'],
-    [data-testid*='carousel'],
-    [data-testid*='highlight'],
     [role='tablist'],
     header,
     nav,
-    hr,
     div:has(> faceplate-tab-group),
-    div:has(> [role='tablist']),
-    div:has(> shreddit-carousel),
-    div:has(> community-recommendations),
-    div:has(> [data-testid*='recommendation']),
-    div:has(> [data-testid*='discovery'])
+    div:has(> [role='tablist'])
   ) {
   grid-column: 1 / -1 !important;
   width: 100% !important;
   box-sizing: border-box !important;
   margin-top: 0 !important;
+}
+
+/* In-feed recommendation widgets, discovery units, and carousels participate as single-column cards to fill gaps */
+body:not([data-reddit-grid-cols='1'])
+  :is(
+    shreddit-feed,
+    shreddit-profile-feed,
+    profile-feed,
+    shreddit-user-feed,
+    shreddit-custom-feed,
+    custom-feed,
+    [data-testid='post-list'],
+    [data-testid='profile-feed'],
+    [data-testid='search-results']
+  )
+  > :is(
+    shreddit-subreddit-discovery-unit,
+    shreddit-carousel,
+    community-recommendations,
+    [data-testid*='discovery'],
+    [data-testid*='recommendation'],
+    [data-testid*='carousel'],
+    [data-testid*='highlight'],
+    div:has(> shreddit-carousel),
+    div:has(> community-recommendations),
+    div:has(> [data-testid*='recommendation']),
+    div:has(> [data-testid*='discovery'])
+  ) {
+  grid-column: span 1 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 /* Ensure feed tabs, headers, and navigation bars have proper separation above feed cards */
@@ -607,7 +628,8 @@ body:not([data-reddit-grid-cols='1']) faceplate-partial {
 /* Spent sentinels and intermediate batch loaders must NEVER take up grid space or create full-width barriers */
 body:not([data-reddit-grid-cols='1']) [data-rg-spent-sentinel='1'],
 body:not([data-reddit-grid-cols='1']) faceplate-batch:has(~ faceplate-batch) :is(faceplate-partial, shreddit-async-loader),
-body:not([data-reddit-grid-cols='1']) :is(faceplate-partial, shreddit-async-loader):has(~ :is(faceplate-batch, faceplate-tracker, shreddit-post)) {
+body:not([data-reddit-grid-cols='1']) :is(faceplate-partial, shreddit-async-loader):has(~ :is(faceplate-batch, faceplate-tracker, shreddit-post)):not([data-rg-sentinel='1']),
+body:not([data-reddit-grid-cols='1']) :is(shreddit-feed, faceplate-batch) > :is(faceplate-partial, shreddit-async-loader):not([data-rg-sentinel='1']):not(:has(shreddit-post, article, .Post)) {
   display: none !important;
   grid-column: auto !important;
   min-height: 0 !important;
@@ -635,17 +657,20 @@ body:not([data-reddit-grid-cols='1'])
   > :is(shreddit-async-loader, faceplate-partial, [slot='more-posts'], [slot='load-more'], button[aria-label*='more posts' i]):last-child:not([data-rg-spent-sentinel='1']) {
   grid-column: 1 / -1 !important;
   width: 100% !important;
-  min-height: 80px !important;
-  display: block !important;
+  min-height: 100px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   visibility: visible !important;
   opacity: 1 !important;
   clear: both !important;
-  margin: 16px auto !important;
+  margin: 20px auto !important;
   box-sizing: border-box !important;
 }
 
 /* Center loading spinner within the sentinel */
 body:not([data-reddit-grid-cols='1']) [data-rg-sentinel='1'] > *,
+body:not([data-reddit-grid-cols='1']) [data-rg-sentinel='1'] [slot='loading'],
 body:not([data-reddit-grid-cols='1'])
   :is(
     shreddit-feed,
@@ -743,15 +768,40 @@ body:not([data-reddit-grid-cols='1']) faceplate-tracker::after {
 }
 
 /* Strip duplicate borders if Reddit nests article or post wrappers */
-body:not([data-reddit-grid-cols='1']) faceplate-tracker > article:has(> shreddit-post),
-body:not([data-reddit-grid-cols='1']) article:has(> shreddit-post),
+body:not([data-reddit-grid-cols='1']) faceplate-tracker > article:has(shreddit-post),
+body:not([data-reddit-grid-cols='1']) article:has(shreddit-post),
+body:not([data-reddit-grid-cols='1']) faceplate-tracker:has(shreddit-post),
+body:not([data-reddit-grid-cols='1']) faceplate-tracker > article,
 body:not([data-reddit-grid-cols='1']) shreddit-post > article {
   background: transparent !important;
+  background-color: transparent !important;
   border: none !important;
+  border-bottom: none !important;
+  border-top: none !important;
   box-shadow: none !important;
   border-radius: 0 !important;
   padding: 0 !important;
+  padding-bottom: 0 !important;
   margin: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* Remove trailing divider lines and bottom borders from articles and action bars */
+body:not([data-reddit-grid-cols='1']) :is(
+  shreddit-feed,
+  profile-feed,
+  shreddit-profile-feed,
+  shreddit-user-feed,
+  shreddit-custom-feed,
+  faceplate-batch,
+  faceplate-tracker,
+  [data-testid='post-list']
+) article,
+body:not([data-reddit-grid-cols='1']) shreddit-post::part(action-bar),
+body:not([data-reddit-grid-cols='1']) shreddit-post [slot='action-bar'],
+body:not([data-reddit-grid-cols='1']) shreddit-post-action-bar {
+  border-bottom: none !important;
+  border-top: none !important;
 }
 
 /* =====================================================================
@@ -783,13 +833,29 @@ body:not([data-reddit-grid-cols='1']) faceplate-batch:empty {
   contain: strict !important;
 }
 
-/* Hide Reddit's batch/feed separators */
-body:not([data-reddit-grid-cols='1'])
-  :is(shreddit-feed, shreddit-profile-feed, profile-feed, shreddit-user-feed, shreddit-custom-feed)
-  hr,
+/* Hide Reddit's batch/feed separators, trailing lines and horizontal rules */
+body:not([data-reddit-grid-cols='1']) hr,
+body:not([data-reddit-grid-cols='1']) :is(shreddit-feed, shreddit-profile-feed, profile-feed, shreddit-user-feed, shreddit-custom-feed, faceplate-batch, article, shreddit-post, faceplate-tracker) hr,
 body:not([data-reddit-grid-cols='1']) faceplate-batch hr,
-body:not([data-reddit-grid-cols='1']) shreddit-post hr {
+body:not([data-reddit-grid-cols='1']) shreddit-post hr,
+body:not([data-reddit-grid-cols='1']) [role='separator'],
+body:not([data-reddit-grid-cols='1']) shreddit-separator,
+body:not([data-reddit-grid-cols='1']) [data-testid*='separator'],
+body:not([data-reddit-grid-cols='1']) [data-testid*='divider'],
+body:not([data-reddit-grid-cols='1']) [class*='separator'],
+body:not([data-reddit-grid-cols='1']) [class*='divider'] {
   display: none !important;
+  height: 0 !important;
+  max-height: 0 !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 /* Normalize any gap/padding Reddit injects on feed containers */
@@ -821,10 +887,10 @@ body:not([data-reddit-grid-cols='1']) faceplate-batch[style] {
 body:not([data-reddit-grid-cols='1']) faceplate-tracker[data-rg-loading],
 body:not([data-reddit-grid-cols='1']) shreddit-post[data-rg-loading],
 body:not([data-reddit-grid-cols='1']) article[data-rg-loading] {
-  opacity: 0.58 !important;
+  opacity: 0.85 !important;
   visibility: visible !important;
   pointer-events: none !important;
-  transition: opacity 180ms ease !important;
+  transition: opacity 60ms ease !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
